@@ -11,6 +11,7 @@ from app.localization.loader import (
     clear_locale_cache,
     load_locale,
 )
+from app.utils.premium_emojis import replace_with_premium_emojis
 
 
 _logger = structlog.get_logger(__name__)
@@ -181,7 +182,16 @@ class Texts:
                 return default
             raise
 
+        _logger.warning("Missing localization key '' for language ''", item=item, language=self.language)
+        raise KeyError(item)
+
     def _get_value(self, item: str) -> Any:
+        value = self._get_raw_value(item)
+        if settings.USE_PREMIUM_EMOJIS and isinstance(value, str):
+            return replace_with_premium_emojis(value)
+        return value
+
+    def _get_raw_value(self, item: str) -> Any:
         if item == 'RULES_TEXT':
             return _get_cached_rules_value(self.language)
 

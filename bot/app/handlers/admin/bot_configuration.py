@@ -1,4 +1,5 @@
 import html
+import json
 import io
 import math
 import time
@@ -27,6 +28,7 @@ from app.services.system_settings_service import (
     ReadOnlySettingError,
     bot_configuration_service,
 )
+from app.utils.premium_emojis import BASE_EMOJIS, get_premium_emoji_map
 from app.services.tribute_service import TributeService
 from app.states import BotConfigStates
 from app.utils.currency_converter import currency_converter
@@ -1172,6 +1174,17 @@ def _build_categories_keyboard(
                 )
             )
         rows.append(nav_row)
+
+    if group_key.lower() == 'interface':
+        # Для кнопки Premium эмодзи в общем списке категорий
+        rows.append(
+            [
+                types.InlineKeyboardButton(
+                    text='🎨 Настройка Premium эмодзи',
+                    callback_data='botcfg_premium_emojis:1',
+                )
+            ]
+        )
 
     rows.append(
         [
@@ -2815,6 +2828,235 @@ async def clear_remna_config(callback: types.CallbackQuery, db_user: User, db: A
     await show_remna_config_menu(callback, db_user=db_user, db=db)
 
 
+@admin_required
+@error_handler
+async def show_premium_emojis_menu(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Отображает сетку эмодзи для настройки."""
+    parts = callback.data.split(':')
+    page = int(parts[1]) if len(parts) > 1 else 1
+    
+    emoji_map = get_premium_emoji_map()
+    total_emojis = len(BASE_EMOJIS)
+    page_size = 25  # 5x5
+    total_pages = math.ceil(total_emojis / page_size)
+    page = max(1, min(page, total_pages))
+    
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    page_emojis = BASE_EMOJIS[start_idx:end_idx]
+    
+    rows: list[list[types.InlineKeyboardButton]] = []
+    
+    # Кнопка включения/отключения
+    is_enabled = settings.USE_PREMIUM_EMOJIS
+    status_icon = "🟢" if is_enabled else "⚪️"
+    status_text = "Включены" if is_enabled else "Выключены"
+    
+    rows.append([
+        types.InlineKeyboardButton(
+            text=f"Статус: {status_icon} {status_text}",
+            callback_data=f"botcfg_prem_toggle:{page}"
+        )
+    ])
+    
+    # Кнопки эмодзи
+    emoji_buttons: list[types.InlineKeyboardButton] = []
+    active_bindings_text = []
+    
+    for emoji in page_emojis:
+        emoji_id = emoji_map.get(emoji)
+        has_binding = bool(emoji_id)
+        
+        # Если есть привязка, используем icon_custom_emoji_id для отображения ПРЯМО НА КНОПКЕ
+        # Важно: ID должен быть валидным числом
+        is_valid_id = str(emoji_id).isdigit() if emoji_id else False
+        
+        btn_text = f"{emoji}"
+        emoji_buttons.append(
+            types.InlineKeyboardButton(
+                text=btn_text,
+                callback_data=f"botcfg_prem_sel:{emoji}:{page}",
+                icon_custom_emoji_id=str(emoji_id) if is_valid_id else None
+            )
+        )
+        
+        if is_valid_id:
+            active_bindings_text.append(f"{emoji} ➔ <tg-emoji emoji-id=\"{emoji_id}\">{emoji}</tg-emoji>")
+    
+    for chunk in _chunk(emoji_buttons, 5):
+        rows.append(list(chunk))
+    
+    # Навигация
+    nav_row: list[types.InlineKeyboardButton] = []
+    if page > 1:
+        nav_row.append(types.InlineKeyboardButton(text="⬅️", callback_data=f"botcfg_premium_emojis:{page-1}"))
+    nav_row.append(types.InlineKeyboardButton(text=f"[{page}/{total_pages}]", callback_data="noop"))
+    if page < total_pages:
+        nav_row.append(types.InlineKeyboardButton(text="➡️", callback_data=f"botcfg_premium_emojis:{page+1}"))
+    if nav_row:
+        rows.append(nav_row)
+        
+    rows.append([types.InlineKeyboardButton(text="⬅️ К категориям", callback_data="botcfg_group:interface:1")])
+    
+    text = "🎨 <b>Настройка Premium эмодзи</b>\n\n"
+    if active_bindings_text:
+        text += "<b>Текущие привязки:</b>\n" + "\n".join(active_bindings_text) + "\n\n"
+    
+    text += (
+        "Выберите стандартный эмодзи из сетки ниже, чтобы изменить или удалить его привязку.\n\n"
+        "✨ — означает, что для этого эмодзи уже настроен Premium аналог."
+    )
+    
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=types.InlineKeyboardMarkup(inline_keyboard=rows))
+    await callback.answer()
+
+@admin_required
+@error_handler
+async def handle_premium_emoji_selection(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Обработка выбора конкретного эмодзи из сетки."""
+    parts = callback.data.split(':')
+    emoji = parts[1]
+    page = parts[2]
+    
+    emoji_map = get_premium_emoji_map()
+    current_id = emoji_map.get(emoji)
+    
+    if current_id:
+        # Предлагаем удалить или изменить
+        is_valid_id = str(current_id).isdigit()
+        binding_display = f"<tg-emoji emoji-id=\"{current_id}\">{emoji}</tg-emoji>" if is_valid_id else "❌ (некорректный ID)"
+        
+        text = (
+            f"Настройка для {emoji}\n\n"
+            f"Текущая привязка: {binding_display}\n"
+            f"ID: <code>{current_id}</code>\n\n"
+            "Вы можете удалить привязку или отправить новый Premium эмодзи для замены."
+        )
+        keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+            [types.InlineKeyboardButton(
+                text="🗑️ Удалить привязку", 
+                callback_data=f"botcfg_prem_del:{emoji}:{page}",
+                icon_custom_emoji_id=str(current_id) if is_valid_id else None
+            )],
+            [types.InlineKeyboardButton(text="⬅️ Назад к сетке", callback_data=f"botcfg_premium_emojis:{page}")]
+        ])
+        await callback.message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
+    else:
+        # Просим отправить эмодзи
+        await state.set_state(BotConfigStates.waiting_for_premium_emoji)
+        await state.update_data(target_emoji=emoji, target_page=page)
+        
+        keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+            [types.InlineKeyboardButton(text="⬅️ Отмена", callback_data=f"botcfg_premium_emojis:{page}")]
+        ])
+        await callback.message.edit_text(
+            f"Перешлите или отправьте <b>Premium эмодзи</b> для замены стандартного {emoji}.\n\n"
+            "<i>Примечание: Это должен быть именно кастомный эмодзи из набора, а не обычный Unicode.</i>",
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
+    await callback.answer()
+
+@admin_required
+@error_handler
+async def delete_premium_emoji(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Удаление привязки эмодзи."""
+    parts = callback.data.split(':')
+    emoji = parts[1]
+    page = parts[2]
+    
+    emoji_map = json.loads(settings.PREMIUM_EMOJIS_DATA or "{}")
+    if emoji in emoji_map:
+        del emoji_map[emoji]
+        await bot_configuration_service.set_value(db, 'PREMIUM_EMOJIS_DATA', json.dumps(emoji_map, ensure_ascii=False))
+        await db.commit()
+    
+    await callback.answer("✅ Привязка удалена")
+    callback.data = f"botcfg_premium_emojis:{page}"
+    await show_premium_emojis_menu(callback, db_user, db, state)
+
+@admin_required
+@error_handler
+async def handle_premium_emoji_input(
+    message: types.Message,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Захват custom_emoji_id из сообщения."""
+    data = await state.get_data()
+    target_emoji = data.get('target_emoji')
+    target_page = data.get('target_page', '1')
+    
+    custom_emoji_id = None
+    if message.entities:
+        for entity in message.entities:
+            if entity.type == "custom_emoji":
+                custom_emoji_id = entity.custom_emoji_id
+                break
+    
+    # Проверка также в тексте, если aiogram не распарсил сразу (иногда бывает на некоторых версиях)
+    if not custom_emoji_id and message.text:
+        # В некоторых случаях ID можно найти в словаре сущностей текста
+        pass
+
+    if not custom_emoji_id:
+        await message.answer("❌ Это не Premium эмодзи. Пожалуйста, отправьте кастомный эмодзи.")
+        return
+
+    # Сохраняем
+    emoji_data = json.loads(settings.PREMIUM_EMOJIS_DATA or "{}")
+    emoji_data[target_emoji] = custom_emoji_id
+    
+    await bot_configuration_service.set_value(db, 'PREMIUM_EMOJIS_DATA', json.dumps(emoji_data, ensure_ascii=False))
+    await db.commit()
+    
+    await state.clear()
+    
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="⬅️ Назад к сетке", callback_data=f"botcfg_premium_emojis:{target_page}")]
+    ])
+    await message.answer(f"✅ Для эмодзи {target_emoji} успешно установлен ID <code>{custom_emoji_id}</code>", parse_mode='HTML', reply_markup=keyboard)
+
+@admin_required
+@error_handler
+async def toggle_premium_emojis_status(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Переключение глобального статуса использования Premium эмодзи."""
+    parts = callback.data.split(':')
+    page = parts[1] if len(parts) > 1 else "1"
+    
+    new_status = not settings.USE_PREMIUM_EMOJIS
+    await bot_configuration_service.set_value(db, 'USE_PREMIUM_EMOJIS', new_status)
+    settings.USE_PREMIUM_EMOJIS = new_status # Явно обновляем в текущем процессе
+    await db.commit()
+    
+    await callback.answer(f"✅ Premium эмодзи {'включены' if new_status else 'выключены'}")
+    
+    # Обновляем меню
+    callback.data = f"botcfg_premium_emojis:{page}"
+    await show_premium_emojis_menu(callback, db_user, db, state)
+
+
 def register_handlers(dp: Dispatcher) -> None:
     dp.callback_query.register(
         show_bot_config_menu,
@@ -2913,6 +3155,26 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.message.register(
         handle_import_message,
         BotConfigStates.waiting_for_import_file,
+    )
+    dp.callback_query.register(
+        show_premium_emojis_menu,
+        F.data.startswith('botcfg_premium_emojis:'),
+    )
+    dp.callback_query.register(
+        handle_premium_emoji_selection,
+        F.data.startswith('botcfg_prem_sel:'),
+    )
+    dp.callback_query.register(
+        delete_premium_emoji,
+        F.data.startswith('botcfg_prem_del:'),
+    )
+    dp.callback_query.register(
+        toggle_premium_emojis_status,
+        F.data.startswith('botcfg_prem_toggle:'),
+    )
+    dp.message.register(
+        handle_premium_emoji_input,
+        BotConfigStates.waiting_for_premium_emoji,
     )
     # Remnawave app config selector
     dp.callback_query.register(

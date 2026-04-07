@@ -363,6 +363,8 @@ class Settings(BaseSettings):
     DISABLE_WEB_PAGE_PREVIEW: bool = False
     ACTIVATE_BUTTON_VISIBLE: bool = False
     ACTIVATE_BUTTON_TEXT: str = 'активировать'
+    USE_PREMIUM_EMOJIS: bool = False  # Включить использование Premium эмодзи (требуется Premium у владельца бота)
+    PREMIUM_EMOJIS_DATA: str = "{}"  # Маппинг стандартных эмодзи на Premium ID в формате JSON
     PAYMENT_BALANCE_DESCRIPTION: str = 'Пополнение баланса'
     PAYMENT_SUBSCRIPTION_DESCRIPTION: str = 'Оплата подписки'
     PAYMENT_SERVICE_NAME: str = 'Интернет-сервис'

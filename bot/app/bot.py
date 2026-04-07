@@ -74,6 +74,7 @@ from app.middlewares.throttling import ThrottlingMiddleware
 from app.services.maintenance_service import maintenance_service
 from app.utils.cache import cache
 from app.utils.message_patch import patch_message_methods
+from app.utils.premium_emojis import PremiumEmojiMiddleware
 
 
 patch_message_methods()
@@ -99,6 +100,7 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     from aiogram.enums import ParseMode
 
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot.session.middleware(PremiumEmojiMiddleware())
 
     maintenance_service.set_bot(bot)
     logger.info('Бот установлен в maintenance_service')

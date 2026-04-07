@@ -318,6 +318,8 @@ class BotConfigurationService:
         'REMNAWAVE_AUTO_SYNC_ENABLED': 'REMNAWAVE',
         'REMNAWAVE_AUTO_SYNC_TIMES': 'REMNAWAVE',
         'CABINET_REMNA_SUB_CONFIG': 'MINIAPP',
+        'USE_PREMIUM_EMOJIS': 'INTERFACE_BRANDING',
+        'PREMIUM_EMOJIS_DATA': 'INTERFACE_BRANDING',
     }
 
     CATEGORY_PREFIX_OVERRIDES: dict[str, str] = {
@@ -720,6 +722,18 @@ class BotConfigurationService:
             'example': 'd4aa2b8c-9a36-4f31-93a2-6f07dad05fba',
             'warning': 'Убедитесь, что конфигурация существует в панели и содержит нужные приложения.',
             'dependencies': 'Настроенное подключение к RemnaWave API',
+        },
+        'USE_PREMIUM_EMOJIS': {
+            'description': 'Включает глобальную замену стандартных эмодзи на кастомные Premium эмодзи.',
+            'format': 'Булево значение.',
+            'example': 'true',
+            'warning': 'Требуется Premium-статус у аккаунта-владельца бота.',
+        },
+        'PREMIUM_EMOJIS_DATA': {
+            'description': 'Данные маппинга эмодзи в формате JSON (автоматически обновляются через панель настройки эмодзи).',
+            'format': 'JSON-строка.',
+            'example': '{"✅": "5432345678901234567"}',
+            'warning': 'Ручное редактирование не рекомендуется, используйте панель настроек.',
         },
         'TRAFFIC_MONITORING_ENABLED': {
             'description': (
