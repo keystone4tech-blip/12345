@@ -1,0 +1,30 @@
+﻿# Базовые файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# База данных и локальные данные
+*.db
+*.sqlite3
+data/
+.docker_data/
+
+# Логи и временные файлы
+logs/
+*.log
+.pytest_cache/
+.coverage
+
+# Docker
+.dockerignore
+!docker-compose.yml
+!Dockerfile
+
+# VS Code / IDE
+.vscode/
+.idea/
+.python-version

@@ -1,0 +1,32 @@
+﻿name: Deploy Bedolaga Bot
+
+on:
+  push:
+    branches:
+      - main  # Срабатывает при пуше в ветку main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}     # IP вашего сервера
+          username: ${{ secrets.SERVER_USER }} # Логин (например, root)
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Приватный SSH ключ
+          script: |
+            cd /path/to/your/project/сервис\ рекламы\ с\ впн
+            git pull origin main
+            
+            # Обновление бота через Docker
+            cd bot
+            docker compose up -d --build
+            
+            # Можно добавить сборку кабинета, если он тоже на сервере
+            # cd ../cabinet
+            # npm install
+            # npm run build
