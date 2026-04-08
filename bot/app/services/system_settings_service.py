@@ -148,6 +148,14 @@ class BotConfigurationService:
         'EXTERNAL_ADMIN_TOKEN': '🛡️ Токен внешней админки',
         'EXTERNAL_ADMIN_TOKEN_BOT_ID': '🆔 ID бота для внеш. админки',
 
+        # SUPPORT
+        'SUPPORT_MENU_ENABLED': 'Включить меню поддержки',
+        'SUPPORT_SYSTEM_MODE': 'Режим системы поддержки',
+        'SUPPORT_TICKET_SLA_ENABLED': 'Включить SLA для тикетов',
+        'SUPPORT_TICKET_SLA_MINUTES': 'SLA: время ответа (мин)',
+        'SUPPORT_AI_ENABLED': 'Включить AI-помощника',
+        'MINIAPP_TICKETS_ENABLED': 'Тикеты в MiniApp',
+
         # REFERRAL
         'REFERRAL_PROGRAM_ENABLED': 'Включить реферальную программу',
         'REFERRAL_PARTNER_SECTION_VISIBLE': 'Показывать раздел в кабинете',
@@ -162,6 +170,11 @@ class BotConfigurationService:
         'REFERRAL_CONTESTS_ENABLED': 'Включить конкурсы рефералов',
         'CONTESTS_ENABLED': 'Глобальный флаг конкурсов',
         'CONTESTS_BUTTON_VISIBLE': 'Показывать кнопку конкурсов в меню',
+
+        # REFERRAL - FRAUD PROTECTION
+        'REFERRAL_WITHDRAWAL_SUSPICIOUS_MIN_DEPOSIT_KOPEKS': 'Анти-фрод: Мин. пополнение для вывода',
+        'REFERRAL_WITHDRAWAL_SUSPICIOUS_MAX_DEPOSITS_PER_MONTH': 'Анти-фрод: Макс. депозитов в месяц',
+        'REFERRAL_WITHDRAWAL_SUSPICIOUS_NO_PURCHASES_RATIO': 'Анти-фрод: Коэфф. подозрительных трат',
 
         # GIFTS
         'GIFTS_ENABLED': 'Включить систему подарков',
@@ -180,6 +193,26 @@ class BotConfigurationService:
         'PREMIUM_EMOJIS_DATA': '📊 Данные Premium эмодзи',
         'HIDE_SUBSCRIPTION_LINK': '🔗 Скрыть ссылки на подписку',
 
+        # BRANDING & MINIAPP
+        'MINIAPP_SERVICE_NAME_RU': 'Название сервиса (RU)',
+        'MINIAPP_SERVICE_NAME_EN': 'Название сервиса (EN)',
+        'MINIAPP_SERVICE_DESCRIPTION_RU': 'Описание сервиса (RU)',
+        'MINIAPP_SERVICE_DESCRIPTION_EN': 'Описание сервиса (EN)',
+        'MINIAPP_CUSTOM_URL': 'Кастомный URL MiniApp',
+        'MINIAPP_PURCHASE_URL': 'URL покупки в MiniApp',
+        'CONNECT_BUTTON_HAPP_DOWNLOAD_ENABLED': 'Кнопка загрузки Happ',
+        'HAPP_DOWNLOAD_LINK_IOS': 'Happ: Ссылка iOS',
+        'HAPP_DOWNLOAD_LINK_ANDROID': 'Happ: Ссылка Android',
+        'HAPP_DOWNLOAD_LINK_WINDOWS': 'Happ: Ссылка Windows',
+
+        # TRIAL
+        'TRIAL_DURATION_DAYS': 'Длительность триала (дней)',
+        'TRIAL_TRAFFIC_LIMIT_GB': 'Лимит трафика триала (ГБ)',
+        'TRIAL_DEVICE_LIMIT': 'Лимит устройств триала',
+        'TRIAL_ACTIVATION_PRICE': 'Цена активации триала',
+        'TRIAL_PAYMENT_ENABLED': 'Платная активация триала',
+        'TRIAL_ADD_REMAINING_DAYS_TO_PAID': 'Перенос дней при покупке',
+
         # SUBSCRIPTIONS
         'BASE_SUBSCRIPTION_PRICE': '💵 Базовая цена подписки',
         'DEFAULT_DEVICE_LIMIT': '📱 Лимит устройств по умолчанию',
@@ -195,6 +228,81 @@ class BotConfigurationService:
         'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': '🔄 Автопокупка после оплаты',
         'PRICE_ROUNDING_ENABLED': '🔢 Округление цен',
         'APP_CONFIG_CACHE_TTL': '🧠 TTL кэша конфига приложений',
+
+        # NOTIFICATIONS & TOPICS
+        'ADMIN_NOTIFICATIONS_ENABLED': 'Включить уведомления админа',
+        'ADMIN_NOTIFICATIONS_CHAT_ID': 'ID чата уведомлений',
+        'ADMIN_NOTIFICATIONS_TICKET_TOPIC_ID': 'Топик для тикетов',
+        'ADMIN_NOTIFICATIONS_NALOG_TOPIC_ID': 'Топик для налоговой',
+        'SUSPICIOUS_NOTIFICATIONS_TOPIC_ID': 'Топик для подозрений',
+        'ADMIN_REPORTS_CHAT_ID': 'ID чата отчетов',
+        'ADMIN_REPORTS_TOPIC_ID': 'Топик отчетов',
+        'ADMIN_REPORTS_SEND_TIME': 'Время отправки отчета',
+
+        # LOGS & ROTATION
+        'LOG_ROTATION_ENABLED': 'Включить ротацию логов',
+        'LOG_ROTATION_TIME': 'Время ротации (HH:MM)',
+        'LOG_ROTATION_KEEP_DAYS': 'Хранить логов (дней)',
+        'LOG_ROTATION_COMPRESS': 'Сжимать логи (Gzip)',
+        'LOG_ROTATION_SEND_TO_TELEGRAM': 'Отправлять логи в Telegram',
+        'LOG_ROTATION_CHAT_ID': 'ID чата для логов',
+        'LOG_ROTATION_TOPIC_ID': 'ID топика логов',
+        'LOG_DIR': 'Папка для журналов (logs)',
+        'LOG_INFO_FILE': 'Файл INFO логов',
+        'LOG_ERROR_FILE': 'Файл ERROR логов',
+        'LOG_PAYMENTS_FILE': 'Файл PAYMENT логов',
+
+        # DATABASE
+        'DATABASE_MODE': 'Режим базы данных',
+        'POSTGRES_HOST': 'Хост PostgreSQL',
+        'POSTGRES_PORT': 'Порт PostgreSQL',
+        'POSTGRES_DB': 'Имя базы данных',
+        'REDIS_URL': 'URL Redis',
+
+        # REMNAWAVE
+        'REMNAWAVE_API_URL': 'URL API RemnaWave',
+        'REMNAWAVE_AUTH_TYPE': 'Тип авторизации API',
+        'REMNAWAVE_AUTO_SYNC_ENABLED': 'Автосинхронизация',
+        'REMNAWAVE_AUTO_SYNC_TIMES': 'Время синхронизации',
+        'REMNAWAVE_WEBHOOK_ENABLED': 'Вебхуки RemnaWave',
+
+        # PAYMENTS - GENERAL
+        'TELEGRAM_STARS_ENABLED': 'Включить Telegram Stars',
+        'TELEGRAM_STARS_RATE_RUB': 'Курс Stars (в рублях)',
+        'PRICE_ROUNDING_ENABLED': 'Округление цен',
+        'PAYMENT_VERIFICATION_AUTO_CHECK_ENABLED': 'Автопроверка платежей',
+
+        # PAYMENT TEMPLATES
+        'PAYMENT_SERVICE_NAME': 'Название услуги в чеке',
+        'PAYMENT_BALANCE_DESCRIPTION': 'Описание пополнения баланса',
+        'PAYMENT_SUBSCRIPTION_DESCRIPTION': 'Описание оплаты подписки',
+        'PAYMENT_BALANCE_TEMPLATE': 'Шаблон чека (Баланс)',
+        'PAYMENT_SUBSCRIPTION_TEMPLATE': 'Шаблон чека (Подписка)',
+
+        # PAYMENTS - YOOKASSA
+        'YOOKASSA_ENABLED': 'Включить YooKassa',
+        'YOOKASSA_SHOP_ID': 'YooKassa: Shop ID',
+        'YOOKASSA_SECRET_KEY': 'YooKassa: Secret Key',
+
+        # PAYMENTS - CRYPTOBOT
+        'CRYPTOBOT_ENABLED': 'Включить CryptoBot',
+        'CRYPTOBOT_API_TOKEN': 'CryptoBot: API Token',
+
+        # PAYMENTS - FREEKASSA / KASSA.AI
+        'FREEKASSA_ENABLED': 'Включить Freekassa',
+        'KASSA_AI_ENABLED': 'Включить KassaAI',
+
+        # PAYMENTS - PAL24
+        'PAL24_ENABLED': 'Включить PayPalych (PAL24)',
+        'PAL24_API_TOKEN': 'PAL24: API Token',
+        'PAL24_SHOP_ID': 'PAL24: Shop ID',
+
+        # PAYMENTS - OTHER
+        'MULENPAY_ENABLED': 'Включить MulenPay',
+        'WATA_ENABLED': 'Включить Wata',
+        'CLOUDPAYMENTS_ENABLED': 'Включить CloudPayments',
+        'HELEKET_ENABLED': 'Включить Heleket Crypto',
+        'TRIBUTE_ENABLED': 'Включить Tribute',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -597,6 +705,27 @@ class BotConfigurationService:
             'example': 'true',
             'warning': 'Если остались не настроенные параметры, предложение может вести себя некорректно.',
         },
+        'REFERRAL_CONTESTS_ENABLED': {
+            'description': 'Включение системы конкурсов между партнерами.',
+            'format': 'Булево значение.',
+        },
+        'REFERRAL_WITHDRAWAL_SUSPICIOUS_MAX_DEPOSITS_PER_MONTH': {
+            'description': 'Максимальное количество пополнений рефералов в месяц для одного партнера. Превышение помечает вывод как подозрительный.',
+            'format': 'Целое число.',
+            'example': '10',
+            'warning': 'Слишком низкое значение может блокировать честных партнеров с активным трафиком.',
+        },
+        'REFERRAL_WITHDRAWAL_SUSPICIOUS_NO_PURCHASES_RATIO': {
+            'description': 'Коэффициент подозрительности: во сколько раз сумма пополнений рефералов превышает сумму их покупок.',
+            'format': 'Дробное число.',
+            'example': '2.0',
+            'warning': 'Значение 2.0 означает, что если рефералы пополнили баланс на 2000р, но купили только на 1000р, вывод считается подозрительным.',
+        },
+        'REFERRAL_WITHDRAWAL_SUSPICIOUS_MIN_DEPOSIT_KOPEKS': {
+            'description': 'Минимальная сумма пополнения одного реферала, чтобы партнер мог подать заявку на вывод средств.',
+            'format': 'Сумма в копейках (напр. 50000 = 500 руб).',
+            'example': '50000',
+        },
         'SIMPLE_SUBSCRIPTION_PERIOD_DAYS': {
             'description': 'Период подписки, который предлагается при быстрой покупке.',
             'format': 'Выберите один из доступных периодов.',
@@ -719,6 +848,187 @@ class BotConfigurationService:
             'example': 'Включите, чтобы запустить стимулирующую акцию для рефереров.',
             'warning': 'После включения необходимо зайти в меню «Конкурсы» и создать активный конкурс, иначе система будет простаивать.',
         },
+
+        # SUPPORT
+        'SUPPORT_MENU_ENABLED': {
+            'description': 'Управляет отображением кнопки «Поддержка» в главном меню бота.',
+            'format': 'Булево значение.',
+        },
+        'SUPPORT_SYSTEM_MODE': {
+            'description': 'Выбор режима работы поддержки: через тикеты внутри бота, прямую ссылку на контакт или оба варианта.',
+            'format': 'Один из вариантов: tickets, contact, both.',
+            'example': 'tickets — работа через систему обращений.',
+        },
+        'SUPPORT_TICKET_SLA_MINUTES': {
+            'description': 'Рекомендуемое время ответа на тикет. Если время превышено, админомодератор получит уведомление.',
+            'format': 'Количество минут (напр. 30).',
+            'example': '5',
+        },
+
+        # TRIAL
+        'TRIAL_DURATION_DAYS': {
+            'description': 'Количество дней бесплатного пробного периода для новых пользователей.',
+            'format': 'Целое число дней.',
+            'example': '3',
+            'warning': 'Установка 0 отключит триал, если нет других условий.',
+        },
+        'TRIAL_TRAFFIC_LIMIT_GB': {
+            'description': 'Лимит трафика, выдаваемый на пробный период.',
+            'format': 'Целое число ГБ.',
+            'example': '5',
+        },
+        'TRIAL_PAYMENT_ENABLED': {
+            'description': 'Если включено, активация триала станет платной (символическая сумма для борьбы с фермами).',
+            'format': 'Булево значение.',
+            'dependencies': 'TRIAL_ACTIVATION_PRICE',
+        },
+
+        # DATABASE
+        'DATABASE_MODE': {
+            'description': 'Выбор типа хранилища данных. Автоматический режим сам определит окружение (Docker/Local).',
+            'format': 'auto, sqlite или postgresql.',
+            'warning': 'Изменение требует перезагрузки бота и миграции данных.',
+        },
+        'REDIS_URL': {
+            'description': 'Адрес подключения к Redis для кэширования состояний и сессий.',
+            'format': 'redis://host:port/db',
+            'example': 'redis://localhost:6379/0',
+        },
+
+        # REMNAWAVE
+        'REMNAWAVE_API_URL': {
+            'description': 'Базовый адрес вашей панели управления RemnaWave.',
+            'format': 'URL адрес (напр. https://panel.example.com).',
+            'example': 'https://my-panel.com',
+        },
+        'REMNAWAVE_AUTO_SYNC_ENABLED': {
+            'description': 'Автоматическая синхронизация статусов подписок и трафика с панелью по расписанию.',
+            'format': 'Булево значение.',
+            'dependencies': 'REMNAWAVE_AUTO_SYNC_TIMES',
+        },
+
+        # PAYMENTS
+        'YOOKASSA_ENABLED': {
+            'description': 'Основной шлюз для приема платежей банковскими картами (РФ).',
+            'format': 'Булево значение.',
+            'warning': 'Для работы требуется Shop ID и Secret Key из личного кабинета YooKassa.',
+        },
+        'TELEGRAM_STARS_ENABLED': {
+            'description': 'Позволяет пользователям пополнять баланс через внутреннюю валюту Telegram Stars.',
+            'format': 'Булево значение.',
+            'warning': 'Взимается комиссия Telegram. Настройка курса Stars производится отдельно.',
+        },
+        'PAL24_ENABLED': {
+            'description': 'Интеграция с платежным шлюзом PayPalych (PAL24) для приема карт и СБП.',
+            'format': 'Булево значение.',
+        },
+
+        # OTHER PAYMENTS
+        'MULENPAY_ENABLED': {
+            'description': 'Интеграция с MulenPay для приема платежей.',
+            'format': 'Булево значение.',
+        },
+        'WATA_ENABLED': {
+            'description': 'Интеграция с Wata (карты РФ и СБП).',
+            'format': 'Булево значение.',
+        },
+        'CLOUDPAYMENTS_ENABLED': {
+            'description': 'Интеграция с CloudPayments (виджет оплаты картами).',
+            'format': 'Булево значение.',
+        },
+        'HELEKET_ENABLED': {
+            'description': 'Интеграция с Heleket для приема криптовалюты.',
+            'format': 'Булево значение.',
+        },
+        'TRIBUTE_ENABLED': {
+            'description': 'Прием донатов и оплат через сервис Tribute.',
+            'format': 'Булево значение.',
+        },
+        'PRICE_ROUNDING_ENABLED': {
+            'description': 'Автоматическое округление цен в интерфейсе (до целого рубля).',
+            'format': 'Булево значение.',
+            'example': 'Если цена 99.40 руб, станет 99 руб. Если 99.60 руб, станет 100 руб.',
+        },
+        'PAYMENT_SERVICE_NAME': {
+            'description': 'Название вашей услуги, которое будет отображаться в чеках и платежных формах.',
+            'format': 'Строка (макс. 64 символа).',
+            'example': 'RemnaWave VPN Service',
+        },
+        'PAYMENT_BALANCE_TEMPLATE': {
+            'description': 'Шаблон строки описания платежа при пополнении баланса.',
+            'format': 'Строка с поддержкой {service_name} и {description}.',
+            'example': '{service_name}: {description}',
+        },
+
+        # BACKUP & LOGS
+        'BACKUP_AUTO_ENABLED': {
+            'description': 'Автоматическое создание резервных копий базы данных по расписанию.',
+            'format': 'Булево значение.',
+            'dependencies': 'BACKUP_INTERVAL_HOURS, BACKUP_TIME',
+        },
+        'LOG_ROTATION_ENABLED': {
+            'description': 'Включает новую систему автоматической очистки и архивации старых журналов (логов).',
+            'format': 'Булево значение.',
+            'warning': 'Рекомендуется включить для предотвращения переполнения диска.',
+        },
+        'LOG_ROTATION_KEEP_DAYS': {
+            'description': 'Сколько дней хранить старые файлы логов перед их безвозвратным удалением.',
+            'format': 'Количество дней.',
+            'example': '7',
+        },
+        'LOG_DIR': {
+            'description': 'Название директории, в которой будут храниться все файлы журналов.',
+            'format': 'Название папки (напр. logs).',
+            'warning': 'Убедитесь, что у бота есть права на создание этой папки.',
+        },
+        'LOG_LEVEL': {
+            'description': 'Уровень детализации системных логов. Для обычной работы рекомендуется INFO.',
+            'format': 'DEBUG, INFO, WARNING, ERROR.',
+            'warning': 'Уровень DEBUG может сильно замедлить работу и быстро заполнить диск.',
+        },
+        'BLACKLIST_CHECK_ENABLED': {
+            'description': 'Включает проверку пользователей по черным спискам (за спам или абузы).',
+            'format': 'Булево значение.',
+        },
+
+        # SYSTEM
+        'TIMEZONE': {
+            'description': 'Часовой пояс для всех уведомлений и отчетов бота.',
+            'format': 'Название часового пояса IANA.',
+            'example': 'Europe/Moscow',
+        },
+        'ADMIN_NOTIFICATIONS_CHAT_ID': {
+            'description': 'ID чата или канала, куда бот будет присылать все административные уведомления.',
+            'format': 'Числовой ID (напр. -100...) или username канала.',
+            'warning': 'Бот должен быть администратором в этом чате.',
+        },
+        'ADMIN_NOTIFICATIONS_TICKET_TOPIC_ID': {
+            'description': 'ID топика в группе администраторов для уведомлений о новых тикетах техподдержки.',
+            'format': 'Числовой ID топика.',
+            'example': '2',
+        },
+        'ADMIN_REPORTS_SEND_TIME': {
+            'description': 'Конкретное время суток для автоматической отправки ежедневного отчета.',
+            'format': 'Время в формате HH:MM.',
+            'example': '09:00',
+        },
+
+        # MINIAPP & BRANDING
+        'MINIAPP_SERVICE_NAME_RU': {
+            'description': 'Название вашего сервиса, отображаемое внутри MiniApp для русскоязычных пользователей.',
+            'format': 'Строка.',
+            'example': 'Мой Лучший VPN',
+        },
+        'CONNECT_BUTTON_HAPP_DOWNLOAD_ENABLED': {
+            'description': 'Включает отображение кнопок скачивания приложения Happ для разных платформ.',
+            'format': 'Булево значение.',
+            'dependencies': 'HAPP_DOWNLOAD_LINK_IOS, HAPP_DOWNLOAD_LINK_ANDROID',
+        },
+        'MAINTENANCE_MODE': {
+            'description': 'Глобальный переключатель режима технического обслуживания.',
+            'format': 'Булево значение.',
+            'warning': 'Включение заблокирует доступ к боту для всех, кроме администраторов.',
+        },
         'CONTESTS_ENABLED': {
             'description': 'Общий переключатель для всех видов соревнований в боте.',
             'format': 'Булево значение.',
@@ -736,12 +1046,14 @@ class BotConfigurationService:
             'warning': 'Слишком низкое значение может вызвать частые напоминания, слишком высокое — ухудшить SLA.',
             'dependencies': 'SUPPORT_TICKET_SLA_ENABLED, SUPPORT_TICKET_SLA_REMINDER_COOLDOWN_MINUTES',
         },
-        'MAINTENANCE_MODE': {
-            'description': 'Переводит бота в режим технического обслуживания и скрывает действия для пользователей.',
+        'SALES_MODE': {
+            'description': 'Режим продажи подписок: Classic (ручной выбор параметров) или Tariffs (готовые пакеты).',
+            'format': 'classic или tariffs.',
+            'example': 'tariffs — рекомендуется для простоты работы с пользователями.',
+        },
+        'TRAFFIC_FAST_CHECK_ENABLED': {
+            'description': 'Включает быструю фоновую проверку трафика (каждые 10 минут) для обнаружения аномалий.',
             'format': 'Булево значение.',
-            'example': 'Включено на время плановых работ.',
-            'warning': 'Не забудьте отключить после завершения работ, иначе бот останется недоступен.',
-            'dependencies': 'MAINTENANCE_MESSAGE, MAINTENANCE_CHECK_INTERVAL',
         },
         'MAINTENANCE_MONITORING_ENABLED': {
             'description': ('Управляет автоматическим запуском мониторинга панели Remnawave при старте бота.'),
