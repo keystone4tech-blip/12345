@@ -51,6 +51,11 @@ class SettingDefinition:
 
     @property
     def display_name(self) -> str:
+        # Сначала проверяем наличие понятного названия в словаре перевода
+        if self.key in BotConfigurationService.SETTING_LABELS:
+            return BotConfigurationService.SETTING_LABELS[self.key]
+            
+        # Если перевода нет, генерируем из ключа (старая логика)
         return _title_from_key(self.key)
 
 
@@ -131,6 +136,65 @@ class BotConfigurationService:
         'BAN_NOTIFICATIONS': '🚫 Тексты уведомлений о блокировках',
         'SUPPORT_AI': '🤖 DonMatteo-AI-Tiket',
         'GIFTS': '🎁 Система подарков',
+    }
+
+    SETTING_LABELS: dict[str, str] = {
+        # CORE
+        'BOT_USERNAME': '🤖 Юзернейм бота',
+        'SUPPORT_USERNAME': '💬 Контакт поддержки',
+        'MAINTENANCE_MODE': '🔧 Режим тех. работ',
+        'MAINTENANCE_MESSAGE': '📝 Текст заглушки тех. работ',
+        'BOT_RUN_MODE': '🚀 Режим запуска (polling/webhook)',
+        'EXTERNAL_ADMIN_TOKEN': '🛡️ Токен внешней админки',
+        'EXTERNAL_ADMIN_TOKEN_BOT_ID': '🆔 ID бота для внеш. админки',
+
+        # REFERRAL
+        'REFERRAL_PROGRAM_ENABLED': 'Включить реферальную программу',
+        'REFERRAL_PARTNER_SECTION_VISIBLE': 'Показывать раздел в кабинете',
+        'REFERRAL_COMMISSION_PERCENT': 'Процент вознаграждения (%)',
+        'REFERRAL_INVITER_BONUS_KOPEKS': 'Бонус за приглашение (коп)',
+        'REFERRAL_FIRST_TOPUP_BONUS_KOPEKS': 'Бонус рефералу за 1-е пополнение',
+        'REFERRAL_MINIMUM_TOPUP_KOPEKS': 'Мин. пополнение для бонуса',
+        'REFERRAL_NOTIFICATIONS_ENABLED': 'Уведомления о новых рефералах',
+        'REFERRAL_WITHDRAWAL_ENABLED': 'Разрешить вывод средств',
+        'REFERRAL_WITHDRAWAL_MIN_AMOUNT_KOPEKS': 'Мин. сумма для вывода',
+        'REFERRAL_WITHDRAWAL_COOLDOWN_DAYS': 'Задержка между выводами (дней)',
+        'REFERRAL_CONTESTS_ENABLED': 'Включить конкурсы рефералов',
+        'CONTESTS_ENABLED': 'Глобальный флаг конкурсов',
+        'CONTESTS_BUTTON_VISIBLE': 'Показывать кнопку конкурсов в меню',
+
+        # GIFTS
+        'GIFTS_ENABLED': 'Включить систему подарков',
+        'GIFTS_BUTTON_VISIBLE': 'Кнопка «Подарок» в меню',
+        'GIFTS_BUTTON_TEXT': 'Текст кнопки подарка',
+        'GIFTS_BUTTON_STYLE': 'Цвет кнопки подарка',
+        'GIFTS_BUTTON_EMOJI': 'Премиум-эмодзи кнопки',
+        'GIFTS_SHARE_MESSAGE_TEMPLATE': 'Шаблон сообщения с подарком',
+
+        # INTERFACE
+        'MAIN_MENU_MODE': 'Стиль главного меню',
+        'CABINET_BUTTON_STYLE': 'Общий цвет кнопок кабинета',
+        'ENABLE_LOGO_MODE': '🖼️ Показывать логотип',
+        'LOGO_FILE': '📁 Файл логотипа',
+        'USE_PREMIUM_EMOJIS': '✨ Использовать Premium эмодзи',
+        'PREMIUM_EMOJIS_DATA': '📊 Данные Premium эмодзи',
+        'HIDE_SUBSCRIPTION_LINK': '🔗 Скрыть ссылки на подписку',
+
+        # SUBSCRIPTIONS
+        'BASE_SUBSCRIPTION_PRICE': '💵 Базовая цена подписки',
+        'DEFAULT_DEVICE_LIMIT': '📱 Лимит устройств по умолчанию',
+        'DEFAULT_TRAFFIC_LIMIT_GB': '📊 Лимит трафика (ГБ)',
+        'SALES_MODE': '📦 Режим продаж (Classic/Tariffs)',
+        'DEVICES_SELECTION_ENABLED': '🔢 Выбор кол-ва устройств',
+        'PRICE_PER_DEVICE': '💰 Цена за доп. устройство',
+        'MAX_DEVICES_LIMIT': '🚫 Макс. кол-во устройств',
+
+        # SYSTEM
+        'TIMEZONE': '🌍 Часовой пояс',
+        'LOG_LEVEL': '📝 Уровень логов',
+        'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': '🔄 Автопокупка после оплаты',
+        'PRICE_ROUNDING_ENABLED': '🔢 Округление цен',
+        'APP_CONFIG_CACHE_TTL': '🧠 TTL кэша конфига приложений',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -602,19 +666,68 @@ class BotConfigurationService:
             'example': 'true',
             'warning': 'Скидки применяются только если указаны корректные пары периодов и процентов.',
         },
+        'REFERRAL_PROGRAM_ENABLED': {
+            'description': 'Общий переключатель реферальной программы. Если выключено, партнерский раздел полностью скрыт.',
+            'format': 'Булево значение (Вкл/Выкл).',
+            'example': 'Включено',
+        },
+        'REFERRAL_COMMISSION_PERCENT': {
+            'description': 'Процент от суммы пополнения рефералов, который моментально начисляется на баланс пригласившего.',
+            'format': 'Целое число от 0 до 100.',
+            'example': '25',
+            'warning': 'Слишком высокий процент может сделать работу сервиса невыгодной.',
+        },
+        'REFERRAL_INVITER_BONUS_KOPEKS': {
+            'description': 'Фиксированная сумма в копейках, выплачиваемая пригласившему за сам факт регистрации или первого пополнения реферала.',
+            'format': 'Целое число в копейках (напр. 10000 = 100 ₽).',
+            'example': '10000',
+        },
+        'REFERRAL_MINIMUM_TOPUP_KOPEKS': {
+            'description': 'Минимальная сумма первого пополнения рефералом, необходимая для активации бонусов пригласившего.',
+            'format': 'Число в копейках.',
+            'example': '10000',
+        },
+        'GIFTS_ENABLED': {
+            'description': 'Включает возможность покупать подписки в подарок через специальный интерфейс.',
+            'format': 'Булево значение.',
+        },
+        'GIFTS_BUTTON_TEXT': {
+            'description': 'Текст на кнопке подарков в главном меню.',
+            'format': 'Строка текста.',
+            'example': '🎁 Подарить VPN',
+        },
+        'GIFTS_SHARE_MESSAGE_TEMPLATE': {
+            'description': 'Текст сообщения, которое копирует пользователь для отправки подарка другу.',
+            'format': 'HTML-текст. Используйте {link} для вставки ссылки на подарок.',
+            'example': 'Привет! Дарю тебе VPN: {link}',
+        },
+        'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': {
+            'description': 'Если у пользователя была выбрана подписка, но не хватало денег, она купится автоматически сразу после пополнения баланса.',
+            'format': 'Булево значение.',
+        },
+        'USE_PREMIUM_EMOJIS': {
+            'description': 'Включает замену обычных иконок на анимированные Premium-эмодзи.',
+            'format': 'Булево значение.',
+            'warning': 'Требуется наличие Telegram Premium у аккаунта-владельца бота.',
+        },
+        'REFERRAL_CONTESTS_ENABLED': {
+            'description': (
+                'Включает систему соревнований между вашими партнерами. '
+                'После включения в админке появится раздел для создания конкурсов с призами за регистрации или покупки подписок их рефералами.'
+            ),
+            'format': 'Булево значение.',
+            'example': 'Включите, чтобы запустить стимулирующую акцию для рефереров.',
+            'warning': 'После включения необходимо зайти в меню «Конкурсы» и создать активный конкурс, иначе система будет простаивать.',
+        },
+        'CONTESTS_ENABLED': {
+            'description': 'Общий переключатель для всех видов соревнований в боте.',
+            'format': 'Булево значение.',
+        },
         'BASE_PROMO_GROUP_PERIOD_DISCOUNTS': {
             'description': ('Список скидок для групп: каждая пара задаёт дни периода и процент скидки.'),
             'format': 'Через запятую пары вида &lt;дней&gt;:&lt;скидка&gt;.',
             'example': '30:10,60:20,90:30,180:50,360:65',
             'warning': 'Некорректные записи будут проигнорированы. Процент ограничен 0-100.',
-        },
-        'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': {
-            'description': (
-                'При достаточном балансе автоматически оформляет сохранённую подписку сразу после пополнения.'
-            ),
-            'format': 'Булево значение.',
-            'example': 'true',
-            'warning': ('Используйте с осторожностью: средства будут списаны мгновенно, если корзина найдена.'),
         },
         'SUPPORT_TICKET_SLA_MINUTES': {
             'description': 'Лимит времени для ответа модераторов на тикет в минутах.',

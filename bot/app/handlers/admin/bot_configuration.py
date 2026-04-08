@@ -1420,7 +1420,7 @@ def _build_setting_keyboard(
     rows.append(
         [
             types.InlineKeyboardButton(
-                text='⬅️ Назад',
+                text='⬅️ Вернуться назад',
                 callback_data=(f'botcfg_cat:{group_key}:{definition.category_key}:{category_page}:{settings_page}'),
             )
         ]
@@ -1445,9 +1445,9 @@ def _render_setting_text(key: str) -> str:
     lines = [
         f'🧩 <b>{summary["name"]}</b>',
         f'🔑 Ключ: <code>{summary["key"]}</code>',
-        f'📁 Категория: {summary["category_label"]}',
-        f'📝 Тип: {type_label}',
-        f'📌 Текущее: {summary["current"]}',
+        f'📁 Раздел: <b>{summary["category_label"]}</b>',
+        f'📋 Тип: <i>{type_label}</i>',
+        f'📊 Текущее значение: <b>{summary["current"]}</b>',
     ]
 
     original_value = summary.get('original')
@@ -1461,15 +1461,15 @@ def _render_setting_text(key: str) -> str:
 
     lines.append('')
     if description:
-        lines.append(f'📘 Описание: {description}')
+        lines.append(f'📘 <b>Описание:</b> {description}')
     if format_hint:
-        lines.append(f'📐 Формат: {format_hint}')
+        lines.append(f'📐 <b>Формат:</b> {format_hint}')
     if example:
-        lines.append(f'💡 Пример: {example}')
+        lines.append(f'💡 <b>Пример:</b> <code>{example}</code>')
     if warning:
-        lines.append(f'⚠️ Важно: {warning}')
+        lines.append(f'\n⚠️ <b>Важно:</b> <i>{warning}</i>')
     if dependencies:
-        lines.append(f'🔗 Связанные: {dependencies}')
+        lines.append(f'🔗 <b>Связанные:</b> {dependencies}')
 
     choices = bot_configuration_service.get_choice_options(key)
     if choices:
@@ -2424,18 +2424,18 @@ async def start_edit_setting(
     texts = get_texts(db_user.language)
 
     instructions = [
-        '✏️ <b>Редактирование настройки</b>',
-        f'Название: {summary["name"]}',
-        f'Ключ: <code>{summary["key"]}</code>',
-        f'Тип: {summary["type"]}',
-        f'Текущее значение: {summary["current"]}',
-        '\nОтправьте новое значение сообщением.',
+        '⚙️ <b>Редактирование настройки</b>',
+        f'👤 Название: <b>{summary["name"]}</b>',
+        f'🔑 Ключ: <code>{summary["key"]}</code>',
+        f'📋 Тип: <i>{summary["type"]}</i>',
+        f'📊 Текущее значение: <code>{summary["current"]}</code>',
+        '\n📝 <b>Введите новое значение сообщением ниже.</b>',
     ]
 
     if definition.is_optional:
-        instructions.append("Отправьте 'none' или оставьте пустым для сброса на значение по умолчанию.")
+        instructions.append("\n💡 <i>Отправьте 'none' или оставьте пустым для сброса на значение по умолчанию.</i>")
 
-    instructions.append("Для отмены отправьте 'cancel'.")
+    instructions.append("❌ <b>Для отмены отправьте 'cancel'.</b>")
 
     await callback.message.edit_text(
         '\n'.join(instructions),
@@ -2511,7 +2511,7 @@ async def handle_edit_setting(
 
     text = _render_setting_text(key)
     keyboard = _build_setting_keyboard(key, group_key, category_page, settings_page)
-    await message.answer('✅ Настройка обновлена')
+    await message.answer('✅ Настройка успешно обновлена')
     await message.answer(text, reply_markup=keyboard)
     await state.clear()
     await _store_setting_context(
@@ -2571,7 +2571,7 @@ async def handle_direct_setting_input(
 
     text = _render_setting_text(key)
     keyboard = _build_setting_keyboard(key, group_key, category_page, settings_page)
-    await message.answer('✅ Настройка обновлена')
+    await message.answer('✅ Настройка успешно обновлена')
     await message.answer(text, reply_markup=keyboard)
 
     await state.clear()
@@ -2628,7 +2628,7 @@ async def reset_setting(
         category_page=category_page,
         settings_page=settings_page,
     )
-    await callback.answer('Сброшено к значению по умолчанию')
+    await callback.answer('🔄 Значение сброшено к стандартному')
 
 
 @admin_required
@@ -2677,7 +2677,7 @@ async def toggle_setting(
         category_page=category_page,
         settings_page=settings_page,
     )
-    await callback.answer('Обновлено')
+    await callback.answer('✅ Переключено')
 
 
 @admin_required
@@ -2941,7 +2941,7 @@ async def _render_premium_emojis_grid(db_user: User, page: int) -> tuple[str, ty
     if nav_row:
         rows.append(nav_row)
         
-    rows.append([types.InlineKeyboardButton(text="⬅️ К категориям", callback_data="botcfg_group:interface:1")])
+    rows.append([types.InlineKeyboardButton(text="📂 К списку разделов", callback_data="botcfg_group:interface:1")])
     
     text = "🎨 <b>Настройка Premium эмодзи</b>\n\n"
     if active_bindings_text:
