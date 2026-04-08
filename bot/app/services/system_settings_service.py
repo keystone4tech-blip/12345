@@ -175,6 +175,10 @@ class BotConfigurationService:
         'REFERRAL_WITHDRAWAL_SUSPICIOUS_MIN_DEPOSIT_KOPEKS': 'Анти-фрод: Мин. пополнение для вывода',
         'REFERRAL_WITHDRAWAL_SUSPICIOUS_MAX_DEPOSITS_PER_MONTH': 'Анти-фрод: Макс. депозитов в месяц',
         'REFERRAL_WITHDRAWAL_SUSPICIOUS_NO_PURCHASES_RATIO': 'Анти-фрод: Коэфф. подозрительных трат',
+        'REFERRAL_WITHDRAWAL_ONLY_REFERRAL_BALANCE': 'Вывод только партнерского баланса',
+        'REFERRAL_WITHDRAWAL_REQUISITES_TEXT': 'Инструкция по реквизитам',
+        'REFERRAL_WITHDRAWAL_NOTIFICATIONS_TOPIC_ID': 'Топик заявок на вывод',
+        'REFERRAL_WITHDRAWAL_TEST_MODE': 'Тестовый режим вывода',
 
         # GIFTS
         'GIFTS_ENABLED': 'Включить систему подарков',
@@ -204,6 +208,10 @@ class BotConfigurationService:
         'HAPP_DOWNLOAD_LINK_IOS': 'Happ: Ссылка iOS',
         'HAPP_DOWNLOAD_LINK_ANDROID': 'Happ: Ссылка Android',
         'HAPP_DOWNLOAD_LINK_WINDOWS': 'Happ: Ссылка Windows',
+        'HAPP_DOWNLOAD_LINK_MACOS': 'Happ: Ссылка macOS',
+        'HAPP_DOWNLOAD_LINK_PC': 'Happ: Ссылка PC (общая)',
+        'MINIAPP_SUPPORT_TYPE': 'Тип поддержки (Tickets/Profile/URL)',
+        'MINIAPP_SUPPORT_URL': 'Кастомная ссылка поддержки',
 
         # TRIAL
         'TRIAL_DURATION_DAYS': 'Длительность триала (дней)',
@@ -229,6 +237,19 @@ class BotConfigurationService:
         'PRICE_ROUNDING_ENABLED': '🔢 Округление цен',
         'APP_CONFIG_CACHE_TTL': '🧠 TTL кэша конфига приложений',
 
+        # BACKUPS
+        'BACKUP_AUTO_ENABLED': 'Включить авто-бэкапы',
+        'BACKUP_TIME': 'Время создания бэкапа',
+        'BACKUP_INTERVAL_HOURS': 'Интервал бэкапов (часов)',
+        'BACKUP_MAX_KEEP': 'Хранить бэкапов (шт)',
+        'BACKUP_COMPRESSION': 'Сжимать бэкапы',
+        'BACKUP_LOCATION': 'Путь хранения бэкапов',
+        'BACKUP_SEND_ENABLED': 'Отправлять бэкапы в Telegram',
+        'BACKUP_SEND_CHAT_ID': 'ID чата для бэкапов',
+        'BACKUP_SEND_TOPIC_ID': 'ID топика для бэкапов',
+        'BACKUP_INCLUDE_LOGS': 'Включать логи в бэкап',
+        'BACKUP_ARCHIVE_PASSWORD': 'Пароль архива бэкапа',
+
         # NOTIFICATIONS & TOPICS
         'ADMIN_NOTIFICATIONS_ENABLED': 'Включить уведомления админа',
         'ADMIN_NOTIFICATIONS_CHAT_ID': 'ID чата уведомлений',
@@ -238,6 +259,43 @@ class BotConfigurationService:
         'ADMIN_REPORTS_CHAT_ID': 'ID чата отчетов',
         'ADMIN_REPORTS_TOPIC_ID': 'Топик отчетов',
         'ADMIN_REPORTS_SEND_TIME': 'Время отправки отчета',
+
+        # WEB API & CABINET
+        'WEB_API_ENABLED': 'Включить Web API',
+        'WEB_API_HOST': 'Хост Web API',
+        'WEB_API_PORT': 'Порт Web API',
+        'WEB_API_ALLOWED_ORIGINS': 'Разрешенные домены (CORS)',
+        'WEB_API_DOCS_ENABLED': 'Включить Swagger-документацию',
+        'CABINET_ENABLED': 'Включить Личный Кабинет',
+        'CABINET_URL': 'URL Личного Кабинета',
+        'CABINET_ALLOWED_ORIGINS': 'Разрешенные домены Кабинета',
+        'CABINET_EMAIL_VERIFICATION_ENABLED': 'Подтверждение почты',
+        'CABINET_ACCESS_TOKEN_EXPIRE_MINUTES': 'Время жизни JWT (мин)',
+
+        # SMTP & EMAILS
+        'SMTP_HOST': 'SMTP: Хост',
+        'SMTP_PORT': 'SMTP: Порт',
+        'SMTP_USER': 'SMTP: Пользователь',
+        'SMTP_PASSWORD': 'SMTP: Пароль',
+        'SMTP_FROM_EMAIL': 'SMTP: Email отправителя',
+        'SMTP_FROM_NAME': 'SMTP: Имя отправителя',
+        'SMTP_USE_TLS': 'SMTP: Использовать TLS',
+
+        # OAUTH
+        'OAUTH_GOOGLE_ENABLED': 'Авторизация Google',
+        'OAUTH_YANDEX_ENABLED': 'Авторизация Yandex',
+        'OAUTH_DISCORD_ENABLED': 'Авторизация Discord',
+        'OAUTH_VK_ENABLED': 'Авторизация VK',
+
+        # UPDATES & SECURITY
+        'VERSION_CHECK_ENABLED': 'Проверка обновлений бота',
+        'VERSION_CHECK_REPO': 'Репозиторий для обновлений',
+        'VERSION_CHECK_INTERVAL_HOURS': 'Интервал проверки (часов)',
+        'SERVER_PUBLIC_IP': 'Публичный IP сервера',
+        'BAN_SYSTEM_ENABLED': 'Интеграция с бан-системой',
+        'BAN_SYSTEM_API_URL': 'URL бан-системы',
+        'BAN_SYSTEM_API_TOKEN': 'Токен бан-системы',
+        'DISPOSABLE_EMAIL_CHECK_ENABLED': 'Блокировка временных почт',
 
         # LOGS & ROTATION
         'LOG_ROTATION_ENABLED': 'Включить ротацию логов',
@@ -271,6 +329,21 @@ class BotConfigurationService:
         'TELEGRAM_STARS_RATE_RUB': 'Курс Stars (в рублях)',
         'PRICE_ROUNDING_ENABLED': 'Округление цен',
         'PAYMENT_VERIFICATION_AUTO_CHECK_ENABLED': 'Автопроверка платежей',
+
+        # TRAFFIC - ADVANCED
+        'TRAFFIC_SELECTION_MODE': 'Режим выбора трафика',
+        'FIXED_TRAFFIC_LIMIT_GB': 'Фиксированный лимит (ГБ)',
+        'BUY_TRAFFIC_BUTTON_VISIBLE': 'Кнопка докупки трафика',
+        'TRAFFIC_FAST_CHECK_INTERVAL_MINUTES': 'Интервал быстрой проверки (мин)',
+        'TRAFFIC_FAST_CHECK_THRESHOLD_GB': 'Порог быстрой проверки (ГБ)',
+        'TRAFFIC_DAILY_CHECK_ENABLED': 'Включить суточную проверку',
+        'TRAFFIC_DAILY_CHECK_TIME': 'Время суточной проверки',
+        'TRAFFIC_DAILY_THRESHOLD_GB': 'Порог суточного трафика (ГБ)',
+        'TRAFFIC_MONITORED_NODES': 'Список наблюдаемых нод',
+        'TRAFFIC_IGNORED_NODES': 'Список игнорируемых нод',
+        'DEFAULT_TRAFFIC_RESET_STRATEGY': 'Стратегия сброса трафика',
+        'RESET_TRAFFIC_ON_PAYMENT': 'Сброс трафика при оплате',
+        'RESET_TRAFFIC_ON_TARIFF_SWITCH': 'Сброс при смене тарифа',
 
         # PAYMENT TEMPLATES
         'PAYMENT_SERVICE_NAME': 'Название услуги в чеке',
@@ -726,6 +799,19 @@ class BotConfigurationService:
             'format': 'Сумма в копейках (напр. 50000 = 500 руб).',
             'example': '50000',
         },
+        'REFERRAL_WITHDRAWAL_ONLY_REFERRAL_BALANCE': {
+            'description': 'Если включено, пользователь может вывести только те средства, которые он заработал на рефералах. Если выключено — весь доступный баланс.',
+            'format': 'Булево значение.',
+        },
+        'REFERRAL_WITHDRAWAL_REQUISITES_TEXT': {
+            'description': 'Текст инструкции, который увидит партнер при подаче заявки на вывод (например, формат номера карты).',
+            'format': 'Строка (поддерживает HTML).',
+            'example': 'Введите номер карты РФ или номер телефона для СБП.',
+        },
+        'REFERRAL_WITHDRAWAL_NOTIFICATIONS_TOPIC_ID': {
+            'description': 'ID топика в группе администраторов для уведомлений о новых заявках на вывод партнерских средств.',
+            'format': 'Числовой ID топика.',
+        },
         'SIMPLE_SUBSCRIPTION_PERIOD_DAYS': {
             'description': 'Период подписки, который предлагается при быстрой покупке.',
             'format': 'Выберите один из доступных периодов.',
@@ -966,6 +1052,26 @@ class BotConfigurationService:
             'format': 'Булево значение.',
             'dependencies': 'BACKUP_INTERVAL_HOURS, BACKUP_TIME',
         },
+        'BACKUP_TIME': {
+            'description': 'Точное время суток для запуска процесса резервного копирования.',
+            'format': 'Время в формате HH:MM.',
+            'example': '03:00',
+        },
+        'BACKUP_LOCATION': {
+            'description': 'Путь к папке внутри сервера, где будут храниться файлы бэкапов.',
+            'format': 'Абсолютный или относительный путь.',
+            'example': '/app/data/backups',
+        },
+        'BACKUP_SEND_ENABLED': {
+            'description': 'Автоматическая отправка созданного файла бэкапа в Telegram чат или канал.',
+            'format': 'Булево значение.',
+            'warning': 'Файлы базы данных могут содержать чувствительную информацию. Убедитесь в безопасности чата.',
+        },
+        'BACKUP_ARCHIVE_PASSWORD': {
+            'description': 'Пароль для шифрования архива с резервной копией (для 7zip/zip).',
+            'format': 'Строка.',
+            'warning': 'Обязательно сохраните этот пароль, иначе восстановить данные будет невозможно.',
+        },
         'LOG_ROTATION_ENABLED': {
             'description': 'Включает новую систему автоматической очистки и архивации старых журналов (логов).',
             'format': 'Булево значение.',
@@ -1012,6 +1118,49 @@ class BotConfigurationService:
             'format': 'Время в формате HH:MM.',
             'example': '09:00',
         },
+        'WEB_API_ENABLED': {
+            'description': 'Включение HTTP API для интеграции с внешними сервисами.',
+            'format': 'Булево значение.',
+            'warning': 'Если вы не используете внешние панели, лучше оставить выключенным для безопасности.',
+        },
+        'CABINET_ENABLED': {
+            'description': 'Включение Личного Кабинета (Web Dashboard) для пользователей.',
+            'format': 'Булево значение.',
+            'dependencies': 'CABINET_URL, CABINET_ACCESS_TOKEN_EXPIRE_MINUTES',
+        },
+        'CABINET_EMAIL_VERIFICATION_ENABLED': {
+            'description': 'Требовать от пользователей подтверждения электронной почты при регистрации в кабинете.',
+            'format': 'Булево значение.',
+            'dependencies': 'SMTP_HOST',
+        },
+        'SMTP_HOST': {
+            'description': 'Адрес почтового сервера для отправки системных писем (регистрация, чеки).',
+            'format': 'Хост (напр. smtp.yandex.ru).',
+            'example': 'smtp.gmail.com',
+        },
+        'OAUTH_GOOGLE_ENABLED': {
+            'description': 'Позволяет пользователям входить в Личный Кабинет через Google аккаунт.',
+            'format': 'Булево значение.',
+            'dependencies': 'OAUTH_GOOGLE_CLIENT_ID, OAUTH_GOOGLE_CLIENT_SECRET',
+        },
+        'VERSION_CHECK_ENABLED': {
+            'description': 'Бот будет автоматически проверять наличие новых версий в официальном репозитории GitHub.',
+            'format': 'Булево значение.',
+        },
+        'SERVER_PUBLIC_IP': {
+            'description': 'Публичный IP-адрес вашего сервера. Требуется для некоторых платежных шлюзов (Freekassa/KassaAI).',
+            'format': 'IPv4 адрес.',
+            'example': '123.45.67.89',
+        },
+        'BAN_SYSTEM_ENABLED': {
+            'description': 'Интеграция с внешней системой мониторинга BedolagaBan для автоматических блокировок.',
+            'format': 'Булево значение.',
+        },
+        'REFERRAL_WITHDRAWAL_TEST_MODE': {
+            'description': 'Позволяет администраторам вручную начислять средства и имитировать выплаты (для отладки).',
+            'format': 'Булево значение.',
+            'warning': 'Включайте только для проверки работоспособности системы.',
+        },
 
         # MINIAPP & BRANDING
         'MINIAPP_SERVICE_NAME_RU': {
@@ -1053,6 +1202,40 @@ class BotConfigurationService:
         },
         'TRAFFIC_FAST_CHECK_ENABLED': {
             'description': 'Включает быструю фоновую проверку трафика (каждые 10 минут) для обнаружения аномалий.',
+            'format': 'Булево значение.',
+        },
+        'TRAFFIC_DAILY_CHECK_ENABLED': {
+            'description': 'Ежедневная полная проверка объема трафика всех пользователей за последние 24 часа.',
+            'format': 'Булево значение.',
+            'dependencies': 'TRAFFIC_DAILY_CHECK_TIME, TRAFFIC_DAILY_THRESHOLD_GB',
+        },
+        'TRAFFIC_DAILY_CHECK_TIME': {
+            'description': 'Точное время суток для запуска глубокой суточной проверки трафика.',
+            'format': 'Время в формате HH:MM.',
+            'example': '00:00',
+        },
+        'TRAFFIC_MONITORED_NODES': {
+            'description': 'Список UUID нод RemnaWave, за которыми нужно следить. Если пусто — проверяются все ноды.',
+            'format': 'UUID через запятую.',
+        },
+        'TRAFFIC_IGNORED_NODES': {
+            'description': 'Список UUID нод, которые будут полностью игнорироваться при любой проверке трафика.',
+            'format': 'UUID через запятую.',
+        },
+        'TRAFFIC_SELECTION_MODE': {
+            'description': 'Как пользователь получает трафик: либо выбирает сам при покупке (selectable), либо получает фиксированный объем по тарифу (fixed).',
+            'format': 'selectable, fixed или fixed_with_topup.',
+        },
+        'DEFAULT_TRAFFIC_RESET_STRATEGY': {
+            'description': 'Периодичность автоматического обнуления счетчика трафика у пользователя.',
+            'format': 'MONTH (ежемесячно) или NEVER (только при оплате).',
+        },
+        'RESET_TRAFFIC_ON_PAYMENT': {
+            'description': 'Сбрасывать счетчик использованного трафика до нуля сразу после пополнения или продления.',
+            'format': 'Булево значение.',
+        },
+        'RESET_TRAFFIC_ON_TARIFF_SWITCH': {
+            'description': 'Автоматически обнулять счетчик трафика при ручном переключении пользователю другого тарифа.',
             'format': 'Булево значение.',
         },
         'MAINTENANCE_MONITORING_ENABLED': {
