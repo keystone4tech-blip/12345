@@ -12,20 +12,6 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-"""add_buttons_to_broadcast_history
-
-Revision ID: 423cac72a422
-Revises: 0016
-Create Date: 2026-04-08 17:27:16.657349
-
-"""
-from typing import Sequence, Union
-
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
-# revision identifiers, used by Alembic.
 revision: str = '423cac72a422'
 down_revision: Union[str, None] = '0016'
 branch_labels: Union[str, Sequence[str], None] = None
