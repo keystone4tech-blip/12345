@@ -9,6 +9,7 @@
   - `bot/app/handlers/admin/promo_offers.py`: Внедрена поддержка `html_text`, валидация HTML и очистка кнопок (`strip_html`).
   - `bot/app/handlers/admin/polls.py`: Поддержка `html_text` для всех полей, полная валидация HTML-тегов, удаление избыточного экранирования в превью.
   - `bot/app/handlers/admin/faq.py`, `welcome_text.py`, `rules.py`, `privacy_policy.py`, `public_offer.py`, `user_messages.py`: Проверена и подтверждена работа валидации HTML и поддержки Rich Text.
+  - **Premium Emojis Update**: Расширен список `BASE_EMOJIS` в `bot/app/utils/premium_emojis.py`. Добавлен эмодзи «🎫» (Промокод) и другие недостающие иконки из локализации, что позволяет настраивать их Premium-версии в админ-панели.
   - **CI/CD Update**: Автоматический деплой временно отключен (триггер `push` заменен на `workflow_dispatch`), чтобы избежать ошибок сборки, пока бот не развернут на сервере.
 
 ### Актуальная структура проекта:
