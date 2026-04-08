@@ -321,7 +321,7 @@ async def process_privacy_policy_edit(
     db: AsyncSession,
 ):
     texts = get_texts(db_user.language)
-    new_text = message.text or ''
+    new_text = message.html_text or ''
 
     if len(new_text) > 4000:
         await message.answer(

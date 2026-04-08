@@ -348,7 +348,7 @@ async def process_new_faq_content(
     db: AsyncSession,
 ):
     texts = get_texts(db_user.language)
-    content = message.text or ''
+    content = message.html_text or ''
 
     if len(content) > 6000:
         await message.answer(
@@ -767,7 +767,7 @@ async def process_edit_faq_content(
     db: AsyncSession,
 ):
     texts = get_texts(db_user.language)
-    content = message.text or ''
+    content = message.html_text or ''
 
     if len(content) > 6000:
         await message.answer(

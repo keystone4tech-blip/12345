@@ -1108,7 +1108,11 @@ async def _handle_edit_field(
         await state.clear()
         return
 
-    value = message.text.strip()
+    # Для текста сообщения используем HTML-разметку, для остальных полей - обычный текст
+    if field == 'message_text':
+        value = (message.html_text or "").strip()
+    else:
+        value = (message.text or "").strip()
     try:
         if field == 'message_text':
             await update_promo_offer_template(db, template, message_text=value)

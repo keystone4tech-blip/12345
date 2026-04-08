@@ -763,7 +763,7 @@ async def select_broadcast_target(callback: types.CallbackQuery, db_user: User, 
 @admin_required
 @error_handler
 async def process_broadcast_message(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
-    broadcast_text = message.text
+    broadcast_text = message.html_text or ""
 
     if len(broadcast_text) > 4000:
         await message.answer('❌ Сообщение слишком длинное (максимум 4000 символов)')

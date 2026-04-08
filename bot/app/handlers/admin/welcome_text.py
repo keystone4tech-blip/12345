@@ -268,7 +268,7 @@ async def start_edit_welcome_text(callback: types.CallbackQuery, state: FSMConte
 @admin_required
 @error_handler
 async def process_welcome_text_edit(message: types.Message, state: FSMContext, db_user: User, db: AsyncSession):
-    new_text = message.text.strip()
+    new_text = (message.html_text or "").strip()
 
     if len(new_text) < 10:
         await message.answer('❌ Текст слишком короткий! Минимум 10 символов.')

@@ -119,7 +119,7 @@ async def start_edit_rules(callback: types.CallbackQuery, db_user: User, state: 
 @admin_required
 @error_handler
 async def process_rules_edit(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
-    new_rules = message.text
+    new_rules = message.html_text
 
     if len(new_rules) > 4000:
         await message.answer('❌ Текст правил слишком длинный (максимум 4000 символов)')
