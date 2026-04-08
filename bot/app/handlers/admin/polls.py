@@ -152,7 +152,7 @@ def _render_creation_progress(
 
     title = data.get('title')
     if title:
-        lines.append(f'• {html.escape(title)}')
+        lines.append(f'• {title}')
 
     if next_step == 'title':
         if error_message:
@@ -228,9 +228,9 @@ def _render_creation_progress(
     if questions:
         lines.append('')
         for idx, question in enumerate(questions, start=1):
-            lines.append(f'{idx}. {html.escape(question["text"])}')
+            lines.append(f'{idx}. {question["text"]}')
             for option in question['options']:
-                lines.append(f'   • {html.escape(option)}')
+                lines.append(f'   • {option}')
 
     if status_message:
         lines.append('')
@@ -463,7 +463,7 @@ async def show_polls_panel(callback: types.CallbackQuery, db_user: User, db: Asy
         for poll in polls[:10]:
             reward = _format_reward_text(poll, db_user.language)
             lines.append(
-                f'• <b>{html.escape(poll.title)}</b> — '
+                f'• <b>{strip_html(poll.title)}</b> — '
                 f'{texts.t("ADMIN_POLLS_QUESTIONS_COUNT", "Вопросов: {count}").format(count=len(poll.questions))}\n'
                 f'  {reward}'
             )
@@ -536,7 +536,7 @@ async def process_poll_title(
         await state.clear()
         return
 
-    title = (message.text or '').strip()
+    title = (message.html_text or '').strip()
     await _safe_delete_message(message)
 
     if not title:
@@ -544,6 +544,23 @@ async def process_poll_title(
             'ADMIN_POLLS_CREATION_TITLE_EMPTY',
             '❌ Заголовок не может быть пустым. Попробуйте снова.',
         )
+        form_text = _render_creation_progress(texts, state_data, 'title', error_message=error_text)
+        updated = await _edit_creation_message(message.bot, state_data, form_text)
+        if not updated:
+            await _send_creation_message(
+                message,
+                state,
+                form_text,
+                parse_mode='HTML',
+            )
+        return
+
+    is_valid, error_message = validate_html_tags(title)
+    if not is_valid:
+        error_text = texts.t(
+            'ADMIN_POLLS_CREATION_INVALID_HTML',
+            '❌ Ошибка в HTML: {error}',
+        ).format(error=error_message)
         form_text = _render_creation_progress(texts, state_data, 'title', error_message=error_text)
         updated = await _edit_creation_message(message.bot, state_data, form_text)
         if not updated:
@@ -613,7 +630,7 @@ async def process_poll_description(
     if message_text == '/skip':
         description = None
     else:
-        description = message_text.strip()
+        description = (message.html_text or '').strip()
         is_valid, error_message = validate_html_tags(description)
         if not is_valid:
             error_text = texts.t(
@@ -835,8 +852,22 @@ async def process_poll_question(
         await state.clear()
         return
 
-    lines = [line.strip() for line in (message.text or '').splitlines() if line.strip()]
+    # Используем html_text для поддержки форматирования в вопросах и ответах
+    lines = [line.strip() for line in (message.html_text or '').splitlines() if line.strip()]
     await _safe_delete_message(message)
+    
+    if len(lines) >= 1:
+        # Валидация HTML для каждой строки
+        for i, line in enumerate(lines):
+            is_valid, error_msg = validate_html_tags(line)
+            if not is_valid:
+                error_text = texts.t(
+                    'ADMIN_POLLS_CREATION_INVALID_HTML',
+                    '❌ Ошибка в HTML (строка {row}): {error}',
+                ).format(row=i+1, error=error_msg)
+                form_text = _render_creation_progress(texts, state_data, 'questions', error_message=error_text)
+                await _edit_creation_message(message.bot, state_data, form_text)
+                return
     if len(lines) < 3:
         error_text = texts.t(
             'ADMIN_POLLS_CREATION_MIN_OPTIONS',
@@ -864,7 +895,7 @@ async def process_poll_question(
     status_message = texts.t(
         'ADMIN_POLLS_CREATION_ADDED_QUESTION',
         'Вопрос добавлен: «{question}». Добавьте следующий вопрос или отправьте /done.',
-    ).format(question=html.escape(question_text))
+    ).format(question=question_text)
 
     form_text = _render_creation_progress(
         texts,
@@ -884,7 +915,7 @@ async def process_poll_question(
 
 async def _render_poll_details(poll: Poll, language: str) -> str:
     texts = get_texts(language)
-    lines = [f'🗳️ <b>{html.escape(poll.title)}</b>']
+    lines = [f'🗳️ <b>{poll.title}</b>']
     if poll.description:
         lines.append(poll.description)
 
@@ -895,10 +926,10 @@ async def _render_poll_details(poll: Poll, language: str) -> str:
         lines.append('')
         lines.append(texts.t('ADMIN_POLLS_QUESTION_LIST_HEADER', '<b>Вопросы:</b>'))
         for idx, question in enumerate(sorted(poll.questions, key=lambda q: q.order), start=1):
-            lines.append(f'{idx}. {html.escape(question.text)}')
+            lines.append(f'{idx}. {question.text}')
             for option in sorted(question.options, key=lambda o: o.order):
                 lines.append(
-                    texts.t('ADMIN_POLLS_OPTION_BULLET', '   • {option}').format(option=html.escape(option.text))
+                    texts.t('ADMIN_POLLS_OPTION_BULLET', '   • {option}').format(option=option.text)
                 )
 
     return '\n'.join(lines)
@@ -1100,13 +1131,13 @@ async def show_poll_stats(
 
     for question in stats['questions']:
         lines.append('')
-        lines.append(f'<b>{html.escape(question["text"])}</b>')
+        lines.append(f'<b>{question["text"]}</b>')
         for option in question['options']:
             lines.append(
                 texts.t(
                     'ADMIN_POLLS_STATS_OPTION_LINE',
                     '• {option}: {count}',
-                ).format(option=html.escape(option['text']), count=option['count'])
+                ).format(option=option['text'], count=option['count'])
             )
 
     await callback.message.edit_text(

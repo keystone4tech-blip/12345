@@ -19,6 +19,7 @@ from app.utils.subscription_utils import (
     get_display_subscription_link,
     get_happ_cryptolink_redirect_link,
 )
+from app.utils.validators import strip_html
 
 
 logger = structlog.get_logger(__name__)
@@ -1333,10 +1334,12 @@ def get_countries_keyboard(
         else:
             price_text = ' (Бесплатно)'
 
+        # Очищаем название сквада от HTML для отображения на кнопке
+        clean_name = strip_html(country["name"])
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=f'{emoji} {country["name"]}{price_text}', callback_data=f'country_{country["uuid"]}'
+                    text=f'{emoji} {clean_name}{price_text}', callback_data=f'country_{country["uuid"]}'
                 )
             ]
         )
@@ -2249,9 +2252,14 @@ def get_manage_countries_keyboard(
                 price_text = f' ({total_price // 100}₽)'
             if discount_percent > 0 and discount_per_month * months_multiplier > 0:
                 price_text += f' (скидка {discount_percent}%: -{(discount_per_month * months_multiplier) // 100}₽)'
-            display_name = f'{icon} {name}{price_text}'
+            
+            # Очищаем название от HTML
+            clean_name = strip_html(name)
+            display_name = f'{icon} {clean_name}{price_text}'
         else:
-            display_name = f'{icon} {name}'
+            # Очищаем название от HTML
+            clean_name = strip_html(name)
+            display_name = f'{icon} {clean_name}'
 
         buttons.append([InlineKeyboardButton(text=display_name, callback_data=f'country_manage_{uuid}')])
 

@@ -22,6 +22,7 @@ from app.services.remnawave_service import RemnaWaveService
 from app.states import AdminStates
 from app.utils.cache import cache
 from app.utils.decorators import admin_required, error_handler
+from app.utils.validators import strip_html, validate_html_tags
 
 
 logger = structlog.get_logger(__name__)
@@ -172,6 +173,7 @@ async def show_servers_list(callback: types.CallbackQuery, db_user: User, db: As
             status_emoji = '✅' if server.is_available else '❌'
             price_text = f'{int(server.price_rubles)} ₽' if server.price_kopeks > 0 else 'Бесплатно'
 
+            # Название может содержать HTML (Premium-эмодзи), поэтому выводим как есть
             text += f'{i}. {status_emoji} {server.display_name}\n'
             text += f'   💰 Цена: {price_text}'
 
@@ -188,9 +190,14 @@ async def show_servers_list(callback: types.CallbackQuery, db_user: User, db: As
             keyboard.append([])
 
         status_emoji = '✅' if server.is_available else '❌'
+        # Очищаем название для кнопки
+        clean_name = strip_html(server.display_name)
+        if len(clean_name) > 15:
+            clean_name = clean_name[:12] + '...'
+            
         keyboard[row_num].append(
             types.InlineKeyboardButton(
-                text=f'{status_emoji} {server.display_name[:15]}...', callback_data=f'admin_server_edit_{server.id}'
+                text=f'{status_emoji} {clean_name}', callback_data=f'admin_server_edit_{server.id}'
             )
         )
 
@@ -577,14 +584,21 @@ async def process_server_name_edit(message: types.Message, state: FSMContext, db
     data = await state.get_data()
     server_id = data.get('server_id')
 
-    new_name = message.text.strip()
-
-    if len(new_name) > 255:
-        await message.answer('❌ Название слишком длинное (максимум 255 символов)')
-        return
+    # Используем html_text для поддержки форматирования и Premium-эмодзи
+    new_name = (message.html_text or '').strip()
 
     if len(new_name) < 3:
         await message.answer('❌ Название слишком короткое (минимум 3 символа)')
+        return
+
+    if len(new_name) > 300:  # Увеличиваем лимит для учета HTML-тегов
+        await message.answer('❌ Название (с учетом HTML-разметки) слишком длинное (максимум 300 символов)')
+        return
+
+    # Валидация HTML-тегов
+    is_valid, error_msg = validate_html_tags(new_name)
+    if not is_valid:
+        await message.answer(f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\nПроверьте правильность тегов и попробуйте снова.', parse_mode="HTML")
         return
 
     server = await update_server_squad(db, server_id, display_name=new_name)
@@ -898,13 +912,20 @@ async def process_server_description_edit(message: types.Message, state: FSMCont
     data = await state.get_data()
     server_id = data.get('server_id')
 
-    new_description = message.text.strip()
+    # Используем html_text для поддержки форматирования и Premium-эмодзи
+    new_description = (message.html_text or '').strip()
 
     if new_description == '-':
         new_description = None
-    elif len(new_description) > 1000:
-        await message.answer('❌ Описание слишком длинное (максимум 1000 символов)')
+    elif len(new_description) > 4000:
+        await message.answer(f'❌ Описание слишком длинное ({len(new_description)} символов, максимум 4000)')
         return
+    else:
+        # Валидация HTML-тегов
+        is_valid, error_msg = validate_html_tags(new_description)
+        if not is_valid:
+            await message.answer(f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\nПроверьте правильность тегов и попробуйте снова.', parse_mode="HTML")
+            return
 
     server = await update_server_squad(db, server_id, description=new_description)
 

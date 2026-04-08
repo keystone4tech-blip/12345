@@ -45,6 +45,7 @@ from app.services.pinned_message_service import (
 )
 from app.states import AdminStates
 from app.utils.decorators import admin_required, error_handler
+from app.utils.validators import validate_html_tags
 from app.utils.miniapp_buttons import BUTTON_KEY_TO_CABINET_PATH, build_miniapp_or_callback_button
 
 
@@ -765,8 +766,14 @@ async def select_broadcast_target(callback: types.CallbackQuery, db_user: User, 
 async def process_broadcast_message(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
     broadcast_text = message.html_text or ""
 
-    if len(broadcast_text) > 4000:
-        await message.answer('❌ Сообщение слишком длинное (максимум 4000 символов)')
+    # Валидация HTML-тегов
+    is_valid, error_msg = validate_html_tags(broadcast_text)
+    if not is_valid:
+        await message.answer(
+            f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\n'
+            f'Проверьте правильность тегов и попробуйте снова.',
+            parse_mode="HTML"
+        )
         return
 
     await state.update_data(broadcast_message=broadcast_text)
@@ -853,7 +860,7 @@ async def process_broadcast_media(message: types.Message, db_user: User, state: 
         return
 
     await state.update_data(
-        has_media=True, media_file_id=media_file_id, media_type=media_type, media_caption=message.caption
+        has_media=True, media_file_id=media_file_id, media_type=media_type, media_caption=message.html_text
     )
 
     await show_media_preview(message, db_user, state)

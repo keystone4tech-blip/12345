@@ -20,6 +20,7 @@ from app.services.subscription_service import SubscriptionService
 from app.services.user_cart_service import user_cart_service
 from app.utils.decorators import error_handler
 from app.utils.promo_offer import get_user_active_promo_discount_percent
+from app.utils.validators import strip_html
 
 
 logger = structlog.get_logger(__name__)
@@ -148,7 +149,9 @@ def get_tariffs_keyboard(
     buttons = []
 
     for tariff in tariffs:
-        buttons.append([InlineKeyboardButton(text=tariff.name, callback_data=f'tariff_select:{tariff.id}')])
+        # Очищаем название от HTML для отображения на кнопке
+        clean_name = strip_html(tariff.name)
+        buttons.append([InlineKeyboardButton(text=clean_name, callback_data=f'tariff_select:{tariff.id}')])
 
     buttons.append([InlineKeyboardButton(text=texts.BACK, callback_data='back_to_menu')])
 

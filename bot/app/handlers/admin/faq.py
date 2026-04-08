@@ -11,7 +11,7 @@ from app.localization.texts import get_texts
 from app.services.faq_service import FaqService
 from app.states import AdminStates
 from app.utils.decorators import admin_required, error_handler
-from app.utils.validators import get_html_help_text, validate_html_tags
+from app.utils.validators import get_html_help_text, validate_html_tags, strip_html
 
 
 logger = structlog.get_logger(__name__)
@@ -101,7 +101,7 @@ async def _build_overview(
 
             updated = _format_timestamp(getattr(page, 'updated_at', None))
             updated_block = f' ({updated})' if updated else ''
-            rows.append(f'{index}. {html.escape(title)} — {status_label}{updated_block}')
+            rows.append(f'{index}. {strip_html(title)} — {status_label}{updated_block}')
 
         pages_list_header = texts.t(
             'ADMIN_FAQ_PAGES_OVERVIEW',
@@ -160,7 +160,7 @@ async def _build_overview(
         buttons.append(
             [
                 types.InlineKeyboardButton(
-                    text=f'{page.display_order}. {title}',
+                    text=f'{page.display_order}. {strip_html(title)}',
                     callback_data=f'admin_faq_page:{page.id}',
                 )
             ]
@@ -308,7 +308,7 @@ async def process_new_faq_title(
     db: AsyncSession,
 ):
     texts = get_texts(db_user.language)
-    title = (message.text or '').strip()
+    title = (message.html_text or '').strip()
 
     if not title:
         await message.answer(
@@ -325,6 +325,16 @@ async def process_new_faq_title(
                 'ADMIN_FAQ_TITLE_TOO_LONG',
                 '❌ Заголовок слишком длинный. Максимум 255 символов.',
             )
+        )
+        return
+
+    is_valid, error_message = validate_html_tags(title)
+    if not is_valid:
+        await message.answer(
+            texts.t(
+                'ADMIN_FAQ_HTML_ERROR',
+                '❌ Ошибка в HTML: {error}',
+            ).format(error=error_message)
         )
         return
 
@@ -479,7 +489,7 @@ async def show_faq_page_details(
         if len(preview) > 400:
             preview_trimmed += '...'
         preview_text = texts.t('ADMIN_FAQ_PAGE_PREVIEW', '<b>Превью:</b>\n{content}').format(
-            content=html.escape(preview_trimmed)
+            content=preview_trimmed
         )
 
     message_parts = [
@@ -487,7 +497,7 @@ async def show_faq_page_details(
         texts.t(
             'ADMIN_FAQ_PAGE_TITLE',
             '<b>Заголовок:</b> {title}',
-        ).format(title=html.escape(title)),
+        ).format(title=title),
         texts.t(
             'ADMIN_FAQ_PAGE_STATUS',
             'Статус: {status}',
@@ -640,7 +650,7 @@ async def process_edit_faq_title(
     db: AsyncSession,
 ):
     texts = get_texts(db_user.language)
-    title = (message.text or '').strip()
+    title = (message.html_text or '').strip()
 
     if not title:
         await message.answer(
@@ -657,6 +667,16 @@ async def process_edit_faq_title(
                 'ADMIN_FAQ_TITLE_TOO_LONG',
                 '❌ Заголовок слишком длинный. Максимум 255 символов.',
             )
+        )
+        return
+
+    is_valid, error_message = validate_html_tags(title)
+    if not is_valid:
+        await message.answer(
+            texts.t(
+                'ADMIN_FAQ_HTML_ERROR',
+                '❌ Ошибка в HTML: {error}',
+            ).format(error=error_message)
         )
         return
 

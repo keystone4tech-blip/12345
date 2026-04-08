@@ -42,10 +42,8 @@ from app.keyboards.inline import get_happ_download_button_row
 from app.localization.texts import get_texts
 from app.services.user_service import UserService
 from app.states import AdminStates
-from app.utils.decorators import admin_required, error_handler
-from app.utils.formatters import format_datetime, format_duration
-from app.utils.miniapp_buttons import build_miniapp_or_callback_button
 from app.utils.subscription_utils import get_display_subscription_link
+from app.utils.validators import strip_html, validate_html_tags
 
 
 logger = structlog.get_logger(__name__)
@@ -1108,9 +1106,18 @@ async def _handle_edit_field(
         await state.clear()
         return
 
-    # Для текста сообщения используем HTML-разметку, для остальных полей - обычный текст
+    # Для текста сообщения используем HTML-разметку
     if field == 'message_text':
         value = (message.html_text or "").strip()
+        # Валидация HTML-тегов
+        is_valid, error_msg = validate_html_tags(value)
+        if not is_valid:
+            await _safe_delete_message(message)
+            await message.answer(f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\nПроверьте правильность тегов и попробуйте снова.', parse_mode="HTML")
+            return
+    elif field == 'button_text':
+        # Для текста кнопки всегда очищаем от HTML
+        value = strip_html((message.text or "").strip())
     else:
         value = (message.text or "").strip()
     try:

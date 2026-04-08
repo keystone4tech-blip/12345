@@ -1,8 +1,8 @@
 from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
 from app.localization.texts import get_texts
+from app.utils.validators import strip_html
 
 
 def _t(texts, key: str, default: str) -> str:
@@ -2342,14 +2342,16 @@ def get_updated_message_buttons_selector_keyboard_with_media(
         row_buttons: list[InlineKeyboardButton] = []
         for button_key in row:
             button_config = button_config_map[button_key]
-            base_text = button_config['text']
+            # Очищаем базовый текст от HTML перед манипуляциями
+            clean_base_text = strip_html(button_config['text'])
+            
             if button_key in selected_buttons:
-                if ' ' in base_text:
-                    toggle_text = f'✅ {base_text.split(" ", 1)[1]}'
+                if ' ' in clean_base_text:
+                    toggle_text = f'✅ {clean_base_text.split(" ", 1)[1]}'
                 else:
-                    toggle_text = f'✅ {base_text}'
+                    toggle_text = f'✅ {clean_base_text}'
             else:
-                toggle_text = base_text
+                toggle_text = clean_base_text
             row_buttons.append(InlineKeyboardButton(text=toggle_text, callback_data=f'btn_{button_key}'))
         if row_buttons:
             keyboard.append(row_buttons)

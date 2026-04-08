@@ -336,3 +336,11 @@ def validate_rules_content(text: str) -> tuple[bool, str, str | None]:
         return False, html_error, None
 
     return True, '', None
+
+
+def strip_html(text: str | None) -> str:
+    """Удаляет все HTML-теги из текста, оставляя только содержимое."""
+    if not text:
+        return ""
+    # Удаляем все, что находится внутри < >
+    return re.sub(r'<[^>]+>', '', text).strip()

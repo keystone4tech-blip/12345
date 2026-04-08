@@ -22,6 +22,7 @@ from app.database.models import Tariff, User
 from app.localization.texts import get_texts
 from app.states import AdminStates
 from app.utils.decorators import admin_required, error_handler
+from app.utils.validators import strip_html, validate_html_tags
 
 
 logger = structlog.get_logger(__name__)
@@ -123,7 +124,9 @@ def get_tariffs_list_keyboard(
 
     for tariff, subs_count in tariffs:
         status = '✅' if tariff.is_active else '❌'
-        button_text = f'{status} {tariff.name} ({subs_count})'
+        # Очищаем название от HTML для кнопки
+        clean_name = strip_html(tariff.name)
+        button_text = f'{status} {clean_name} ({subs_count})'
         buttons.append([InlineKeyboardButton(text=button_text, callback_data=f'admin_tariff_view:{tariff.id}')])
 
     # Пагинация
@@ -744,14 +747,21 @@ async def process_tariff_name(
 ):
     """Обрабатывает название тарифа."""
     texts = get_texts(db_user.language)
-    name = message.text.strip()
+    # Используем html_text для поддержки форматирования и Premium-эмодзи
+    name = (message.html_text or '').strip()
 
     if len(name) < 2:
         await message.answer('Название должно быть не короче 2 символов')
         return
 
-    if len(name) > 50:
-        await message.answer('Название должно быть не длиннее 50 символов')
+    if len(name) > 200:  # Увеличиваем лимит для учета HTML-тегов
+        await message.answer('Название (с учетом HTML-разметки) слишком длинное')
+        return
+
+    # Валидация HTML-тегов
+    is_valid, error_msg = validate_html_tags(name)
+    if not is_valid:
+        await message.answer(f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\nПроверьте правильность тегов и попробуйте снова.', parse_mode="HTML")
         return
 
     await state.update_data(tariff_name=name)
@@ -1065,9 +1075,21 @@ async def process_edit_tariff_name(
         await state.clear()
         return
 
-    name = message.text.strip()
-    if len(name) < 2 or len(name) > 50:
-        await message.answer('Название должно быть от 2 до 50 символов')
+    # Используем html_text для поддержки форматирования и Premium-эмодзи
+    name = (message.html_text or '').strip()
+    
+    if len(name) < 2:
+        await message.answer('Название должно быть не короче 2 символов')
+        return
+        
+    if len(name) > 200:  # Увеличиваем лимит для учета HTML-тегов
+        await message.answer('Название (с учетом HTML-разметки) слишком длинное')
+        return
+
+    # Валидация HTML-тегов
+    is_valid, error_msg = validate_html_tags(name)
+    if not is_valid:
+        await message.answer(f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\nПроверьте правильность тегов и попробуйте снова.', parse_mode="HTML")
         return
 
     tariff = await update_tariff(db, tariff, name=name)
@@ -1134,9 +1156,17 @@ async def process_edit_tariff_description(
         await state.clear()
         return
 
-    description = message.text.strip()
+    # Используем html_text для поддержки форматирования и Premium-эмодзи
+    description = (message.html_text or '').strip()
+    
     if description == '-':
         description = None
+    else:
+        # Валидация HTML-тегов
+        is_valid, error_msg = validate_html_tags(description)
+        if not is_valid:
+            await message.answer(f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\nПроверьте правильность тегов и попробуйте снова.', parse_mode="HTML")
+            return
 
     tariff = await update_tariff(db, tariff, description=description)
     await state.clear()

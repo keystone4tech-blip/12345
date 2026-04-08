@@ -104,7 +104,7 @@ async def process_new_message_text(message: types.Message, state: FSMContext, db
         )
         return
 
-    message_text = message.text.strip()
+    message_text = (message.html_text or "").strip()
 
     if len(message_text) > 4000:
         await message.answer(
@@ -364,7 +364,7 @@ async def process_edit_message_text(message: types.Message, state: FSMContext, d
         await message.answer('❌ Ошибка: ID сообщения не найден')
         return
 
-    new_text = message.text.strip()
+    new_text = (message.html_text or "").strip()
 
     if len(new_text) > 4000:
         await message.answer(

@@ -81,7 +81,7 @@ async def _build_overview(
         preview_trimmed = preview_raw[:400]
         if len(preview_raw) > 400:
             preview_trimmed += '...'
-        preview_block = f'{preview_title}\n<code>{html.escape(preview_trimmed)}</code>'
+        preview_block = f'{preview_title}\n<code>{preview_trimmed}</code>'
 
     language_block = texts.t(
         'ADMIN_PRIVACY_POLICY_LANGUAGE',
@@ -252,7 +252,7 @@ async def start_edit_privacy_policy(
                 'ADMIN_PRIVACY_POLICY_CURRENT_PREVIEW',
                 'Текущий текст (превью):',
             )
-            + f'\n<code>{html.escape(preview)}</code>\n\n'
+            + f'\n<code>{preview}</code>\n\n'
         )
 
     prompt = texts.t(

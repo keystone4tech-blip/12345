@@ -41,6 +41,7 @@ from app.utils.promo_offer import (
     build_test_access_hint,
 )
 from app.utils.timezone import format_local_datetime
+from app.utils.validators import strip_html
 
 
 logger = structlog.get_logger(__name__)
@@ -498,11 +499,13 @@ async def show_faq_pages(
         if not raw_title:
             raw_title = texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
         if len(raw_title) > 60:
-            raw_title = f'{raw_title[:57]}...'
+        clean_title = strip_html(raw_title)
+        if len(clean_title) > 40:
+            clean_title = f'{clean_title[:37]}...'
         buttons.append(
             [
                 types.InlineKeyboardButton(
-                    text=f'{index}. {raw_title}',
+                    text=f'{index}. {clean_title}',
                     callback_data=f'menu_faq_page:{page.id}:1',
                 )
             ]
