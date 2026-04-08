@@ -9,7 +9,7 @@
   - `bot/app/handlers/admin/promo_offers.py`: Внедрена поддержка `html_text`, валидация HTML и очистка кнопок (`strip_html`).
   - `bot/app/handlers/admin/polls.py`: Поддержка `html_text` для всех полей, полная валидация HTML-тегов, удаление избыточного экранирования в превью.
   - `bot/app/handlers/admin/faq.py`, `welcome_text.py`, `rules.py`, `privacy_policy.py`, `public_offer.py`, `user_messages.py`: Проверена и подтверждена работа валидации HTML и поддержки Rich Text.
-  - `bot/app/keyboards/admin.py`: Очистка меток кнопок (`strip_html`) во всех критических UI-элементах.
+  - **CI/CD Update**: Автоматический деплой временно отключен (триггер `push` заменен на `workflow_dispatch`), чтобы избежать ошибок сборки, пока бот не развернут на сервере.
 
 ### Актуальная структура проекта:
 - `/bot/app/handlers/admin`: Все модули управления контентом поддерживают нативный HTML Telegram.
