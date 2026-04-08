@@ -1,9 +1,7 @@
 name: Deploy Bedolaga Bot
 
 on:
-  push:
-    branches:
-      - main  # Срабатывает при пуше в ветку main
+  workflow_dispatch:  # Позволяет запускать деплой вручную из вкладки Actions
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Подавляет предупреждение об устаревании Node.js 20
