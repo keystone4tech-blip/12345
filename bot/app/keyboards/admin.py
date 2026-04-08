@@ -2257,11 +2257,15 @@ BROADCAST_BUTTON_ROWS: tuple[tuple[str, ...], ...] = (
 )
 
 
-def get_broadcast_button_config(language: str) -> dict[str, dict[str, str]]:
+def get_broadcast_button_config(language: str, raw: bool = False) -> dict[str, dict[str, str]]:
     texts = get_texts(language)
     return {
         key: {
-            'text': texts.t(config['text_key'], config['default_text']),
+            'text': (
+                texts.get_raw(config['text_key'], config['default_text'])
+                if raw
+                else texts.t(config['text_key'], config['default_text'])
+            ),
             'callback': config['callback'],
         }
         for key, config in BROADCAST_BUTTONS.items()
@@ -2331,7 +2335,7 @@ def get_updated_message_buttons_selector_keyboard_with_media(
     selected_buttons = selected_buttons or []
 
     texts = get_texts(language)
-    button_config_map = get_broadcast_button_config(language)
+    button_config_map = get_broadcast_button_config(language, raw=True)
     keyboard: list[list[InlineKeyboardButton]] = []
 
     for row in BROADCAST_BUTTON_ROWS:

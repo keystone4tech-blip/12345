@@ -182,8 +182,11 @@ class Texts:
                 return default
             raise
 
-        _logger.warning("Missing localization key '' for language ''", item=item, language=self.language)
-        raise KeyError(item)
+    def get_raw(self, item: str, default: Any = None) -> Any:
+        try:
+            return self._get_raw_value(item)
+        except KeyError:
+            return default
 
     def _get_value(self, item: str) -> Any:
         value = self._get_raw_value(item)
