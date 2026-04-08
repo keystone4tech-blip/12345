@@ -78,6 +78,9 @@ def extract_first_emoji(text: str) -> Optional[str]:
 
 def apply_premium_to_button(button: T) -> T:
     """Применяет Premium-эмодзи к кнопке (InlineKeyboardButton или KeyboardButton)."""
+    # Проверяем, не помечена ли кнопка как "сохранить оригинал" (для админ-панели)
+    keep_original = getattr(button, "_keep_emoji", False)
+
     if not settings.USE_PREMIUM_EMOJIS:
         # Даже если выключено, на всякий случай чистим от тегов, если они туда попали
         text = getattr(button, "text", None)
@@ -106,6 +109,15 @@ def apply_premium_to_button(button: T) -> T:
         if emoji_id:
             try:
                 setattr(button, "icon_custom_emoji_id", emoji_id)
+                
+                # Если не режим сохранения оригинала, удаляем эмодзи из текста
+                if not keep_original:
+                    # Удаляем только первое вхождение этого эмодзи
+                    new_text = text.replace(emoji, "", 1).strip()
+                    # Telegram не позволяет пустые кнопки, подставляем пробел если текста не осталось
+                    if not new_text:
+                        new_text = " "
+                    setattr(button, "text", new_text)
             except Exception:
                 # Если объект заморожен или не поддерживает установку атрибутов
                 pass

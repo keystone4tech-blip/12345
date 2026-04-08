@@ -2877,13 +2877,13 @@ async def show_premium_emojis_menu(
         is_valid_id = str(emoji_id).isdigit() if emoji_id else False
         
         btn_text = f"{emoji}"
-        emoji_buttons.append(
-            types.InlineKeyboardButton(
-                text=btn_text,
-                callback_data=f"botcfg_prem_sel:{emoji}:{page}",
-                icon_custom_emoji_id=str(emoji_id) if is_valid_id else None
-            )
+        btn = types.InlineKeyboardButton(
+            text=btn_text,
+            callback_data=f"botcfg_prem_sel:{emoji}:{page}",
+            icon_custom_emoji_id=str(emoji_id) if is_valid_id else None
         )
+        btn._keep_emoji = True # Сохраняем оригинал для админки
+        emoji_buttons.append(btn)
         
         if is_valid_id:
             active_bindings_text.append(f"{emoji} ➔ <tg-emoji emoji-id=\"{emoji_id}\">{emoji}</tg-emoji>")
@@ -2942,12 +2942,15 @@ async def handle_premium_emoji_selection(
             f"ID: <code>{current_id}</code>\n\n"
             "Вы можете удалить привязку или отправить новый Premium эмодзи для замены."
         )
+        btn_del = types.InlineKeyboardButton(
+            text="🗑️ Удалить привязку", 
+            callback_data=f"botcfg_prem_del:{emoji}:{page}",
+            icon_custom_emoji_id=str(current_id) if is_valid_id else None
+        )
+        btn_del._keep_emoji = True
+        
         keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-            [types.InlineKeyboardButton(
-                text="🗑️ Удалить привязку", 
-                callback_data=f"botcfg_prem_del:{emoji}:{page}",
-                icon_custom_emoji_id=str(current_id) if is_valid_id else None
-            )],
+            [btn_del],
             [types.InlineKeyboardButton(text="⬅️ Назад к сетке", callback_data=f"botcfg_premium_emojis:{page}")]
         ])
         await callback.message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
