@@ -1,9 +1,12 @@
-﻿name: Deploy Bedolaga Bot
+name: Deploy Bedolaga Bot
 
 on:
   push:
     branches:
       - main  # Срабатывает при пуше в ветку main
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Подавляет предупреждение об устаревании Node.js 20
 
 jobs:
   deploy:
@@ -19,14 +22,20 @@ jobs:
           username: ${{ secrets.SERVER_USER }} # Логин (например, root)
           key: ${{ secrets.SSH_PRIVATE_KEY }}  # Приватный SSH ключ
           script: |
-            cd /path/to/your/project/сервис\ рекламы\ с\ впн
+            # Переходим в папку проекта. Если секрет PROJECT_PATH не задан, используем путь по умолчанию.
+            TARGET_DIR="${{ secrets.PROJECT_PATH }}"
+            if [ -z "$TARGET_DIR" ]; then
+              TARGET_DIR="/root/сервис рекламы с впн"
+            fi
+
+            echo "Переход в директорию: $TARGET_DIR"
+            cd "$TARGET_DIR" || { echo "❌ Ошибка: Директория $TARGET_DIR не найдена на сервере."; exit 1; }
+
+            echo "📥 Обновление кода из репозитория..."
             git pull origin main
-            
-            # Обновление бота через Docker
+
+            echo "🚀 Перезапуск Docker-контейнеров..."
             cd bot
             docker compose up -d --build
-            
-            # Можно добавить сборку кабинета, если он тоже на сервере
-            # cd ../cabinet
-            # npm install
-            # npm run build
+
+            echo "✅ Деплой успешно завершен!"
