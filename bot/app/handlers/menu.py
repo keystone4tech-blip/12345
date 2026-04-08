@@ -498,7 +498,6 @@ async def show_faq_pages(
         raw_title = (page.title or '').strip()
         if not raw_title:
             raw_title = texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
-        if len(raw_title) > 60:
         clean_title = strip_html(raw_title)
         if len(clean_title) > 40:
             clean_title = f'{clean_title[:37]}...'

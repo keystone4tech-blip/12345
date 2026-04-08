@@ -69,7 +69,11 @@ services:
       - ./locales:/app/locales:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      # Логотип для сообщений
       - ./vpn_logo.png:/app/vpn_logo.png:ro
+      # Монтирование исходного кода для авто-обновления (DEVELOPMENT)
+      - ./app:/app/app:rw
+      - ./main.py:/app/main.py:rw
     ports:
       - '${WEB_API_PORT:-8080}:8080'
     networks:

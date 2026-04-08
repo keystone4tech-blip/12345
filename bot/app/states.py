@@ -88,6 +88,10 @@ class AdminStates(StatesGroup):
 
     waiting_for_broadcast_message = State()
     waiting_for_broadcast_media = State()
+    waiting_for_broadcast_buttons_menu = State()
+    waiting_for_broadcast_button_text = State()
+    waiting_for_broadcast_button_url = State()
+    waiting_for_broadcast_button_style = State()
     confirming_broadcast = State()
 
     creating_promo_group_name = State()

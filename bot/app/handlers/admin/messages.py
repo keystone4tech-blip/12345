@@ -98,11 +98,17 @@ def get_updated_message_buttons_selector_keyboard(
     return get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, False, language)
 
 
-def create_broadcast_keyboard(selected_buttons: list, language: str = 'ru') -> types.InlineKeyboardMarkup | None:
+def create_broadcast_keyboard(
+    selected_buttons: list, 
+    language: str = 'ru', 
+    custom_buttons: list[dict] = None
+) -> types.InlineKeyboardMarkup | None:
     selected_buttons = selected_buttons or []
+    custom_buttons = custom_buttons or []
     keyboard: list[list[types.InlineKeyboardButton]] = []
     button_config_map = get_broadcast_button_config(language)
 
+    # 1. Сначала добавляем стандартные кнопки
     for row in BUTTON_ROWS:
         row_buttons: list[types.InlineKeyboardButton] = []
         for button_key in row:
@@ -123,6 +129,16 @@ def create_broadcast_keyboard(selected_buttons: list, language: str = 'ru') -> t
                 )
         if row_buttons:
             keyboard.append(row_buttons)
+
+    # 2. Затем добавляем кастомные кнопки (каждую в новой строке для красоты)
+    for btn in custom_buttons:
+        keyboard.append([
+            types.InlineKeyboardButton(
+                text=btn['text'],
+                url=btn['url'],
+                style=btn.get('style', 'primary')
+            )
+        ])
 
     if not keyboard:
         return None
@@ -942,8 +958,16 @@ async def show_button_selector_callback(callback: types.CallbackQuery, db_user: 
         media_type = data.get('media_type', 'файл')
         media_info = f'\n🖼️ <b>Медиафайл:</b> {media_type} добавлен'
 
+    custom_buttons = data.get('custom_buttons', [])
+    custom_info = ""
+    if custom_buttons:
+        custom_info = "\n\n✨ <b>Ваши кастомные кнопки:</b>\n"
+        for i, btn in enumerate(custom_buttons, 1):
+            style_name = {'primary': '🔵', 'success': '🟢', 'danger': '🔴'}.get(btn['style'], '⚪')
+            custom_info += f"{i}. {style_name} {btn['text']} — <code>{btn['url']}</code>\n"
+
     text = f"""
-📘 <b>Выбор дополнительных кнопок</b>
+📘 <b>Выбор дополнительных кнопок [ACTIVE_DEV]</b>
 
 Выберите кнопки, которые будут добавлены к сообщению рассылки:
 
@@ -954,7 +978,7 @@ async def show_button_selector_callback(callback: types.CallbackQuery, db_user: 
 📱 <b>Подписка</b> — покажет состояние подписки
 🛠️ <b>Техподдержка</b> — свяжет с поддержкой
 
-🏠 <b>Кнопка "На главную"</b> включена по умолчанию, но вы можете отключить её при необходимости.{media_info}
+🏠 <b>Кнопка "На главную"</b> включена по умолчанию, но вы можете отключить её при необходимости.{media_info}{custom_info}
 
 Выберите нужные кнопки и нажмите "Продолжить":
 """
@@ -995,8 +1019,16 @@ async def show_button_selector(message: types.Message, db_user: User, state: FSM
 
     has_media = data.get('has_media', False)
 
-    text = """
-📘 <b>Выбор дополнительных кнопок</b>
+    custom_buttons = data.get('custom_buttons', [])
+    custom_info = ""
+    if custom_buttons:
+        custom_info = "\n\n✨ <b>Ваши кастомные кнопки:</b>\n"
+        for i, btn in enumerate(custom_buttons, 1):
+            style_name = {'primary': '🔵', 'success': '🟢', 'danger': '🔴'}.get(btn['style'], '⚪')
+            custom_info += f"{i}. {style_name} {btn['text']} — <code>{btn['url']}</code>\n"
+
+    text = f"""
+📘 <b>Выбор дополнительных кнопок [ACTIVE_DEV]</b>
 
 Выберите кнопки, которые будут добавлены к сообщению рассылки:
 
@@ -1007,7 +1039,7 @@ async def show_button_selector(message: types.Message, db_user: User, state: FSM
 📱 <b>Подписка</b> — покажет состояние подписки
 🛠️ <b>Техподдержка</b> — свяжет с поддержкой
 
-🏠 <b>Кнопка "На главную"</b> включена по умолчанию, но вы можете отключить её при необходимости.
+🏠 <b>Кнопка "На главную"</b> включена по умолчанию, но вы можете отключить её при необходимости.{custom_info}
 
 Выберите нужные кнопки и нажмите "Продолжить":
 """
@@ -1020,6 +1052,19 @@ async def show_button_selector(message: types.Message, db_user: User, state: FSM
 @admin_required
 @error_handler
 async def toggle_button_selection(callback: types.CallbackQuery, db_user: User, state: FSMContext):
+    if callback.data == 'btn_custom':
+        await callback.message.answer(
+            '📝 <b>Введите текст для новой кнопки:</b>\n\n'
+            '<i>Вы можете использовать эмодзи. Если эмодзи настроен как премиум в админке, он будет заменен автоматически.</i>',
+            parse_mode='HTML',
+            reply_markup=types.InlineKeyboardMarkup(
+                inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='edit_buttons')]]
+            ),
+        )
+        await state.set_state(AdminStates.waiting_for_broadcast_button_text)
+        await callback.answer()
+        return
+
     button_type = callback.data.replace('btn_', '')
     data = await state.get_data()
     selected_buttons = data.get('selected_buttons')
@@ -1039,6 +1084,81 @@ async def toggle_button_selection(callback: types.CallbackQuery, db_user: User, 
     keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
 
     await callback.message.edit_reply_markup(reply_markup=keyboard)
+    await callback.answer()
+
+
+@admin_required
+@error_handler
+async def process_custom_button_text(message: types.Message, db_user: User, state: FSMContext):
+    text = message.text.strip()
+    if not text:
+        await message.answer('❌ Текст кнопки не может быть пустым. Введите текст:')
+        return
+
+    await state.update_data(temp_button_text=text)
+    await message.answer(
+        f'🔗 <b>Текст кнопки:</b> {text}\n\nТеперь введите <b>URL-ссылку</b> для этой кнопки (например, https://google.com):',
+        parse_mode='HTML',
+        reply_markup=types.InlineKeyboardMarkup(
+            inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='edit_buttons')]]
+        ),
+    )
+    await state.set_state(AdminStates.waiting_for_broadcast_button_url)
+
+
+@admin_required
+@error_handler
+async def process_custom_button_url(message: types.Message, db_user: User, state: FSMContext):
+    url = message.text.strip()
+    if not (url.startswith('http://') or url.startswith('https://') or url.startswith('tg://')):
+        await message.answer('❌ Ссылка должна начинаться с http://, https:// или tg://. Попробуйте еще раз:')
+        return
+
+    await state.update_data(temp_button_url=url)
+    
+    keyboard = types.InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                types.InlineKeyboardButton(text='🔵 Стандартный (Primary)', callback_data='style_primary'),
+                types.InlineKeyboardButton(text='🟢 Успех (Success)', callback_data='style_success'),
+            ],
+            [
+                types.InlineKeyboardButton(text='🔴 Опасность (Danger)', callback_data='style_danger'),
+            ],
+            [types.InlineKeyboardButton(text='❌ Отмена', callback_data='edit_buttons')],
+        ]
+    )
+    
+    await message.answer(
+        '🎨 <b>Выберите стиль (цвет) для кнопки:</b>\n\n'
+        '<i>Стили — это новая функция Telegram. Если клиент пользователя не поддерживает их, кнопка будет обычной.</i>',
+        parse_mode='HTML',
+        reply_markup=keyboard,
+    )
+    await state.set_state(AdminStates.waiting_for_broadcast_button_style)
+
+
+@admin_required
+@error_handler
+async def process_custom_button_style(callback: types.CallbackQuery, db_user: User, state: FSMContext):
+    style = callback.data.replace('style_', '')
+    data = await state.get_data()
+    
+    text = data.get('temp_button_text')
+    url = data.get('temp_button_url')
+    
+    custom_buttons = data.get('custom_buttons', [])
+    custom_buttons.append({
+        'text': text,
+        'url': url,
+        'style': style
+    })
+    
+    await state.update_data(custom_buttons=custom_buttons)
+    await callback.message.answer(f'✅ Кнопка "<b>{text}</b>" добавлена!', parse_mode='HTML')
+    
+    # Возвращаемся в меню выбора кнопок
+    await show_button_selector_callback(callback, db_user, state)
     await callback.answer()
 
 
@@ -1070,8 +1190,14 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
     ordered_keys = [button_key for row in BUTTON_ROWS for button_key in row]
     button_labels = get_broadcast_button_labels(db_user.language)
     selected_names = [button_labels[key] for key in ordered_keys if key in selected_buttons]
-    if selected_names:
-        buttons_info = f'\n📘 <b>Кнопки:</b> {", ".join(selected_names)}'
+    
+    custom_buttons = data.get('custom_buttons', [])
+    custom_names = [f"[{btn['text']}]" for btn in custom_buttons]
+    
+    all_buttons_list = selected_names + custom_names
+    
+    if all_buttons_list:
+        buttons_info = f'\n📘 <b>Кнопки:</b> {", ".join(all_buttons_list)}'
     else:
         buttons_info = '\n📘 <b>Кнопки:</b> отсутствуют'
 
@@ -1179,6 +1305,8 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     recipient_telegram_ids: list[int] = [user.telegram_id for user in users_orm if user.telegram_id is not None]
     total_users_count = len(users_orm)
 
+    custom_buttons = data.get('custom_buttons', [])
+
     # Создаём запись истории рассылки
     broadcast_history = BroadcastHistory(
         target_type=target,
@@ -1187,6 +1315,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
         media_type=media_type,
         media_file_id=media_file_id,
         media_caption=media_caption,
+        buttons={'selected_buttons': selected_buttons, 'custom_buttons': custom_buttons},
         total_count=total_users_count,
         sent_count=0,
         failed_count=0,
@@ -1209,7 +1338,9 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     sent_count = 0
     failed_count = 0
 
-    broadcast_keyboard = create_broadcast_keyboard(selected_buttons, admin_language)
+    broadcast_keyboard = create_broadcast_keyboard(
+        selected_buttons, admin_language, custom_buttons=custom_buttons
+    )
 
     # =========================================================================
     # Rate limiting: Telegram допускает ~30 msg/sec для бота.
@@ -2023,3 +2154,8 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(process_broadcast_message, AdminStates.waiting_for_broadcast_message)
     dp.message.register(process_broadcast_media, AdminStates.waiting_for_broadcast_media)
     dp.message.register(process_pinned_message_update, AdminStates.editing_pinned_message)
+
+    # Кастомные кнопки
+    dp.message.register(process_custom_button_text, AdminStates.waiting_for_broadcast_button_text)
+    dp.message.register(process_custom_button_url, AdminStates.waiting_for_broadcast_button_url)
+    dp.callback_query.register(process_custom_button_style, AdminStates.waiting_for_broadcast_button_style)

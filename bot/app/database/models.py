@@ -1980,6 +1980,7 @@ class BroadcastHistory(Base):
     failed_count = Column(Integer, default=0)
     blocked_count = Column(Integer, default=0)
     status = Column(String(50), default='in_progress')
+    buttons = Column(JSON, nullable=True)  # Новое поле: JSON-список кнопок [{text, url, style}]
     admin_id = Column(Integer, ForeignKey('users.id'))
     admin_name = Column(String(255))
     created_at = Column(AwareDateTime(), server_default=func.now())

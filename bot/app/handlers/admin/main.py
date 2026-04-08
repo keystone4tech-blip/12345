@@ -53,7 +53,11 @@ async def show_admin_panel(callback: types.CallbackQuery, db_user: User, db: Asy
     except Exception as e:
         logger.error('Не удалось получить статистику Remnawave для админ-панели', error=e)
 
-    await callback.message.edit_text(admin_text, reply_markup=get_admin_main_keyboard(db_user.language))
+    await callback.message.edit_text(
+        admin_text,
+        reply_markup=get_admin_main_keyboard(db_user.language),
+        parse_mode='HTML',
+    )
     await callback.answer()
 
 
@@ -63,10 +67,10 @@ async def show_users_submenu(callback: types.CallbackQuery, db_user: User, db: A
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('ADMIN_USERS_SUBMENU_TITLE', '👥 **Управление пользователями и подписками**\n\n')
+        texts.t('ADMIN_USERS_SUBMENU_TITLE', '👥 <b>Управление пользователями и подписками</b>\n\n')
         + texts.t('ADMIN_SUBMENU_SELECT_SECTION', 'Выберите нужный раздел:'),
         reply_markup=get_admin_users_submenu_keyboard(db_user.language),
-        parse_mode='Markdown',
+        parse_mode='HTML',
     )
     await callback.answer()
 
@@ -77,10 +81,10 @@ async def show_promo_submenu(callback: types.CallbackQuery, db_user: User, db: A
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('ADMIN_PROMO_SUBMENU_TITLE', '💰 **Промокоды и статистика**\n\n')
+        texts.t('ADMIN_PROMO_SUBMENU_TITLE', '💰 <b>Промокоды и статистика</b>\n\n')
         + texts.t('ADMIN_SUBMENU_SELECT_SECTION', 'Выберите нужный раздел:'),
         reply_markup=get_admin_promo_submenu_keyboard(db_user.language),
-        parse_mode='Markdown',
+        parse_mode='HTML',
     )
     await callback.answer()
 
@@ -91,10 +95,10 @@ async def show_communications_submenu(callback: types.CallbackQuery, db_user: Us
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('ADMIN_COMMUNICATIONS_SUBMENU_TITLE', '📨 **Коммуникации**\n\n')
+        texts.t('ADMIN_COMMUNICATIONS_SUBMENU_TITLE', '📨 <b>Коммуникации</b>\n\n')
         + texts.t('ADMIN_COMMUNICATIONS_SUBMENU_DESCRIPTION', 'Управление рассылками и текстами интерфейса:'),
         reply_markup=get_admin_communications_submenu_keyboard(db_user.language),
-        parse_mode='Markdown',
+        parse_mode='HTML',
     )
     await callback.answer()
 
@@ -122,14 +126,14 @@ async def show_support_submenu(callback: types.CallbackQuery, db_user: User, db:
             ]
         )
     await callback.message.edit_text(
-        texts.t('ADMIN_SUPPORT_SUBMENU_TITLE', '🛟 **Поддержка**\n\n')
+        texts.t('ADMIN_SUPPORT_SUBMENU_TITLE', '🛟 <b>Поддержка</b>\n\n')
         + (
             texts.t('ADMIN_SUPPORT_SUBMENU_DESCRIPTION_MODERATOR', 'Доступ к тикетам.')
             if is_moderator_only
             else texts.t('ADMIN_SUPPORT_SUBMENU_DESCRIPTION', 'Управление тикетами и настройками поддержки:')
         ),
         reply_markup=kb,
-        parse_mode='Markdown',
+        parse_mode='HTML',
     )
     await callback.answer()
 
@@ -236,10 +240,10 @@ async def show_settings_submenu(callback: types.CallbackQuery, db_user: User, db
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('ADMIN_SETTINGS_SUBMENU_TITLE', '⚙️ **Настройки системы**\n\n')
+        texts.t('ADMIN_SETTINGS_SUBMENU_TITLE', '⚙️ <b>Настройки системы</b>\n\n')
         + texts.t('ADMIN_SETTINGS_SUBMENU_DESCRIPTION', 'Управление Remnawave, мониторингом и другими настройками:'),
         reply_markup=get_admin_settings_submenu_keyboard(db_user.language),
-        parse_mode='Markdown',
+        parse_mode='HTML',
     )
     await callback.answer()
 
@@ -250,12 +254,12 @@ async def show_system_submenu(callback: types.CallbackQuery, db_user: User, db: 
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('ADMIN_SYSTEM_SUBMENU_TITLE', '🛠️ **Системные функции**\n\n')
+        texts.t('ADMIN_SYSTEM_SUBMENU_TITLE', '🛠️ <b>Системные функции</b>\n\n')
         + texts.t(
             'ADMIN_SYSTEM_SUBMENU_DESCRIPTION', 'Отчеты, обновления, логи, резервные копии и системные операции:'
         ),
         reply_markup=get_admin_system_submenu_keyboard(db_user.language),
-        parse_mode='Markdown',
+        parse_mode='HTML',
     )
     await callback.answer()
 

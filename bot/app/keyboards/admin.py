@@ -2367,9 +2367,22 @@ def get_updated_message_buttons_selector_keyboard_with_media(
 
     keyboard.extend(
         [
+            [
+                InlineKeyboardButton(
+                    text=_t(texts, 'ADMIN_BROADCAST_ADD_CUSTOM_BUTTON', '➕ Своя кнопка'), callback_data='btn_custom'
+                )
+            ],
             [InlineKeyboardButton(text=_t(texts, 'ADMIN_CONTINUE', '✅ Продолжить'), callback_data='buttons_confirm')],
             [InlineKeyboardButton(text=_t(texts, 'ADMIN_CANCEL', '❌ Отмена'), callback_data='admin_messages')],
         ]
+    )
+
+    from app.handlers.admin.messages import logger as admin_logger
+    admin_logger.debug(
+        "Сгенерирована клавиатура выбора кнопок для рассылки",
+        rows_count=len(keyboard),
+        buttons_count=sum(len(row) for row in keyboard),
+        has_custom_btn=any(any(b.callback_data == 'btn_custom' for b in row) for row in keyboard)
     )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
