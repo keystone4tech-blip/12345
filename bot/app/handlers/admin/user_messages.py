@@ -86,7 +86,7 @@ async def add_user_message_start(callback: types.CallbackQuery, state: FSMContex
         f'📝 <b>Добавление нового сообщения</b>\n\n'
         f'Введите текст сообщения, которое будет показываться в главном меню.\n\n'
         f'{get_html_help_text()}\n\n'
-        f'Отправьте /cancel для отмены.',
+        f'<i>Отправьте /cancel для отмены.</i>',
         parse_mode='HTML',
     )
 
@@ -175,8 +175,9 @@ async def list_user_messages(callback: types.CallbackQuery, db_user: User, db: A
 
     for msg in messages:
         status_emoji = '🟢' if msg.is_active else '🔴'
-        preview = msg.message_text[:100] + '...' if len(msg.message_text) > 100 else msg.message_text
-        preview = preview.replace('<', '&lt;').replace('>', '&gt;')
+        # Используем strip_html для чистого превью в списке
+        clean_text = strip_html(msg.message_text)
+        preview = (clean_text[:100] + '...') if len(clean_text) > 100 else clean_text
 
         text += f'{status_emoji} <b>ID {msg.id}</b>\n{preview}\n📅 {msg.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
 
@@ -234,8 +235,8 @@ async def view_user_message(callback: types.CallbackQuery, db_user: User, db: As
         f'<b>Статус:</b> {status_text}\n'
         f'<b>Создано:</b> {message.created_at.strftime("%d.%m.%Y %H:%M")}\n'
         f'<b>Обновлено:</b> {message.updated_at.strftime("%d.%m.%Y %H:%M")}\n\n'
-        f'<b>Содержимое:</b>\n'
-        f'<blockquote>{safe_content}</blockquote>'
+        f'<b>Предварительный просмотр:</b>\n'
+        f'<blockquote>{message.message_text}</blockquote>'
     )
 
     await callback.message.edit_text(
@@ -338,7 +339,7 @@ async def edit_user_message_start(callback: types.CallbackQuery, state: FSMConte
     await callback.message.edit_text(
         f'✏️ <b>Редактирование сообщения ID {message.id}</b>\n\n'
         f'<b>Текущий текст:</b>\n'
-        f'<blockquote>{sanitize_html(message.message_text)}</blockquote>\n\n'
+        f'<blockquote>{message.message_text}</blockquote>\n\n'
         f'Введите новый текст сообщения или отправьте /cancel для отмены:',
         parse_mode='HTML',
     )
@@ -392,7 +393,7 @@ async def process_edit_message_text(message: types.Message, state: FSMContext, d
                 f'<b>ID:</b> {updated_message.id}\n'
                 f'<b>Обновлено:</b> {updated_message.updated_at.strftime("%d.%m.%Y %H:%M")}\n\n'
                 f'<b>Новый текст:</b>\n'
-                f'<blockquote>{sanitize_html(new_text)}</blockquote>',
+                f'<blockquote>{new_text}</blockquote>',
                 reply_markup=get_user_messages_keyboard(db_user.language),
                 parse_mode='HTML',
             )

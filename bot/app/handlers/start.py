@@ -36,6 +36,7 @@ from app.middlewares.channel_checker import (
 )
 from app.services.admin_notification_service import AdminNotificationService
 from app.services.campaign_service import AdvertisingCampaignService
+from app.services.gift_service import GiftService
 from app.services.channel_subscription_service import channel_subscription_service
 from app.services.main_menu_button_service import MainMenuButtonService
 from app.services.pinned_message_service import (
@@ -404,7 +405,13 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                     'Кампания без партнёра, реферер не устанавливается',
                     campaign_id=campaign.id,
                     campaign_name=campaign.name,
+                    partner_user_id=campaign.partner_user_id,
                 )
+        elif start_parameter.startswith('gift_'):
+            gift_token = start_parameter.replace('gift_', '', 1)
+            await state.update_data(gift_token=gift_token)
+            logger.info('🎁 Найден токен подарка в ссылке', gift_token=gift_token)
+            referral_code = None
         else:
             referral_code = start_parameter
             logger.info('🔎 Найден реферальный код', referral_code=referral_code)
@@ -522,6 +529,30 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
 
         if pinned_message and not pinned_message.send_before_menu:
             await _send_pinned_message(message.bot, db, user, pinned_message)
+
+        # ПРОВЕРКА ПОДАРКА ДЛЯ СУЩЕСТВУЮЩЕГО ПОЛЬЗОВАТЕЛЯ
+        gift_token = data.get('gift_token')
+        if gift_token:
+            gift_info = await GiftService.get_gift_by_token(db, gift_token)
+            if gift_info:
+                offer_text = texts.t('GIFT_OFFER_TEXT', 
+                    "🎁 <b>Вам прислали подарок!</b>\n\n"
+                    "Пользователь {gifter_name} хочет подарить вам подписку на тариф <b>{tariff_name}</b> сроком на {period_days} дн.\n\n"
+                    "Нажмите кнопку ниже, чтобы принять подарок!"
+                ).format(
+                    gifter_name=gift_info['gifter_name'],
+                    tariff_name=gift_info['tariff_name'],
+                    period_days=gift_info['period_days']
+                )
+                
+                accept_kb = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
+                                          callback_data=f"gift_accept:{gift_token}")]
+                ])
+                await message.answer(offer_text, reply_markup=accept_kb, parse_mode='HTML')
+            else:
+                await message.answer(texts.t('GIFT_INVALID_TOKEN', "😔 Ссылка на подарок недействительна или уже была использована."))
+            
         await state.clear()
         return
 
@@ -1416,6 +1447,28 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                 custom_buttons=custom_buttons,
             )
             await message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+
+            # ПРОВЕРКА ПОДАРКА ПРИ ЗАВЕРШЕНИИ РЕГИСТРАЦИИ (существующий)
+            gift_token = data.get('gift_token')
+            if gift_token:
+                gift_info = await GiftService.get_gift_by_token(db, gift_token)
+                if gift_info:
+                    offer_text = texts.t('GIFT_OFFER_TEXT', 
+                        "🎁 <b>Вам прислали подарок!</b>\n\n"
+                        "Пользователь {gifter_name} хочет подарить вам подписку на тариф <b>{tariff_name}</b> сроком на {period_days} дн.\n\n"
+                        "Нажмите кнопку ниже, чтобы принять подарок!"
+                    ).format(
+                        gifter_name=gift_info['gifter_name'],
+                        tariff_name=gift_info['tariff_name'],
+                        period_days=gift_info['period_days']
+                    )
+                    
+                    accept_kb = InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
+                                              callback_data=f"gift_accept:{gift_token}")]
+                    ])
+                    await message.answer(offer_text, reply_markup=accept_kb, parse_mode='HTML')
+
             await _send_pinned_message(message.bot, db, existing_user)
         except Exception as e:
             logger.error('Ошибка при показе главного меню существующему пользователю', error=e)
@@ -1652,6 +1705,29 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                 custom_buttons=custom_buttons,
             )
             await message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+
+            # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
+            data = await state.get_data() or {}
+            gift_token = data.get('gift_token')
+            if gift_token:
+                gift_info = await GiftService.get_gift_by_token(db, gift_token)
+                if gift_info:
+                    offer_text = texts.t('GIFT_OFFER_TEXT', 
+                        "🎁 <b>Вам прислали подарок!</b>\n\n"
+                        "Пользователь {gifter_name} хочет подарить вам подписку на тариф <b>{tariff_name}</b> сроком на {period_days} дн.\n\n"
+                        "Нажмите кнопку ниже, чтобы принять подарок!"
+                    ).format(
+                        gifter_name=gift_info['gifter_name'],
+                        tariff_name=gift_info['tariff_name'],
+                        period_days=gift_info['period_days']
+                    )
+                    
+                    accept_kb = InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
+                                              callback_data=f"gift_accept:{gift_token}")]
+                    ])
+                    await message.answer(offer_text, reply_markup=accept_kb, parse_mode='HTML')
+
             logger.info('✅ Главное меню показано пользователю', telegram_id=user.telegram_id)
             await _send_pinned_message(message.bot, db, user)
         except Exception as e:

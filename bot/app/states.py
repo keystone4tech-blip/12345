@@ -92,6 +92,7 @@ class AdminStates(StatesGroup):
     waiting_for_broadcast_button_text = State()
     waiting_for_broadcast_button_url = State()
     waiting_for_broadcast_button_style = State()
+    waiting_for_broadcast_button_emoji = State()
     confirming_broadcast = State()
 
     creating_promo_group_name = State()

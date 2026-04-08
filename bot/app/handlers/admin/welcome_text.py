@@ -85,7 +85,7 @@ async def show_current_welcome_text(callback: types.CallbackQuery, db_user: User
     await callback.message.edit_text(
         f'{status_emoji} <b>Статус:</b> {status_text}\n\n'
         f'{status}\n\n'
-        f'<code>{current_text}</code>\n\n'
+        f'<blockquote>{current_text}</blockquote>\n\n'
         f'💡 Доступные плейсхолдеры:\n{placeholders_text}',
         reply_markup=get_welcome_text_keyboard(db_user.language, is_enabled),
         parse_mode='HTML',
@@ -144,7 +144,7 @@ async def start_edit_welcome_text(callback: types.CallbackQuery, state: FSMConte
     await callback.message.edit_text(
         f'📝 Редактирование приветственного текста\n\n'
         f'Текущий текст:\n'
-        f'<code>{current_text}</code>\n\n'
+        f'<blockquote>{current_text}</blockquote>\n\n'
         f'💡 Доступные плейсхолдеры:\n{placeholders_text}\n\n'
         f'Отправьте новый текст:',
         parse_mode='HTML',
@@ -187,7 +187,7 @@ async def process_welcome_text_edit(message: types.Message, state: FSMContext, d
             f'✅ Приветственный текст успешно обновлен!\n\n'
             f'{status_emoji} <b>Статус:</b> {status_text}\n\n'
             f'Новый текст:\n'
-            f'<code>{new_text}</code>\n\n'
+            f'<blockquote>{new_text}</blockquote>\n\n'
             f'💡 Будут заменяться плейсхолдеры: {placeholders_text}',
             reply_markup=get_welcome_text_keyboard(db_user.language, welcome_settings['is_enabled']),
             parse_mode='HTML',
@@ -217,7 +217,7 @@ async def reset_welcome_text(callback: types.CallbackQuery, db_user: User, db: A
             f'✅ Приветственный текст сброшен на стандартный!\n\n'
             f'{status_emoji} <b>Статус:</b> {status_text}\n\n'
             f'Стандартный текст:\n'
-            f'<code>{default_text}</code>\n\n'
+            f'<blockquote>{default_text}</blockquote>\n\n'
             f'💡 Плейсхолдер <code>{{user_name}}</code> будет заменяться на имя пользователя',
             reply_markup=get_welcome_text_keyboard(db_user.language, welcome_settings['is_enabled']),
             parse_mode='HTML',
@@ -251,7 +251,7 @@ async def show_preview_welcome_text(callback: types.CallbackQuery, db_user: User
         await callback.message.edit_text(
             f'👁️ Предварительный просмотр\n\n'
             f"Как будет выглядеть текст для пользователя 'Иван' (@test_user):\n\n"
-            f'<code>{preview_text}</code>',
+            f'<blockquote>{preview_text}</blockquote>',
             reply_markup=get_welcome_text_keyboard(db_user.language, welcome_settings['is_enabled']),
             parse_mode='HTML',
         )

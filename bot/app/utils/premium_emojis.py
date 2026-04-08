@@ -92,6 +92,17 @@ def extract_first_emoji(text: str) -> Optional[str]:
     return None
 
 
+def get_custom_emoji_id(message: Any) -> Optional[str]:
+    """Извлекает ID премиум-эмодзи из сообщения, если он есть."""
+    if not hasattr(message, "entities") or not message.entities:
+        return None
+        
+    for entity in message.entities:
+        if entity.type == "custom_emoji" and hasattr(entity, "custom_emoji_id"):
+            return str(entity.custom_emoji_id)
+    return None
+
+
 def apply_premium_to_button(button: T) -> T:
     """Применяет Premium-эмодзи к кнопке (InlineKeyboardButton или KeyboardButton)."""
     # Проверяем, не помечена ли кнопка как "сохранить оригинал" (для админ-панели)
@@ -115,16 +126,21 @@ def apply_premium_to_button(button: T) -> T:
         text = re.sub(r'<tg-emoji[^>]*>(.*?)</tg-emoji>', r'\1', text)
         setattr(button, "text", text)
 
-    # Если ID уже установлен — ничего не делаем
-    if getattr(button, "icon_custom_emoji_id", None):
-        return button
+    # Проверяем существующий ID, если он установлен
+    existing_id = getattr(button, "icon_custom_emoji_id", None)
+    if existing_id:
+        if str(existing_id).isdigit():
+            return button
+        else:
+            # Сбрасываем некорректный ID
+            setattr(button, "icon_custom_emoji_id", None)
 
     emoji = extract_first_emoji(text)
     if emoji:
         emoji_id = get_premium_emoji_id(emoji)
-        if emoji_id:
+        if emoji_id and str(emoji_id).isdigit():
             try:
-                setattr(button, "icon_custom_emoji_id", emoji_id)
+                setattr(button, "icon_custom_emoji_id", str(emoji_id))
                 
                 # Если не режим сохранения оригинала, удаляем эмодзи из текста
                 if not keep_original:

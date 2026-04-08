@@ -8,6 +8,7 @@ async def set_bot_commands(bot: Bot):
     try:
         commands = [
             BotCommand(command="start", description="🏠 Главное меню / Main menu"),
+            BotCommand(command="language", description="🌐 Сменить язык / Change language"),
             BotCommand(command="support", description="🛠 Техподдержка / Support"),
         ]
         # Регистрация стандартных команд

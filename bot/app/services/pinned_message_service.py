@@ -38,6 +38,7 @@ async def set_active_pinned_message(
     media_file_id: str | None = None,
     send_before_menu: bool | None = None,
     send_on_every_start: bool | None = None,
+    buttons: list | None = None,
 ) -> PinnedMessage:
     sanitized_content = sanitize_html(content or '')
     is_valid, error_message = validate_html_tags(sanitized_content)
@@ -70,6 +71,7 @@ async def set_active_pinned_message(
             if send_on_every_start is not None
             else getattr(previous_active, 'send_on_every_start', True)
         ),
+        buttons=buttons,
     )
 
     db.add(pinned_message)
@@ -112,7 +114,7 @@ async def deliver_pinned_message_to_user(
     if not user.telegram_id:
         return False
 
-    success = await _send_and_pin_message(bot, user.telegram_id, pinned_message)
+    success = await _send_and_pin_message(bot, user.telegram_id, pinned_message, user_language=getattr(user, 'language', 'ru'))
     if success:
         await _mark_pinned_delivery(user_id=getattr(user, 'id', None), pinned_message_id=pinned_message.id)
     return success
@@ -167,6 +169,7 @@ async def broadcast_pinned_message(
                         bot,
                         telegram_id,
                         pinned_message,
+                        user_language='ru'
                     )
                     if success:
                         sent_count += 1
@@ -282,7 +285,7 @@ async def _mark_pinned_delivery(
         await session.commit()
 
 
-async def _send_and_pin_message(bot: Bot, chat_id: int, pinned_message: PinnedMessage) -> bool:
+async def _send_and_pin_message(bot: Bot, chat_id: int, pinned_message: PinnedMessage, user_language: str = 'ru') -> bool:
     try:
         await bot.unpin_all_chat_messages(chat_id=chat_id)
     except TelegramBadRequest:
@@ -296,6 +299,21 @@ async def _send_and_pin_message(bot: Bot, chat_id: int, pinned_message: PinnedMe
         except (TelegramBadRequest, TelegramForbiddenError, TelegramRetryAfter):
             pass
 
+    reply_markup = None
+    if pinned_message.buttons:
+        from app.handlers.admin.messages import create_broadcast_keyboard
+
+        # Получаем язык пользователя для правильной локализации кнопок
+        if isinstance(pinned_message.buttons, dict):
+            reply_markup = create_broadcast_keyboard(
+                selected_buttons=pinned_message.buttons.get('standard', []),
+                custom_buttons=pinned_message.buttons.get('custom', []),
+                language=user_language
+            )
+        else:
+            # Fallback для старого формата
+            reply_markup = create_broadcast_keyboard(pinned_message.buttons, language=user_language)
+
     try:
         if pinned_message.media_type == 'photo' and pinned_message.media_file_id:
             sent_message = await bot.send_photo(
@@ -304,6 +322,7 @@ async def _send_and_pin_message(bot: Bot, chat_id: int, pinned_message: PinnedMe
                 caption=pinned_message.content or None,
                 parse_mode='HTML' if pinned_message.content else None,
                 disable_notification=True,
+                reply_markup=reply_markup,
             )
         elif pinned_message.media_type == 'video' and pinned_message.media_file_id:
             sent_message = await bot.send_video(
@@ -312,6 +331,7 @@ async def _send_and_pin_message(bot: Bot, chat_id: int, pinned_message: PinnedMe
                 caption=pinned_message.content or None,
                 parse_mode='HTML' if pinned_message.content else None,
                 disable_notification=True,
+                reply_markup=reply_markup,
             )
         else:
             sent_message = await bot.send_message(
@@ -320,6 +340,7 @@ async def _send_and_pin_message(bot: Bot, chat_id: int, pinned_message: PinnedMe
                 parse_mode='HTML',
                 disable_web_page_preview=True,
                 disable_notification=True,
+                reply_markup=reply_markup,
             )
         await bot.pin_chat_message(
             chat_id=chat_id,

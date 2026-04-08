@@ -447,9 +447,30 @@ def _build_cabinet_main_menu_keyboard(
         info_text = info_cfg.get('labels', {}).get(language, '') or texts.t('MENU_INFO', 'ℹ️ Инфо')
         paired.append(_cabinet_button(info_text, '/info', 'menu_info'))
 
-    # Language selection (stays as callback — not a cabinet section)
-    if settings.is_language_selection_enabled():
-        paired.append(InlineKeyboardButton(text=texts.MENU_LANGUAGE, callback_data='menu_language'))
+    # Gift system button (instead of language selection)
+    if settings.GIFTS_ENABLED and settings.GIFTS_BUTTON_VISIBLE:
+        gift_text = settings.GIFTS_BUTTON_TEXT or texts.t('MENU_GIFTS', '🎁 Сделать подарок')
+        
+        btn_kwargs = {
+            'text': gift_text,
+            'callback_data': 'gifts_start',
+            'style': settings.GIFTS_BUTTON_STYLE or 'success',
+        }
+        
+        if settings.GIFTS_BUTTON_EMOJI:
+            try:
+                # В aiogram 3.x для InlineKeyboardButton атрибут can_be_set динамически
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.GIFTS_BUTTON_EMOJI)
+                
+                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(gift_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = gift_text.replace(standard_emoji, "", 1).strip()
+            except (ValueError, TypeError):
+                pass
+                
+        paired.append(InlineKeyboardButton(**btn_kwargs))
 
     # Lay out in pairs
     for i in range(0, len(paired), 2):
@@ -673,8 +694,29 @@ def get_main_menu_keyboard(
         )
     )
 
-    if settings.is_language_selection_enabled():
-        paired_buttons.append(InlineKeyboardButton(text=texts.MENU_LANGUAGE, callback_data='menu_language'))
+    # Gift system button (instead of language selection)
+    if settings.GIFTS_ENABLED and settings.GIFTS_BUTTON_VISIBLE:
+        gift_text = settings.GIFTS_BUTTON_TEXT or texts.t('MENU_GIFTS', '🎁 Подарить VPN')
+        
+        btn_kwargs = {
+            'text': gift_text,
+            'callback_data': 'gifts_start',
+            'style': settings.GIFTS_BUTTON_STYLE or 'success',
+        }
+        
+        if settings.GIFTS_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.GIFTS_BUTTON_EMOJI)
+                
+                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(gift_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = gift_text.replace(standard_emoji, "", 1).strip()
+            except (ValueError, TypeError):
+                pass
+                
+        paired_buttons.append(InlineKeyboardButton(**btn_kwargs))
 
     for i in range(0, len(paired_buttons), 2):
         row = paired_buttons[i : i + 2]

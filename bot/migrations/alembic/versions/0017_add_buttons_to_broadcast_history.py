@@ -1,6 +1,6 @@
 """add_buttons_to_broadcast_history
 
-Revision ID: 423cac72a422
+Revision ID: 0017
 Revises: 0016
 Create Date: 2026-04-08 17:27:16.657349
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '423cac72a422'
+revision: str = '0017'
 down_revision: Union[str, None] = '0016'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

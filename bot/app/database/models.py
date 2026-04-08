@@ -132,6 +132,7 @@ class TransactionType(Enum):
     REFUND = 'refund'
     REFERRAL_REWARD = 'referral_reward'
     POLL_REWARD = 'poll_reward'
+    GIFT_VPN = 'gift_vpn'
 
 
 class PromoCodeType(Enum):
@@ -2213,6 +2214,7 @@ class PinnedMessage(Base):
     media_file_id = Column(String(255), nullable=True)
     send_before_menu = Column(Boolean, nullable=False, server_default='1', default=True)
     send_on_every_start = Column(Boolean, nullable=False, server_default='1', default=True)
+    buttons = Column(JSON, nullable=True)
     is_active = Column(Boolean, default=True)
     created_by = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     created_at = Column(AwareDateTime(), default=func.now())
@@ -2968,6 +2970,42 @@ class AdminAuditLog(Base):
 
     def __repr__(self) -> str:
         return f'<AdminAuditLog id={self.id} action={self.action!r} status={self.status!r}>'
+
+
+class Gift(Base):
+    """Подарочные VPN-подписки."""
+
+    __tablename__ = 'gifts'
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Уникальный токен для активации (часть uuid)
+    token = Column(String(64), unique=True, nullable=False, index=True)
+
+    # Параметры подарка
+    tariff_id = Column(Integer, ForeignKey('tariffs.id', ondelete='CASCADE'), nullable=False)
+    period_days = Column(Integer, nullable=False)
+
+    # Кто подарил
+    gifter_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+
+    # Кто получил
+    recipient_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+
+    # Использован
+    is_used = Column(Boolean, default=False, nullable=False, index=True)
+
+    # Время отметки
+    created_at = Column(AwareDateTime(), default=func.now())
+    activated_at = Column(AwareDateTime(), nullable=True)
+
+    # Relationships
+    tariff = relationship('Tariff', backref='gifts')
+    gifter = relationship('User', foreign_keys=[gifter_id], backref='sent_gifts')
+    recipient = relationship('User', foreign_keys=[recipient_id], backref='received_gifts')
+
+    def __repr__(self) -> str:
+        return f"<Gift(token='{self.token}', tariff_id={self.tariff_id}, is_used={self.is_used})>"
 
 import app.database.models_ai_ticket  # noqa: F401, E402
 

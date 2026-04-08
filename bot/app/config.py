@@ -251,6 +251,15 @@ class Settings(BaseSettings):
     # Для обратной совместимости со старыми конфигами
     REFERRAL_CONTESTS_ENABLED: bool = False
 
+    # Система подарков
+    GIFTS_ENABLED: bool = False  # Включить/выключить систему подарков
+    GIFTS_BUTTON_VISIBLE: bool = True  # Показывать кнопку в главном меню
+    GIFTS_BUTTON_TEXT: str = '🎁 Сделать подарок'  # Текст кнопки в главном меню
+    GIFTS_BUTTON_STYLE: str = 'success'  # Стиль кнопки (primary, success, danger, default)
+    GIFTS_BUTTON_EMOJI: str | None = None  # Кастомный эмодзи для кнопки (ID)
+    GIFTS_SHARE_MESSAGE_TEMPLATE: str = '🎁 Прими подарок!\n\nПереходи по ссылке для активации: {link}'
+
+
     BLACKLIST_CHECK_ENABLED: bool = False
     BLACKLIST_GITHUB_URL: str | None = None
     BLACKLIST_UPDATE_INTERVAL_HOURS: int = 24

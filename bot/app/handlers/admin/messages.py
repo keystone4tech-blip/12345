@@ -47,6 +47,7 @@ from app.states import AdminStates
 from app.utils.decorators import admin_required, error_handler
 from app.utils.validators import validate_html_tags
 from app.utils.miniapp_buttons import BUTTON_KEY_TO_CABINET_PATH, build_miniapp_or_callback_button
+from app.utils.premium_emojis import get_custom_emoji_id
 
 
 logger = structlog.get_logger(__name__)
@@ -108,7 +109,28 @@ def create_broadcast_keyboard(
     keyboard: list[list[types.InlineKeyboardButton]] = []
     button_config_map = get_broadcast_button_config(language)
 
-    # 1. Сначала добавляем стандартные кнопки
+    # 1. Сначала добавляем кастомные кнопки (теперь они в самом верху по порядку создания)
+    for btn in custom_buttons:
+        btn_style = btn.get('style', 'primary')
+        if btn_style == 'default':
+            btn_style = None # Обычный стиль
+            
+        button = types.InlineKeyboardButton(
+            text=btn['text'],
+            url=btn['url'],
+            style=btn_style
+        )
+        
+        # Если есть сохраненный ID премиум-эмодзи, применяем его
+        emoji_id = btn.get('emoji_id')
+        if emoji_id:
+            setattr(button, "icon_custom_emoji_id", emoji_id)
+            # В некоторых версиях/клиентах может потребоваться очистка текста от символа-заполнителя
+            # Но в данном случае мы полагаемся на то, что текст уже сформирован правильно
+            
+        keyboard.append([button])
+
+    # 2. Затем добавляем стандартные кнопки
     for row in BUTTON_ROWS:
         row_buttons: list[types.InlineKeyboardButton] = []
         for button_key in row:
@@ -129,16 +151,6 @@ def create_broadcast_keyboard(
                 )
         if row_buttons:
             keyboard.append(row_buttons)
-
-    # 2. Затем добавляем кастомные кнопки (каждую в новой строке для красоты)
-    for btn in custom_buttons:
-        keyboard.append([
-            types.InlineKeyboardButton(
-                text=btn['text'],
-                url=btn['url'],
-                style=btn.get('style', 'primary')
-            )
-        ])
 
     if not keyboard:
         return None
@@ -272,7 +284,7 @@ async def show_pinned_message_menu(
         body = (
             '📌 <b>Закрепленное сообщение</b>\n\n'
             '📝 Текущий текст:\n'
-            f'<code>{content_preview}</code>\n\n'
+            f'<blockquote>{pinned_message.content or ""}</blockquote>\n\n'
             f'{media_line}'
             f'{position_line}\n'
             f'{start_mode_line}\n'
@@ -428,34 +440,34 @@ async def process_pinned_message_update(
         )
         return
 
-    try:
-        pinned_message = await set_active_pinned_message(
-            db,
-            pinned_text,
-            db_user.id,
-            media_type=media_type,
-            media_file_id=media_file_id,
-        )
-    except ValueError as validation_error:
-        await message.answer(f'❌ {validation_error}')
-        return
+    await state.update_data(
+        broadcast_message=pinned_text,
+        media_type=media_type,
+        media_file_id=media_file_id,
+        has_media=bool(media_file_id),
+        last_action='pinned',
+        selected_buttons=[],  # По умолчанию кнопок нет
+        custom_buttons=[],
+    )
 
-    # Сообщение сохранено, спрашиваем о рассылке
-    from app.keyboards.admin import get_pinned_broadcast_confirm_keyboard
+    # Переходим к выбору кнопок
+    from app.keyboards.admin import get_message_buttons_selector_keyboard
     from app.states import AdminStates
 
     await message.answer(
         texts.t(
-            'ADMIN_PINNED_SAVED_ASK_BROADCAST',
-            '📌 <b>Сообщение сохранено!</b>\n\n'
+            'ADMIN_PINNED_CONTENT_SAVED_SETUP_BUTTONS',
+            '✅ <b>Содержимое сохранено!</b>\n\n'
+            'Теперь вы можете настроить кнопки для этого сообщения.\n'
+            'Они будут отображаться в самом закрепе и при рассылке.\n'
             'Выберите, как доставить сообщение пользователям:\n\n'
             '• <b>Разослать сейчас</b> — отправит и закрепит у всех активных пользователей\n'
-            '• <b>Только при /start</b> — пользователи увидят при следующем запуске бота',
+            '• <b>Только при /start</b> — пользователи увидят при следующем запуске бота'
         ),
-        reply_markup=get_pinned_broadcast_confirm_keyboard(db_user.language, pinned_message.id),
+        reply_markup=get_message_buttons_selector_keyboard(db_user.language),
         parse_mode='HTML',
     )
-    await state.set_state(AdminStates.confirming_pinned_broadcast)
+    await state.set_state(AdminStates.waiting_for_broadcast_buttons_menu)
 
 
 @admin_required
@@ -983,7 +995,9 @@ async def show_button_selector_callback(callback: types.CallbackQuery, db_user: 
 Выберите нужные кнопки и нажмите "Продолжить":
 """
 
-    keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
+    keyboard = get_updated_message_buttons_selector_keyboard_with_media(
+        selected_buttons, has_media, db_user.language, custom_buttons=custom_buttons
+    )
 
     # Проверяем, является ли текущее сообщение медиа-сообщением
     # (фото, видео, документ и т.д.) - для них нельзя использовать edit_text
@@ -1044,7 +1058,10 @@ async def show_button_selector(message: types.Message, db_user: User, state: FSM
 Выберите нужные кнопки и нажмите "Продолжить":
 """
 
-    keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
+    custom_buttons = data.get('custom_buttons', [])
+    keyboard = get_updated_message_buttons_selector_keyboard_with_media(
+        selected_buttons, has_media, db_user.language, custom_buttons=custom_buttons
+    )
 
     await message.answer(text, reply_markup=keyboard, parse_mode='HTML')
 
@@ -1081,7 +1098,10 @@ async def toggle_button_selection(callback: types.CallbackQuery, db_user: User, 
     await state.update_data(selected_buttons=selected_buttons)
 
     has_media = data.get('has_media', False)
-    keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
+    custom_buttons = data.get('custom_buttons', [])
+    keyboard = get_updated_message_buttons_selector_keyboard_with_media(
+        selected_buttons, has_media, db_user.language, custom_buttons=custom_buttons
+    )
 
     await callback.message.edit_reply_markup(reply_markup=keyboard)
     await callback.answer()
@@ -1119,11 +1139,12 @@ async def process_custom_button_url(message: types.Message, db_user: User, state
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                types.InlineKeyboardButton(text='🔵 Стандартный (Primary)', callback_data='style_primary'),
-                types.InlineKeyboardButton(text='🟢 Успех (Success)', callback_data='style_success'),
+                types.InlineKeyboardButton(text='🔵 Синяя', callback_data='style_primary'),
+                types.InlineKeyboardButton(text='🟢 Зеленая', callback_data='style_success'),
             ],
             [
-                types.InlineKeyboardButton(text='🔴 Опасность (Danger)', callback_data='style_danger'),
+                types.InlineKeyboardButton(text='🔴 Красная', callback_data='style_danger'),
+                types.InlineKeyboardButton(text='⚪ Обычная', callback_data='style_default'),
             ],
             [types.InlineKeyboardButton(text='❌ Отмена', callback_data='edit_buttons')],
         ]
@@ -1142,10 +1163,57 @@ async def process_custom_button_url(message: types.Message, db_user: User, state
 @error_handler
 async def process_custom_button_style(callback: types.CallbackQuery, db_user: User, state: FSMContext):
     style = callback.data.replace('style_', '')
-    data = await state.get_data()
+    await state.update_data(temp_button_style=style)
     
+    from app.keyboards.admin import get_broadcast_button_emoji_keyboard
+    
+    await callback.message.edit_text(
+        '✨ <b>Отправьте премиум эмодзи для кнопки:</b>\n\n'
+        '<i>Или просто любой эмодзи. Он будет добавлен в начало текста кнопки.</i>',
+        parse_mode='HTML',
+        reply_markup=get_broadcast_button_emoji_keyboard(db_user.language)
+    )
+    await state.set_state(AdminStates.waiting_for_broadcast_button_emoji)
+    await callback.answer()
+
+
+@admin_required
+@error_handler
+async def process_custom_button_emoji(message: types.Message, db_user: User, state: FSMContext):
+    emoji_text = message.text.strip()
+    custom_emoji_id = get_custom_emoji_id(message)
+    
+    data = await state.get_data()
     text = data.get('temp_button_text')
     url = data.get('temp_button_url')
+    style = data.get('temp_button_style')
+    
+    # Если это премиум эмодзи, мы можем сохранить его ID
+    # Если обычный - просто добавляем его в текст
+    if custom_emoji_id:
+        final_text = text # Для премиум эмодзи текст остается чистым (эмодзи будет иконкой)
+    else:
+        final_text = f"{emoji_text} {text}"
+    
+    custom_buttons = data.get('custom_buttons', [])
+    custom_buttons.append({
+        'text': final_text,
+        'url': url,
+        'style': style,
+        'emoji_id': custom_emoji_id
+    })
+    
+    await state.update_data(custom_buttons=custom_buttons)
+    await show_button_selector(message, db_user, state)
+
+
+@admin_required
+@error_handler
+async def process_custom_button_emoji_skip(callback: types.CallbackQuery, db_user: User, state: FSMContext):
+    data = await state.get_data()
+    text = data.get('temp_button_text')
+    url = data.get('temp_button_url')
+    style = data.get('temp_button_style')
     
     custom_buttons = data.get('custom_buttons', [])
     custom_buttons.append({
@@ -1155,9 +1223,6 @@ async def process_custom_button_style(callback: types.CallbackQuery, db_user: Us
     })
     
     await state.update_data(custom_buttons=custom_buttons)
-    await callback.message.answer(f'✅ Кнопка "<b>{text}</b>" добавлена!', parse_mode='HTML')
-    
-    # Возвращаемся в меню выбора кнопок
     await show_button_selector_callback(callback, db_user, state)
     await callback.answer()
 
@@ -1166,6 +1231,55 @@ async def process_custom_button_style(callback: types.CallbackQuery, db_user: Us
 @error_handler
 async def confirm_button_selection(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
     data = await state.get_data()
+    last_action = data.get('last_action')
+    texts = get_texts(db_user.language)
+
+    if last_action == 'pinned':
+        # Для закрепленного сообщения пропускаем выбор аудитории и переходим к подтверждению режима закрепа
+        from app.keyboards.admin import get_pinned_broadcast_confirm_keyboard
+        from app.services.pinned_message_service import set_active_pinned_message
+        from app.states import AdminStates
+
+        # Собираем все кнопки (стандартные + кастомные)
+        custom_buttons = data.get('custom_buttons', [])
+        selected_standard = data.get('selected_buttons', [])
+        
+        try:
+            # Создаем или обновляем закрепленное сообщение
+            pinned_message = await set_active_pinned_message(
+                db,
+                data.get('broadcast_message'),
+                db_user.id,
+                media_type=data.get('media_type'),
+                media_file_id=data.get('media_file_id'),
+                buttons={
+                    'standard': selected_standard,
+                    'custom': custom_buttons
+                }
+            )
+            
+            await callback.message.edit_text(
+                texts.t(
+                    'ADMIN_PINNED_SAVED_ASK_BROADCAST',
+                    '📌 <b>Сообщение сохранено с кнопками!</b>\n\n'
+                    'Выберите, как доставить сообщение пользователям:\n\n'
+                    '• <b>Разослать сейчас</b> — отправит и закрепит у всех активных пользователей\n'
+                    '• <b>Только при /start</b> — пользователи увидят при следующем запуске бота',
+                ),
+                reply_markup=get_pinned_broadcast_confirm_keyboard(db_user.language, pinned_message.id),
+                parse_mode='HTML',
+            )
+            await state.set_state(AdminStates.confirming_pinned_broadcast)
+            await callback.answer()
+            return
+        except Exception as e:
+            error_text = str(e)
+            if len(error_text) > 180:
+                error_text = error_text[:177] + "..."
+            logger.error('Ошибка сохранения закрепленного сообщения с кнопками', error=e)
+            await callback.answer(f'❌ Ошибка: {error_text}', show_alert=True)
+            return
+
     target = data.get('broadcast_target')
     message_text = data.get('broadcast_message')
     selected_buttons = data.get('selected_buttons')
@@ -2159,3 +2273,5 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(process_custom_button_text, AdminStates.waiting_for_broadcast_button_text)
     dp.message.register(process_custom_button_url, AdminStates.waiting_for_broadcast_button_url)
     dp.callback_query.register(process_custom_button_style, AdminStates.waiting_for_broadcast_button_style)
+    dp.message.register(process_custom_button_emoji, AdminStates.waiting_for_broadcast_button_emoji)
+    dp.callback_query.register(process_custom_button_emoji_skip, F.data == 'skip_emoji', AdminStates.waiting_for_broadcast_button_emoji)

@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import structlog
 from aiogram import Dispatcher, F, types
-from aiogram.filters import StateFilter
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -891,6 +891,35 @@ async def show_public_offer(
     await callback.answer()
 
 
+async def cmd_language(message: types.Message, db_user: User, db: AsyncSession):
+    if db_user is None:
+        texts = get_texts(settings.DEFAULT_LANGUAGE)
+        await message.answer(
+            texts.t('USER_NOT_FOUND_ERROR', 'Ошибка: пользователь не найден.'),
+        )
+        return
+
+    texts = get_texts(db_user.language)
+
+    if not settings.is_language_selection_enabled():
+        await message.answer(
+            texts.t(
+                'LANGUAGE_SELECTION_DISABLED',
+                '⚙️ Выбор языка временно недоступен.',
+            ),
+        )
+        return
+
+    await message.answer(
+        texts.t('LANGUAGE_PROMPT', '🌐 Выберите язык интерфейса:'),
+        reply_markup=get_language_selection_keyboard(
+            current_language=db_user.language,
+            include_back=False,
+            language=db_user.language,
+        ),
+    )
+
+
 async def show_language_menu(
     callback: types.CallbackQuery,
     db_user: User,
@@ -1442,3 +1471,6 @@ def register_handlers(dp: Dispatcher):
     dp.callback_query.register(add_traffic, F.data.startswith('add_traffic_'))
 
     dp.callback_query.register(handle_activate_button, F.data == 'activate_button')
+
+    # Command handlers
+    dp.message.register(cmd_language, Command('language'))

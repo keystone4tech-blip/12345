@@ -130,6 +130,7 @@ class BotConfigurationService:
         'MODERATION': '🛡️ Модерация и фильтры',
         'BAN_NOTIFICATIONS': '🚫 Тексты уведомлений о блокировках',
         'SUPPORT_AI': '🤖 DonMatteo-AI-Tiket',
+        'GIFTS': '🎁 Система подарков',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -191,6 +192,7 @@ class BotConfigurationService:
         'MODERATION': 'Настройки фильтров отображаемых имен и защиты от фишинга.',
         'BAN_NOTIFICATIONS': 'Тексты уведомлений о блокировках, которые отправляются пользователям.',
         'SUPPORT_AI': 'Настройки AI-ассистента первой линии: Telegram Forum группа, провайдеры, ключи и системный промпт.',
+        'GIFTS': 'Настройка функционала подарков: включение системы, оформление кнопки в меню и шаблоны приглашений.',
     }
 
     @staticmethod
@@ -320,6 +322,12 @@ class BotConfigurationService:
         'CABINET_REMNA_SUB_CONFIG': 'MINIAPP',
         'USE_PREMIUM_EMOJIS': 'INTERFACE_BRANDING',
         'PREMIUM_EMOJIS_DATA': 'INTERFACE_BRANDING',
+        'GIFTS_ENABLED': 'GIFTS',
+        'GIFTS_BUTTON_VISIBLE': 'GIFTS',
+        'GIFTS_BUTTON_TEXT': 'GIFTS',
+        'GIFTS_BUTTON_STYLE': 'GIFTS',
+        'GIFTS_BUTTON_EMOJI': 'GIFTS',
+        'GIFTS_SHARE_MESSAGE_TEMPLATE': 'GIFTS',
     }
 
     CATEGORY_PREFIX_OVERRIDES: dict[str, str] = {
@@ -371,6 +379,7 @@ class BotConfigurationService:
         'DISPLAY_NAME_': 'MODERATION',
         'BAN_MSG_': 'BAN_NOTIFICATIONS',
         'SUPPORT_AI_': 'SUPPORT_AI',
+        'GIFTS_': 'GIFTS',
     }
 
     CHOICES: dict[str, list[ChoiceOption]] = {
@@ -486,6 +495,12 @@ class BotConfigurationService:
             ChoiceOption('email', '📧 Отключён для Email'),
             ChoiceOption('telegram', '📱 Отключён для Telegram'),
             ChoiceOption('all', '🚫 Отключён для всех'),
+        ],
+        'GIFTS_BUTTON_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
         ],
     }
 
@@ -919,6 +934,41 @@ class BotConfigurationService:
             'format': 'Булево значение: выберите "Включить" или "Выключить".',
             'example': 'Выключено по умолчанию.',
             'warning': 'При включении трафик будет обнуляться при каждом продлении подписки.',
+        },
+        'GIFTS_ENABLED': {
+            'description': 'Включает или полностью отключает систему подарков в боте.',
+            'format': 'Булево значение.',
+            'example': 'true',
+            'warning': 'При отключении все разделы покупки и активации подарков станут недоступны.',
+        },
+        'GIFTS_BUTTON_VISIBLE': {
+            'description': 'Управляет отображением кнопки «🎁 Подарить VPN» в главном меню.',
+            'format': 'Булево значение.',
+            'example': 'true',
+        },
+        'GIFTS_BUTTON_TEXT': {
+            'description': 'Надпись на кнопке в главном меню бота.',
+            'format': 'Текстовая строка.',
+            'example': '🎁 Сделать подарок',
+        },
+        'GIFTS_BUTTON_STYLE': {
+            'description': 'Цвет кнопки в главном меню бота.',
+            'format': 'Выберите один из предустановленных стилей (Синий, Зеленый, Красный, Серый).',
+            'example': 'Зелёный',
+        },
+        'GIFTS_BUTTON_EMOJI': {
+            'description': (
+                'ID премиум-эмодзи для кнопки подарков. Если пусто, используется стандартный смайлик 🎁. '
+                'Для получения ID отправьте эмодзи боту @EmojiIdBot.'
+            ),
+            'format': 'Числовой ID или пусто.',
+            'example': '5432345678901234567',
+            'warning': 'Работает только если у бота есть доступ к Premium-эмодзи.',
+        },
+        'GIFTS_SHARE_MESSAGE_TEMPLATE': {
+            'description': 'Шаблон текста, который будет предложен пользователю для отправки другу вместе с подарком.',
+            'format': 'Используйте плейсхолдер {link} для вставки ссылки на подарок.',
+            'example': 'Лови подарок! Активируй VPN тут: {link}',
         },
     }
 

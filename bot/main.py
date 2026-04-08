@@ -15,6 +15,7 @@ from app.utils.bot_commands import set_bot_commands
 from app.config import settings
 from app.database.database import sync_postgres_sequences
 from app.database.migrations import run_alembic_upgrade
+from app.database.schema_sync import sync_database_schema
 from app.database.models import PaymentMethod
 from app.localization.loader import ensure_locale_templates
 from app.logging_config import setup_logging
@@ -205,6 +206,15 @@ async def main():
                 'Пропущено',
                 'SKIP_MIGRATION=true',
             )
+
+        async with timeline.stage(
+            'Синхронизация схемы (Auto-Sync)',
+            '🛠️',
+            success_message='Схема БД синхронизирована',
+        ) as stage:
+            sync_ok = await sync_database_schema()
+            if not sync_ok:
+                stage.warning('Автоматическая синхронизация схемы завершилась с ошибками')
 
         async with timeline.stage(
             'Инициализация базы данных',

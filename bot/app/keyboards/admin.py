@@ -976,6 +976,12 @@ def get_pinned_broadcast_confirm_keyboard(
                     callback_data=f'admin_pinned_broadcast_skip:{pinned_message_id}',
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text=_t(texts, 'CANCEL', '❌ Отмена'),
+                    callback_data='admin_pinned_message',
+                )
+            ],
         ]
     )
 
@@ -2330,14 +2336,41 @@ def get_media_confirm_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
 
 
 def get_updated_message_buttons_selector_keyboard_with_media(
-    selected_buttons: list, has_media: bool = False, language: str = 'ru'
+    selected_buttons: list, has_media: bool = False, language: str = 'ru', custom_buttons: list = None
 ) -> InlineKeyboardMarkup:
     selected_buttons = selected_buttons or []
+    custom_buttons = custom_buttons or []
 
     texts = get_texts(language)
     button_config_map = get_broadcast_button_config(language, raw=True)
     keyboard: list[list[InlineKeyboardButton]] = []
 
+    # 1. Сначала добавляем уже созданные кастомные кнопки
+    for i, btn in enumerate(custom_buttons):
+        button = InlineKeyboardButton(
+            text=btn['text'], 
+            callback_data=f"btn_custom_info_{i}",
+            style=btn.get('style') if btn.get('style') != 'default' else None
+        )
+        
+        # Если есть сохраненный ID премиум-эмодзи, применяем его
+        emoji_id = btn.get('emoji_id')
+        if emoji_id:
+            setattr(button, "icon_custom_emoji_id", emoji_id)
+            
+        keyboard.append([button])
+
+    # 2. Затем кнопка «Создать свою кнопку» (теперь вверху над стандартными)
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text='➕ Создать свою кнопку', 
+                callback_data='btn_custom'
+            )
+        ]
+    )
+
+    # 3. Затем стандартные кнопки
     for row in BROADCAST_BUTTON_ROWS:
         row_buttons: list[InlineKeyboardButton] = []
         for button_key in row:
@@ -2367,11 +2400,6 @@ def get_updated_message_buttons_selector_keyboard_with_media(
 
     keyboard.extend(
         [
-            [
-                InlineKeyboardButton(
-                    text=_t(texts, 'ADMIN_BROADCAST_ADD_CUSTOM_BUTTON', '➕ Своя кнопка'), callback_data='btn_custom'
-                )
-            ],
             [InlineKeyboardButton(text=_t(texts, 'ADMIN_CONTINUE', '✅ Продолжить'), callback_data='buttons_confirm')],
             [InlineKeyboardButton(text=_t(texts, 'ADMIN_CANCEL', '❌ Отмена'), callback_data='admin_messages')],
         ]
@@ -2386,3 +2414,17 @@ def get_updated_message_buttons_selector_keyboard_with_media(
     )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_broadcast_button_emoji_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text='📦 Пропустить', callback_data='skip_emoji'),
+            ],
+            [
+                InlineKeyboardButton(text=_t(texts, 'ADMIN_CANCEL', '❌ Отмена'), callback_data='edit_buttons'),
+            ]
+        ]
+    )
