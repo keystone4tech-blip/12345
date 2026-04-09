@@ -185,6 +185,9 @@ class BotConfigurationService:
         'REFERRAL_FIRST_TOPUP_BONUS_KOPEKS': 'Бонус рефералу за 1-е пополнение',
         'REFERRAL_MINIMUM_TOPUP_KOPEKS': 'Мин. пополнение для бонуса',
         'REFERRAL_NOTIFICATIONS_ENABLED': 'Уведомления о новых рефералах',
+        'REFERRAL_BUTTON_TEXT': 'Текст кнопки партнерки',
+        'REFERRAL_BUTTON_STYLE': 'Цвет кнопки партнерки',
+        'REFERRAL_BUTTON_EMOJI': 'Премиум-эмодзи кнопки',
         'REFERRAL_WITHDRAWAL_ENABLED': 'Разрешить вывод средств',
         'REFERRAL_WITHDRAWAL_MIN_AMOUNT_KOPEKS': 'Мин. сумма для вывода',
         'REFERRAL_WITHDRAWAL_COOLDOWN_DAYS': 'Задержка между выводами (дней)',
@@ -318,6 +321,21 @@ class BotConfigurationService:
         'SMTP_FROM_NAME': 'SMTP: Имя отправителя',
         'SMTP_USE_TLS': 'SMTP: Использовать TLS',
 
+        # SUBSCRIPTIONS_CORE
+        'BASE_SUBSCRIPTION_PRICE': '💵 Базовая цена подписки',
+        'DEFAULT_DEVICE_LIMIT': '📱 Лимит устройств по умолчанию',
+        'DEFAULT_TRAFFIC_LIMIT_GB': '📊 Лимит трафика (ГБ)',
+        'SALES_MODE': '📦 Режим продаж (Classic/Tariffs)',
+        'DEVICES_SELECTION_ENABLED': '🔢 Выбор кол-ва устройств',
+        'PRICE_PER_DEVICE': '💰 Цена за доп. устройство',
+        'MAX_DEVICES_LIMIT': '🚫 Макс. кол-во устройств',
+        'FIXED_TRAFFIC_LIMIT_GB': 'Лимит трафика (фиксированный)',
+        'BUY_SUBSCRIPTION_BUTTON_TEXT': 'Текст кнопки покупки',
+        'BUY_SUBSCRIPTION_BUTTON_STYLE': 'Цвет кнопки покупки',
+        'BUY_SUBSCRIPTION_BUTTON_EMOJI': 'Премиум-эмодзи кнопки покупки',
+        'SUBSCRIPTION_BUTTON_TEXT': 'Текст раздела «Подписка»',
+        'BUY_TRAFFIC_BUTTON_VISIBLE': 'Кнопка докупки трафика',
+
         # OAUTH
         'OAUTH_GOOGLE_ENABLED': 'Включить Google OAuth',
         'OAUTH_GOOGLE_CLIENT_ID': 'Google: Client ID',
@@ -393,8 +411,6 @@ class BotConfigurationService:
 
         # TRAFFIC - ADVANCED
         'TRAFFIC_SELECTION_MODE': 'Режим выбора трафика',
-        'FIXED_TRAFFIC_LIMIT_GB': 'Фиксированный лимит (ГБ)',
-        'BUY_TRAFFIC_BUTTON_VISIBLE': 'Кнопка докупки трафика',
         'TRAFFIC_FAST_CHECK_INTERVAL_MINUTES': 'Интервал быстрой проверки (мин)',
         'TRAFFIC_FAST_CHECK_THRESHOLD_GB': 'Порог быстрой проверки (ГБ)',
         'TRAFFIC_DAILY_CHECK_ENABLED': 'Включить суточную проверку',
@@ -590,6 +606,12 @@ class BotConfigurationService:
         'AVAILABLE_LANGUAGES': 'LOCALIZATION',
         'LANGUAGE_SELECTION_ENABLED': 'LOCALIZATION',
         'DEFAULT_DEVICE_LIMIT': 'SUBSCRIPTIONS_CORE',
+        'FIXED_TRAFFIC_LIMIT_GB': 'SUBSCRIPTIONS_CORE',
+        'BUY_SUBSCRIPTION_BUTTON_TEXT': 'SUBSCRIPTIONS_CORE',
+        'BUY_SUBSCRIPTION_BUTTON_STYLE': 'SUBSCRIPTIONS_CORE',
+        'BUY_SUBSCRIPTION_BUTTON_EMOJI': 'SUBSCRIPTIONS_CORE',
+        'SUBSCRIPTION_BUTTON_TEXT': 'SUBSCRIPTIONS_CORE',
+        'BUY_TRAFFIC_BUTTON_VISIBLE': 'SUBSCRIPTIONS_CORE',
         'DEFAULT_TRAFFIC_LIMIT_GB': 'SUBSCRIPTIONS_CORE',
         'MAX_DEVICES_LIMIT': 'SUBSCRIPTIONS_CORE',
         'PRICE_PER_DEVICE': 'SUBSCRIPTIONS_CORE',
@@ -610,6 +632,9 @@ class BotConfigurationService:
         'PRICE_90_DAYS': 'SUBSCRIPTION_PRICES',
         'PRICE_180_DAYS': 'SUBSCRIPTION_PRICES',
         'PRICE_360_DAYS': 'SUBSCRIPTION_PRICES',
+        'REFERRAL_BUTTON_TEXT': 'REFERRAL',
+        'REFERRAL_BUTTON_STYLE': 'REFERRAL',
+        'REFERRAL_BUTTON_EMOJI': 'REFERRAL',
         'PAID_SUBSCRIPTION_USER_TAG': 'SUBSCRIPTION_PRICES',
         'TRAFFIC_PACKAGES_CONFIG': 'TRAFFIC_PACKAGES',
         'BASE_PROMO_GROUP_PERIOD_DISCOUNTS_ENABLED': 'SUBSCRIPTIONS_CORE',
@@ -882,6 +907,18 @@ class BotConfigurationService:
             ChoiceOption('danger', '🔴 Красный'),
             ChoiceOption('default', '⚪ Серый'),
         ],
+        'REFERRAL_BUTTON_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
+        'BUY_SUBSCRIPTION_BUTTON_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
     }
 
     SETTING_HINTS: dict[str, dict[str, str]] = {
@@ -902,6 +939,29 @@ class BotConfigurationService:
             'format': 'Дни через запятую.',
             'example': '30, 90',
             'warning': 'Проверьте наличие цен для каждого указанного периода.',
+        },
+        'BUY_SUBSCRIPTION_BUTTON_TEXT': {
+            'description': 'Текст, который будет написан на кнопке покупки подписки в главном меню.',
+            'format': 'Текстовая строка.',
+            'example': '💎 Купить подписку',
+        },
+        'BUY_SUBSCRIPTION_BUTTON_STYLE': {
+            'description': 'Цветовое оформление кнопки покупки в главном меню.',
+            'format': 'Выберите один из четырех цветов.',
+            'example': 'Зелёный (рекомендуется для CTA)',
+        },
+        'BUY_SUBSCRIPTION_BUTTON_EMOJI': {
+            'description': (
+                'Позволяет использовать красивый анимированный премиум-эмодзи для кнопки покупки. '
+                'Для этого отправьте нужный эмодзи боту @EmojiIdBot и вставьте полученный ID сюда.'
+            ),
+            'format': 'ID премиум-эмодзи.',
+            'warning': 'Будет работать только в официальных приложениях Telegram.',
+        },
+        'SUBSCRIPTION_BUTTON_TEXT': {
+            'description': 'Текст для общего раздела подписки (в нижней Reply-клавиатуре и в меню личного кабинета).',
+            'format': 'Текстовая строка.',
+            'example': '📱 Моя подписка',
         },
         'PRICE_14_DAYS': {
             'description': 'Стоимость подписки на 14 дней. Часто используется как «Пробная платная версия» для новых клиентов.',
@@ -1020,6 +1080,24 @@ class BotConfigurationService:
             'format': 'Булево значение (Вкл/Выкл).',
             'example': 'Включено',
         },
+        'REFERRAL_BUTTON_TEXT': {
+            'description': 'Текст, который будет написан на кнопке партнерки в главном меню.',
+            'format': 'Текстовая строка.',
+            'example': '🤝 Партнерка',
+        },
+        'REFERRAL_BUTTON_STYLE': {
+            'description': 'Цветовое оформление кнопки партнерки в главном меню (для инлайн-кнопок).',
+            'format': 'Выберите один из четырех цветов.',
+            'example': 'Синий (основной)',
+        },
+        'REFERRAL_BUTTON_EMOJI': {
+            'description': (
+                'Позволяет использовать красивый анимированный премиум-эмодзи для партнерки. '
+                'Для этого отправьте нужный эмодзи боту @EmojiIdBot и вставьте полученный ID сюда.'
+            ),
+            'format': 'ID премиум-эмодзи.',
+            'warning': 'Будет работать только в официальных приложениях Telegram.',
+        },
         'REFERRAL_COMMISSION_PERCENT': {
             'description': 'Процент от суммы пополнения рефералов, который моментально начисляется на баланс пригласившего.',
             'format': 'Целое число от 0 до 100.',
@@ -1036,29 +1114,12 @@ class BotConfigurationService:
             'format': 'Число в копейках.',
             'example': '10000',
         },
-        'GIFTS_ENABLED': {
-            'description': 'Включает возможность покупать подписки в подарок через специальный интерфейс.',
-            'format': 'Булево значение.',
-        },
-        'GIFTS_BUTTON_TEXT': {
-            'description': 'Текст на кнопке подарков в главном меню.',
-            'format': 'Строка текста.',
-            'example': '🎁 Подарить VPN',
-        },
-        'GIFTS_SHARE_MESSAGE_TEMPLATE': {
-            'description': 'Текст сообщения, которое копирует пользователь для отправки подарка другу.',
-            'format': 'HTML-текст. Используйте {link} для вставки ссылки на подарок.',
-            'example': 'Привет! Дарю тебе VPN: {link}',
-        },
+
         'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': {
             'description': 'Если у пользователя была выбрана подписка, но не хватало денег, она купится автоматически сразу после пополнения баланса.',
             'format': 'Булево значение.',
         },
-        'USE_PREMIUM_EMOJIS': {
-            'description': 'Включает замену обычных иконок на анимированные Premium-эмодзи.',
-            'format': 'Булево значение.',
-            'warning': 'Требуется наличие Telegram Premium у аккаунта-владельца бота.',
-        },
+
         'REFERRAL_CONTESTS_ENABLED': {
             'description': (
                 'Включает систему соревнований между вашими партнерами. '
@@ -1127,12 +1188,7 @@ class BotConfigurationService:
             'dependencies': 'REMNAWAVE_AUTO_SYNC_TIMES',
         },
 
-        # PAYMENTS
-        'YOOKASSA_ENABLED': {
-            'description': 'Основной шлюз для приема платежей банковскими картами (РФ).',
-            'format': 'Булево значение.',
-            'warning': 'Для работы требуется Shop ID и Secret Key из личного кабинета YooKassa.',
-        },
+
         'TELEGRAM_STARS_ENABLED': {
             'description': 'Позволяет пользователям пополнять баланс через внутреннюю валюту Telegram Stars.',
             'format': 'Булево значение.',
@@ -1227,149 +1283,24 @@ class BotConfigurationService:
             'warning': 'Уровень DEBUG может сильно замедлить работу и быстро заполнить диск.',
         },
         'BLACKLIST_CHECK_ENABLED': {
-               'TRAFFIC_MONITORING_ENABLED': {
-            'description': 'Включает систему слежения за использованием интернета. Бот будет регулярно проверять, сколько ГБ потратил каждый пользователь, и сохранять эти данные.',
+            'description': 'Включает автоматическую проверку пользователей по черным спискам. Если пользователь найден в списке, он будет заблокирован.',
             'format': 'Булево значение.',
-            'warning': 'Отключение этой опции остановит все уведомления о превышении трафика.',
         },
-        'TRAFFIC_MONITORING_INTERVAL_HOURS': {
-            'description': 'Как часто (в часах) бот должен заходить на сервер и проверять статистику трафика. Рекомендуется проверять раз в сутки.',
+        'BLACKLIST_GITHUB_URL': {
+            'description': 'URL к файлу со списком ID пользователей (в формате txt или json) на GitHub или другом ресурсе.',
+            'format': 'Полная ссылка (URL).',
+        },
+        'BLACKLIST_UPDATE_INTERVAL_HOURS': {
+            'description': 'Как часто бот должен обновлять локальную копию черного списка из внешнего источника.',
             'format': 'Число часов.',
             'example': '24',
         },
-        'TRAFFIC_SNAPSHOT_TTL_HOURS': {
-            'description': 'Время хранения слепка данных. Нужно для сравнения «было вчера — стало сегодня». Должно быть не меньше интервала проверки.',
-            'format': 'Число часов.',
-        },
-        'TRAFFIC_FAST_CHECK_ENABLED': {
-            'description': '«Быстрая проверка»: бот будет очень часто (например, каждые 10 мин) проверять активных пользователей. Полезно для моментального обнаружения тех, кто качает слишком много.',
+        'BLACKLIST_IGNORE_ADMINS': {
+            'description': 'Если включено, администраторы бота никогда не будут проверяться по черным спискам.',
             'format': 'Булево значение.',
         },
-        'TRAFFIC_FAST_CHECK_INTERVAL_MINUTES': {
-            'description': 'Интервал для быстрой проверки. Чем меньше число, тем быстрее бот заметит аномальную нагрузку.',
-            'format': 'Минуты.',
-            'example': '10',
-        },
-        'TRAFFIC_FAST_CHECK_THRESHOLD_GB': {
-            'description': 'Порог тревоги: если за один интервал (например, за 10 мин) пользователь скачал больше этого объема ГБ, бот пришлет уведомление.',
-            'format': 'Число ГБ.',
-            'example': '5.0',
-        },
-        'TRAFFIC_DAILY_CHECK_ENABLED': {
-            'description': 'Глубокая суточная проверка. Бот раз в день анализирует полный объем трафика за последние 24 часа и уведомляет о лидерах потребления.',
-            'format': 'Булево значение.',
-        },
-        'TRAFFIC_DAILY_CHECK_TIME': {
-            'description': 'Точное время, когда бот должен провести глубокую суточную проверку.',
-            'format': 'Время HH:MM.',
-            'example': '00:00',
-        },
-        'TRAFFIC_DAILY_THRESHOLD_GB': {
-            'description': 'Лимит ГБ в сутки. Если пользователь скачал за день больше этого числа ГБ, вы получите отчет.',
-            'format': 'Число ГБ.',
-            'example': '50.0',
-        },
-        'TRAFFIC_NOTIFICATION_COOLDOWN_MINUTES': {
-            'description': 'Защита от спама: если бот уже прислал уведомление по пользователю, он не будет беспокоить вас снова по этому же человеку в течение этого времени.',
-            'format': 'Минуты.',
-            'example': '60',
-        },
-        'WEBHOOK_NOTIFY_USER_ENABLED': {
-            'description': 'Главный рубильник уведомлений для пользователей. Если выключено — пользователи вообще не будут получать сообщения от сервера (окончание подписки и т.д.).',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_SUB_STATUS': {
-            'description': 'Уведомлять пользователя, если администратор вручную включил или выключил его подписку в панели.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_SUB_EXPIRED': {
-            'description': 'Автоматическое сообщение пользователю, когда его подписка полностью закончилась.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_SUB_EXPIRING': {
-            'description': 'Заблаговременные напоминания о продлении (за 3 дня, 2 дня и 1 день до конца). Помогает не терять клиентов.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_SUB_LIMITED': {
-            'description': 'Уведомление о том, что лимит трафика исчерпан и интернет временно приостановлен до докупки ГБ.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_TRAFFIC_RESET': {
-            'description': 'Сообщить пользователю, что его счетчик ГБ был обнулен (например, в начале месяца).',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_SUB_DELETED': {
-            'description': 'Уведомление о том, что профиль пользователя был полностью удален с сервера.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_SUB_REVOKED': {
-            'description': 'Уведомление при «аннулировании» ключей. Обычно происходит, когда пользователь сам сбрасывает настройки или меняет устройство.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_FIRST_CONNECTED': {
-            'description': 'Дружелюбное приветствие при самом первом успешном подключении пользователя к VPN.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_NOT_CONNECTED': {
-            'description': 'Напоминание для тех, кто купил подписку, но так и не подключился. Помогает новичкам не забыть про сервис.',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_BANDWIDTH_THRESHOLD': {
-            'description': 'Предупреждение, когда лимит трафика подходит к концу (например, осталось 10-20% ГБ).',
-            'format': 'Булево значение.',
-        },
-        'WEBHOOK_NOTIFY_DEVICES': {
-            'description': 'Уведомления о входе с нового устройства или отключении текущего.',
-            'format': 'Булево значение.',
-        },
-',
-            'example': '5',
-            'warning': 'Слишком низкое значение может вызвать частые напоминания, слишком высокое — ухудшить SLA.',
-            'dependencies': 'SUPPORT_TICKET_SLA_ENABLED, SUPPORT_TICKET_SLA_REMINDER_COOLDOWN_MINUTES',
-        },
-        'SALES_MODE': {
-            'description': 'Режим продажи подписок: Classic (ручной выбор параметров) или Tariffs (готовые пакеты).',
-            'format': 'classic или tariffs.',
-            'example': 'tariffs — рекомендуется для простоты работы с пользователями.',
-        },
-        'TRAFFIC_FAST_CHECK_ENABLED': {
-            'description': 'Включает быструю фоновую проверку трафика (каждые 10 минут) для обнаружения аномалий.',
-            'format': 'Булево значение.',
-        },
-        'TRAFFIC_DAILY_CHECK_ENABLED': {
-            'description': 'Ежедневная полная проверка объема трафика всех пользователей за последние 24 часа.',
-            'format': 'Булево значение.',
-            'dependencies': 'TRAFFIC_DAILY_CHECK_TIME, TRAFFIC_DAILY_THRESHOLD_GB',
-        },
-        'TRAFFIC_DAILY_CHECK_TIME': {
-            'description': 'Точное время суток для запуска глубокой суточной проверки трафика.',
-            'format': 'Время в формате HH:MM.',
-            'example': '00:00',
-        },
-        'TRAFFIC_MONITORED_NODES': {
-            'description': 'Список UUID нод RemnaWave, за которыми нужно следить. Если пусто — проверяются все ноды.',
-            'format': 'UUID через запятую.',
-        },
-        'TRAFFIC_IGNORED_NODES': {
-            'description': 'Список UUID нод, которые будут полностью игнорироваться при любой проверке трафика.',
-            'format': 'UUID через запятую.',
-        },
-        'TRAFFIC_SELECTION_MODE': {
-            'description': 'Как пользователь получает трафик: либо выбирает сам при покупке (selectable), либо получает фиксированный объем по тарифу (fixed).',
-            'format': 'selectable, fixed или fixed_with_topup.',
-        },
-        'DEFAULT_TRAFFIC_RESET_STRATEGY': {
-            'description': 'Периодичность автоматического обнуления счетчика трафика у пользователя.',
-            'format': 'MONTH (ежемесячно) или NEVER (только при оплате).',
-        },
-        'RESET_TRAFFIC_ON_PAYMENT': {
-            'description': 'Сбрасывать счетчик использованного трафика до нуля сразу после пополнения или продления.',
-            'format': 'Булево значение.',
-        },
-        'RESET_TRAFFIC_ON_TARIFF_SWITCH': {
-            'description': 'Автоматически обнулять счетчик трафика при ручном переключении пользователю другого тарифа.',
-            'format': 'Булево значение.',
-        },
+
+
         'MAINTENANCE_MONITORING_ENABLED': {
             'description': ('Управляет автоматическим запуском мониторинга панели Remnawave при старте бота.'),
             'format': 'Булево значение.',
@@ -1395,20 +1326,7 @@ class BotConfigurationService:
             'warning': 'Слишком агрессивные фильтры могут блокировать добросовестных пользователей.',
             'dependencies': 'Фильтр отображаемых имен',
         },
-        'REMNAWAVE_API_URL': {
-            'description': 'Базовый адрес панели RemnaWave, с которой синхронизируется бот.',
-            'format': 'Полный URL вида https://panel.example.com.',
-            'example': 'https://panel.remnawave.net',
-            'warning': 'Недоступный адрес приведет к ошибкам при управлении VPN-учетками.',
-            'dependencies': 'REMNAWAVE_API_KEY или REMNAWAVE_USERNAME/REMNAWAVE_PASSWORD',
-        },
-        'REMNAWAVE_AUTO_SYNC_ENABLED': {
-            'description': 'Автоматически запускает синхронизацию пользователей и серверов с панелью RemnaWave.',
-            'format': 'Булево значение.',
-            'example': 'Включено при корректно настроенных API-ключах.',
-            'warning': 'При включении без расписания синхронизация не будет выполнена.',
-            'dependencies': 'REMNAWAVE_AUTO_SYNC_TIMES',
-        },
+
         'REMNAWAVE_AUTO_SYNC_TIMES': {
             'description': ('Список времени в формате HH:MM, когда запускается автосинхронизация в течение суток.'),
             'format': 'Перечислите время через запятую или с новой строки (например, 03:00, 15:00).',
@@ -1715,23 +1633,26 @@ class BotConfigurationService:
             'dependencies': 'OAUTH_YANDEX_CLIENT_ID, OAUTH_YANDEX_CLIENT_SECRET',
         },
         'SERVER_STATUS_MODE': {
-            'description': 'Как пользователи будут видеть статус ваших серверов. «Выключено» — скрыть раздел, «Внешняя ссылка» — отправить на сторонний сайт, «XRay Checker» — проверка нод в реальном времени через бота.',
-            'format': 'Выберите режим отображения из списка.',
-            'example': 'xray — самый красивый и наглядный режим.',
-            'warning': 'В режиме XRay Checker бот будет регулярно опрашивать сервера, что может незначительно нагрузить панель.',
+            'description': 'Определяет, как пользователи будут видеть статус ваших серверов. «Выключено» — скрыть раздел, «Внешняя ссылка» — направить на ваш сайт мониторинга, «XRay Checker» — запустить встроенную проверку нод в реальном времени.',
+            'format': 'Выберите один из трех режимов.',
+            'example': 'xray — рекомендуется для максимальной наглядности.',
+            'warning': 'Режим XRay Checker работает только при активном соединении с API RemnaWave.',
         },
         'SERVER_STATUS_EXTERNAL_URL': {
-            'description': 'Ссылка на ваш сторонний сервис мониторинга (например, UptimeRobot). Пользователи увидят кнопку «Статус серверов», ведущую на этот сайт.',
-            'format': 'Веб-ссылка (https://...).',
+            'description': 'Если вы используете сторонние сервисы (например, UptimeRobot или Grafana), укажите ссылку на них здесь. Она превратится в кнопку в меню статуса.',
+            'format': 'Полная ссылка на сайт.',
+            'example': 'https://status.my-proxy.com',
         },
         'SERVER_STATUS_REQUEST_TIMEOUT': {
-            'description': 'Сколько секунд бот готов ждать ответа от сервера при проверке статуса. Если ответа нет — сервер помечается как упавший.',
-            'format': 'Секунды (рекомендуется 5-10).',
+            'description': 'Максимальное время, которое бот готов ждать ответа от сервера метрик. Если сервер не ответит вовремя, бот пометит его как «недоступен».',
+            'format': 'Число в секундах.',
+            'example': '10',
         },
         'WEB_API_ALLOWED_ORIGINS': {
-            'description': 'Список доверенных сайтов, которым разрешено работать с вашим Web API. Это защита от взлома через браузер с чужих ресурсов.',
-            'format': 'Домены через запятую (напр. console.vpn.ru, dashboard.io).',
-            'warning': 'Символ * разрешает доступ вообще всем. Используйте его только при тестировании.',
+            'description': 'Список доверенных сайтов (доменов), которым разрешено обращаться к вашему Web API. Это защита от выполнения нежелательных скриптов с чужих ресурсов.',
+            'format': 'Домены через запятую или знак * для доступа отовсюду.',
+            'example': 'https://admin.my-panel.ru, https://dashboard.com',
+            'warning': 'Значение * делает API уязвимым, используйте только для отладки.',
         },
         'WEB_API_DEFAULT_TOKEN': {
             'description': 'Секретный пароль (токен) для авторизации внешних инструментов в вашем API. Бот будет сравнивать этот ключ с присылаемым, чтобы отсечь неавторизованные запросы.',
@@ -1812,62 +1733,7 @@ class BotConfigurationService:
             'format': 'Число в секундах.',
             'example': '5',
         },
-        'WEBHOOK_NOTIFY_USER_ENABLED': {
-            'description': 'Глобальный переключатель уведомлений пользователям на основе событий из панели.',
-            'format': 'Булево значение.',
-        },
-        'SUPPORT_TICKET_SLA_CHECK_INTERVAL_SECONDS': {
-            'description': 'Как часто бот должен проверять все открытые тикеты на предмет нарушения времени ответа (SLA). Если модератор не ответил вовремя — придет уведомление.',
-            'format': 'Число в секундах.',
-            'example': '300 (каждые 5 минут)',
-        },
-        'SUPPORT_TICKET_SLA_REMINDER_COOLDOWN_MINUTES': {
-            'description': 'Минимальная пауза между повторными «пингами» администратора о просроченном тикете. Чтобы не заваливать админа уведомлениями ежесекундно.',
-            'format': 'Число в минутах.',
-            'example': '60',
-        },
-        'SUPPORT_AI_FORUM_ID': {
-            'description': 'ID основной темы (ветки) на вашем административном форуме, где ИИ-помощник будет анализировать вопросы пользователей. Это позволяет ИИ учиться на живых диалогах.',
-            'format': 'Числовой ID ветки.',
-        },
-        'CLOUDPAYMENTS_PUBLIC_ID': {
-            'description': 'Ваша публичная "Витрина" (Public ID) в системе CloudPayments. Необходима для инициализации виджета оплаты.',
-            'format': 'Строка из личного кабинета CloudPayments.',
-        },
-        'CLOUDPAYMENTS_API_SECRET': {
-            'description': 'Секретный ключ API для подтверждения платежей в CloudPayments. Позволяет боту безопасно проверять статус транзакций.',
-            'format': 'Секретная строка (API Secret).',
-        },
-        'HELEKET_MERCHANT_ID': {
-            'description': 'Ваш уникальный номер мерчанта в системе Heleket. Он используется для того, чтобы система знала, на чей счет зачислять криптовалюту.',
-            'format': 'Числовой ID из панели Heleket.',
-        },
-        'HELEKET_API_KEY': {
-            'description': 'Секретный ключ для управления платежами через Heleket. Позволяет боту безопасно проверять, действительно ли крипто-перевод был совершен.',
-            'format': 'API ключ (секретная строка).',
-        },
-        'OAUTH_GOOGLE_CLIENT_ID': {
-            'description': 'Уникальный идентификатор вашего проекта в Google Cloud. Бот использует его, чтобы "представиться" сервису Google при авторизации пользователей.',
-            'format': 'Строка, заканчивающаяся на .apps.googleusercontent.com',
-        },
-        'OAUTH_YANDEX_CLIENT_ID': {
-            'description': 'Идентификатор вашего приложения, полученный в Яндекс API. Необходим для корректной работы кнопки "Войти через Яндекс".',
-            'format': 'Цифро-буквенная строка (ID клиента).',
-        },
-        'NALOGO_INN': {
-            'description': 'Ваша персональный ИНН. Бот будет использовать его для автоматической регистрации доходов в сервисе «Мой Налог».',
-            'format': '12 цифр без пробелов.',
-            'warning': 'Неверный ИНН сделает авторизацию в налоговой невозможной.',
-        },
-        'NALOGO_PASSWORD': {
-            'description': 'Пароль от вашего личного кабинета налогоплательщика. Бот сохраняет его в зашифрованном виде.',
-            'format': 'Секретная строка.',
-            'warning': 'Используйте пароль именно от кабинета lkfl.nalog.ru.',
-        },
-        'NALOGO_DEVICE_ID': {
-            'description': 'Имя устройства для налоговой. Вы увидите его в журнале авторизаций в кабинете «Мой Налог» как название вашего бота.',
-            'format': 'Любое понятное имя (напр. MyVPNCashier).',
-        },
+
     }
 
     @classmethod

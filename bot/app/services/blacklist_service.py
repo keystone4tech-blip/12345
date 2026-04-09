@@ -31,6 +31,9 @@ class BlacklistService:
         # Кэш результатов проверки: {telegram_id: (is_blacklisted, reason, timestamp)}
         self._check_cache: dict[int, tuple[bool, str | None, float]] = {}
         self._cache_ttl = 300  # 5 минут
+        self.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        self.MAX_RETRIES = 3
+        self.RETRY_DELAY_SECONDS = 5
 
     def is_blacklist_check_enabled(self) -> bool:
         """Проверяет, включена ли проверка черного списка"""
@@ -69,13 +72,33 @@ class BlacklistService:
                 else:
                     raw_url = github_url
 
-                # Получаем содержимое файла
-                async with aiohttp.ClientSession() as session, session.get(raw_url) as response:
-                    if response.status != 200:
-                        logger.error('Ошибка при получении черного списка: статус', status=response.status)
-                        return False
+                timeout = aiohttp.ClientTimeout(total=20)
+                headers = {'User-Agent': self.USER_AGENT}
+                content = None
 
-                    content = await response.text()
+                for attempt in range(1, self.MAX_RETRIES + 1):
+                    try:
+                        async with aiohttp.ClientSession(timeout=timeout) as session:
+                            async with session.get(raw_url, headers=headers) as response:
+                                if response.status != 200:
+                                    logger.error('Ошибка при получении черного списка', attempt=attempt, status=response.status)
+                                    if attempt < self.MAX_RETRIES:
+                                        await asyncio.sleep(self.RETRY_DELAY_SECONDS)
+                                        continue
+                                    return False
+
+                                content = await response.text()
+                                break  # Успешно получили данные
+                    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                        logger.warning('Сетевая ошибка при обновлении черного списка', attempt=attempt, error=str(e))
+                        if attempt < self.MAX_RETRIES:
+                            await asyncio.sleep(self.RETRY_DELAY_SECONDS)
+                        else:
+                            logger.error('Все попытки обновления черного списка провалены')
+                            return False
+
+                if content is None:
+                    return False
 
                 # Разбираем содержимое файла
                 blacklist_data = []

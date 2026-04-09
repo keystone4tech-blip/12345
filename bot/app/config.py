@@ -228,6 +228,16 @@ class Settings(BaseSettings):
     REFERRAL_NOTIFICATIONS_ENABLED: bool = True
     REFERRAL_NOTIFICATION_RETRY_ATTEMPTS: int = 3
 
+    REFERRAL_BUTTON_TEXT: str = '🤝 Партнерка'  # Текст кнопки в главном меню
+    REFERRAL_BUTTON_STYLE: str = 'primary'  # Стиль кнопки (primary, success, danger, default)
+    REFERRAL_BUTTON_EMOJI: str | None = None  # Кастомный премиум-эмодзи для кнопки (ID)
+
+    BUY_SUBSCRIPTION_BUTTON_TEXT: str = '💎 Купить подписку'  # Текст кнопки покупки
+    BUY_SUBSCRIPTION_BUTTON_STYLE: str = 'primary'  # Стиль кнопки покупки
+    BUY_SUBSCRIPTION_BUTTON_EMOJI: str | None = None  # Премиум-эмодзи для кнопки покупки
+
+    SUBSCRIPTION_BUTTON_TEXT: str = '📱 Подписка'  # Общее название раздела подписки
+
     # Настройки вывода реферального баланса
     REFERRAL_WITHDRAWAL_ENABLED: bool = False  # Включить возможность вывода
     REFERRAL_WITHDRAWAL_MIN_AMOUNT_KOPEKS: int = 100000  # Мин. сумма вывода (1000₽)

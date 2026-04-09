@@ -402,7 +402,7 @@ def _build_cabinet_main_menu_keyboard(
     # Subscription (green — main action)
     sub_cfg = cached_styles.get('subscription', {})
     if sub_cfg.get('enabled', True):
-        sub_text = sub_cfg.get('labels', {}).get(language, '') or texts.MENU_SUBSCRIPTION
+        sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or sub_cfg.get('labels', {}).get(language, '') or texts.MENU_SUBSCRIPTION
         paired.append(_cabinet_button(sub_text, '/subscription', 'menu_subscription'))
 
     # Balance
@@ -424,8 +424,23 @@ def _build_cabinet_main_menu_keyboard(
     # Referrals (if enabled)
     ref_cfg = cached_styles.get('referral', {})
     if settings.is_referral_program_enabled() and ref_cfg.get('enabled', True):
-        ref_text = ref_cfg.get('labels', {}).get(language, '') or texts.MENU_REFERRALS
-        paired.append(_cabinet_button(ref_text, '/referral', 'menu_referrals'))
+        ref_text = settings.REFERRAL_BUTTON_TEXT or ref_cfg.get('labels', {}).get(language, '') or texts.MENU_REFERRALS
+        
+        btn_kwargs = {
+            'text': ref_text,
+            'path': '/referral',
+            'callback_fallback': 'menu_referrals',
+            'style': settings.REFERRAL_BUTTON_STYLE or None,
+            'icon_custom_emoji_id': settings.REFERRAL_BUTTON_EMOJI or None,
+        }
+        
+        if btn_kwargs['icon_custom_emoji_id']:
+            from app.utils.premium_emojis import extract_first_emoji
+            standard_emoji = extract_first_emoji(ref_text)
+            if standard_emoji:
+                btn_kwargs['text'] = ref_text.replace(standard_emoji, "", 1).strip()
+                
+        paired.append(_cabinet_button(**btn_kwargs))
 
     # Support
     support_enabled = False
@@ -594,7 +609,8 @@ def get_main_menu_keyboard(
         happ_row = get_happ_download_button_row(texts)
         if happ_row:
             keyboard.append(happ_row)
-        paired_buttons.append(InlineKeyboardButton(text=texts.MENU_SUBSCRIPTION, callback_data='menu_subscription'))
+        sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or texts.MENU_SUBSCRIPTION
+        paired_buttons.append(InlineKeyboardButton(text=sub_text, callback_data='menu_subscription'))
 
         # Добавляем кнопку докупки трафика для лимитированных подписок
         # В режиме тарифов проверяем tariff_id (детальная проверка в хендлере)
@@ -639,7 +655,27 @@ def get_main_menu_keyboard(
         subscription_buttons.append(InlineKeyboardButton(text=texts.MENU_TRIAL, callback_data='menu_trial'))
 
     if show_buy:
-        subscription_buttons.append(InlineKeyboardButton(text=texts.MENU_BUY_SUBSCRIPTION, callback_data='menu_buy'))
+        buy_text = settings.BUY_SUBSCRIPTION_BUTTON_TEXT or texts.MENU_BUY_SUBSCRIPTION
+        
+        btn_kwargs = {
+            'text': buy_text,
+            'callback_data': 'menu_buy',
+            'style': settings.BUY_SUBSCRIPTION_BUTTON_STYLE or 'primary',
+        }
+        
+        if settings.BUY_SUBSCRIPTION_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.BUY_SUBSCRIPTION_BUTTON_EMOJI)
+                
+                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(buy_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = buy_text.replace(standard_emoji, "", 1).strip()
+            except (ValueError, TypeError):
+                pass
+                
+        subscription_buttons.append(InlineKeyboardButton(**btn_kwargs))
 
     if subscription_buttons:
         paired_buttons.extend(subscription_buttons)
@@ -665,7 +701,27 @@ def get_main_menu_keyboard(
 
     # Добавляем кнопку рефералов, только если программа включена
     if settings.is_referral_program_enabled():
-        paired_buttons.append(InlineKeyboardButton(text=texts.MENU_REFERRALS, callback_data='menu_referrals'))
+        ref_text = settings.REFERRAL_BUTTON_TEXT or texts.MENU_REFERRALS
+        
+        btn_kwargs = {
+            'text': ref_text,
+            'callback_data': 'menu_referrals',
+            'style': settings.REFERRAL_BUTTON_STYLE or 'primary',
+        }
+        
+        if settings.REFERRAL_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.REFERRAL_BUTTON_EMOJI)
+                
+                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(ref_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = ref_text.replace(standard_emoji, "", 1).strip()
+            except (ValueError, TypeError):
+                pass
+                
+        paired_buttons.append(InlineKeyboardButton(**btn_kwargs))
 
     # Добавляем кнопку конкурсов
     if settings.CONTESTS_ENABLED and settings.CONTESTS_BUTTON_VISIBLE:
