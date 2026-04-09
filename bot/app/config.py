@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     TEST_EMAIL: str = ''  # e.g., test@example.com
     TEST_EMAIL_PASSWORD: str = ''  # Password for test account
 
-    SUPPORT_USERNAME: str = '@support'
+    SUPPORT_USERNAME: str = '@MozhnoVPN'
     SUPPORT_MENU_ENABLED: bool = True
     SUPPORT_SYSTEM_MODE: str = 'tickets'  # one of: tickets, contact, both, ai_tiket
     # SLA for support tickets
@@ -101,7 +101,7 @@ class Settings(BaseSettings):
     REMNAWAVE_CADDY_TOKEN: str | None = None
     REMNAWAVE_AUTH_TYPE: str = 'api_key'  # api_key, basic, bearer, cookies, caddy
     REMNAWAVE_USER_DESCRIPTION_TEMPLATE: str = 'Bot user: {full_name} {username}'
-    REMNAWAVE_USER_USERNAME_TEMPLATE: str = 'user_{telegram_id}'
+    REMNAWAVE_USER_USERNAME_TEMPLATE: str = 'MozhnoVPN_{telegram_id}'
     REMNAWAVE_USER_DELETE_MODE: str = 'delete'  # "delete" или "disable"
     REMNAWAVE_AUTO_SYNC_ENABLED: bool = False
     REMNAWAVE_AUTO_SYNC_TIMES: str = '03:00'
@@ -237,6 +237,12 @@ class Settings(BaseSettings):
     BUY_SUBSCRIPTION_BUTTON_EMOJI: str | None = None  # Премиум-эмодзи для кнопки покупки
 
     SUBSCRIPTION_BUTTON_TEXT: str = '📱 Подписка'  # Общее название раздела подписки
+    SUBSCRIPTION_BUTTON_STYLE: str = 'success'  # Стиль кнопки раздела подписки (управление)
+    SUBSCRIPTION_BUTTON_EMOJI: str | None = None  # Кастомный эмодзи для кнопки подписки (ID)
+
+    CONNECT_BUTTON_TEXT: str = '🔗 Подключиться'  # Текст кнопки подключения
+    CONNECT_BUTTON_STYLE: str = 'primary'  # Стиль кнопки подключения
+    CONNECT_BUTTON_EMOJI: str | None = None  # Кастомный эмодзи для кнопки подключения (ID)
 
     # Настройки вывода реферального баланса
     REFERRAL_WITHDRAWAL_ENABLED: bool = False  # Включить возможность вывода
@@ -554,8 +560,8 @@ class Settings(BaseSettings):
     MINIAPP_CUSTOM_URL: str = ''
     MINIAPP_STATIC_PATH: str = 'miniapp'
     MINIAPP_PURCHASE_URL: str = ''
-    MINIAPP_SERVICE_NAME_EN: str = 'Bedolaga VPN'
-    MINIAPP_SERVICE_NAME_RU: str = 'Bedolaga VPN'
+    MINIAPP_SERVICE_NAME_EN: str = 'MozhnoVPN'
+    MINIAPP_SERVICE_NAME_RU: str = 'MozhnoVPN'
     MINIAPP_SERVICE_DESCRIPTION_EN: str = 'Secure & Fast Connection'
     MINIAPP_SERVICE_DESCRIPTION_RU: str = 'Безопасное и быстрое подключение'
     CONNECT_BUTTON_HAPP_DOWNLOAD_ENABLED: bool = False
@@ -709,7 +715,7 @@ class Settings(BaseSettings):
     APP_CONFIG_CACHE_TTL: int = 3600
 
     VERSION_CHECK_ENABLED: bool = True
-    VERSION_CHECK_REPO: str = 'fr1ngg/remnawave-bedolaga-telegram-bot'
+    VERSION_CHECK_REPO: str = 'keystone4tech-blip/12345'
     VERSION_CHECK_INTERVAL_HOURS: int = 1
 
     BACKUP_AUTO_ENABLED: bool = True
@@ -766,7 +772,7 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = 'VPN Service'
     SMTP_USE_TLS: bool = True
 
-    # Ban System Integration (BedolagaBan monitoring)
+    # Ban System Integration (monitoring)
     BAN_SYSTEM_ENABLED: bool = False
     BAN_SYSTEM_API_URL: str | None = None  # e.g., http://ban-server:8000
     BAN_SYSTEM_API_TOKEN: str | None = None
@@ -1064,7 +1070,7 @@ class Settings(BaseSettings):
 
         Для email-пользователей (telegram_id=None) использует email prefix + user_id.
         """
-        template = self.REMNAWAVE_USER_USERNAME_TEMPLATE or 'user_{telegram_id}'
+        template = self.REMNAWAVE_USER_USERNAME_TEMPLATE or 'MozhnoVPN_{telegram_id}'
 
         username_clean = (username or '').lstrip('@')
         full_name_value = full_name or ''

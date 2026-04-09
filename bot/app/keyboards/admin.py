@@ -1158,6 +1158,14 @@ def get_user_management_keyboard(
                 ),
             ]
         )
+        # Новая кнопка полной очистки
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text='☢️ Стереть пользователя', callback_data=f'admin_user_wipe_{user_id}'
+                )
+            ]
+        )
     elif user_status == 'blocked':
         keyboard.append(
             [
@@ -1168,6 +1176,14 @@ def get_user_management_keyboard(
                 InlineKeyboardButton(
                     text=_t(texts, 'ADMIN_USER_DELETE', '🗑️ Удалить'), callback_data=f'admin_user_delete_{user_id}'
                 ),
+            ]
+        )
+        # Новая кнопка полной очистки
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text='☢️ Стереть пользователя', callback_data=f'admin_user_wipe_{user_id}'
+                )
             ]
         )
     elif user_status == 'deleted':

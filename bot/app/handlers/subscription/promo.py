@@ -211,7 +211,14 @@ async def claim_discount_offer(
                 ]
             ]
         )
-        await callback.message.answer(success_message, reply_markup=back_keyboard)
+        await callback.message.answer(
+            success_message,
+            reply_markup=back_keyboard,
+            message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
+        )
+        import contextlib
+        with contextlib.suppress(Exception):
+            await callback.message.delete()
         return
 
     discount_percent = int(offer.discount_percent or 0)
@@ -362,17 +369,42 @@ async def claim_discount_offer(
             button_text = texts.get('MENU_BUY_SUBSCRIPTION', '💎 Купить подписку')
             button_callback = 'subscription_upgrade'
 
+    btn_kwargs = {
+        'text': button_text,
+        'callback_data': button_callback,
+    }
+
+    if button_callback == 'subscription_upgrade':
+        # Применяем динамические настройки для кнопки покупки
+        buy_text = settings.BUY_SUBSCRIPTION_BUTTON_TEXT or texts.MENU_BUY_SUBSCRIPTION
+        btn_kwargs['text'] = buy_text
+        btn_kwargs['style'] = settings.BUY_SUBSCRIPTION_BUTTON_STYLE or 'primary'
+        
+        if settings.BUY_SUBSCRIPTION_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.BUY_SUBSCRIPTION_BUTTON_EMOJI)
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(buy_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = buy_text.replace(standard_emoji, "", 1).strip()
+            except Exception:
+                pass
+
     buy_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                build_miniapp_or_callback_button(
-                    text=button_text,
-                    callback_data=button_callback,
-                )
+                build_miniapp_or_callback_button(**btn_kwargs)
             ]
         ]
     )
-    await callback.message.answer(success_message, reply_markup=buy_keyboard)
+    await callback.message.answer(
+        success_message,
+        reply_markup=buy_keyboard,
+        message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
+    )
+    import contextlib
+    with contextlib.suppress(Exception):
+        await callback.message.delete()
 
 
 async def handle_promo_offer_close(

@@ -120,6 +120,7 @@ async def process_promocode(message: types.Message, db_user: User, state: FSMCon
         await message.answer(
             texts.PROMOCODE_SUCCESS.format(description=result['description']),
             reply_markup=get_back_keyboard(db_user.language),
+            message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
         )
     else:
         # Записываем неудачную попытку только для not_found (перебор)

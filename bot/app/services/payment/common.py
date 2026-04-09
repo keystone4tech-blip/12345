@@ -80,10 +80,31 @@ class PaymentCommonMixin:
                 )
 
         # Создаем основную кнопку: если есть активная подписка - продлить, иначе купить
-        first_button = build_miniapp_or_callback_button(
-            text=(texts.MENU_EXTEND_SUBSCRIPTION if has_active_subscription else texts.MENU_BUY_SUBSCRIPTION),
-            callback_data=('subscription_extend' if has_active_subscription else 'menu_buy'),
-        )
+        button_text = (texts.MENU_EXTEND_SUBSCRIPTION if has_active_subscription else texts.MENU_BUY_SUBSCRIPTION)
+        button_callback = ('subscription_extend' if has_active_subscription else 'menu_buy')
+        
+        btn_kwargs = {
+            'text': button_text,
+            'callback_data': button_callback,
+        }
+        
+        if button_callback == 'menu_buy':
+            # Применяем динамические настройки для кнопки покупки
+            buy_text = settings.BUY_SUBSCRIPTION_BUTTON_TEXT or texts.MENU_BUY_SUBSCRIPTION
+            btn_kwargs['text'] = buy_text
+            btn_kwargs['style'] = settings.BUY_SUBSCRIPTION_BUTTON_STYLE or 'primary'
+            
+            if settings.BUY_SUBSCRIPTION_BUTTON_EMOJI:
+                try:
+                    btn_kwargs['icon_custom_emoji_id'] = str(settings.BUY_SUBSCRIPTION_BUTTON_EMOJI)
+                    from app.utils.premium_emojis import extract_first_emoji
+                    standard_emoji = extract_first_emoji(buy_text)
+                    if standard_emoji:
+                        btn_kwargs['text'] = buy_text.replace(standard_emoji, "", 1).strip()
+                except Exception:
+                    pass
+
+        first_button = build_miniapp_or_callback_button(**btn_kwargs)
 
         keyboard_rows: list[list[InlineKeyboardButton]] = [
             [first_button],

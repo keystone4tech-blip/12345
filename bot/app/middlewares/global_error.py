@@ -24,7 +24,8 @@ ERROR_MESSAGE_MAX_LENGTH: Final[int] = 500
 REPORT_SEPARATOR_WIDTH: Final[int] = 50
 DATETIME_FORMAT: Final[str] = '%d.%m.%Y %H:%M:%S'
 DATETIME_FORMAT_FILENAME: Final[str] = '%Y%m%d_%H%M%S'
-DEVELOPER_CONTACT_URL: Final[str] = 'https://t.me/fringg'
+# URL-ы
+DEVELOPER_CONTACT_URL: Final[str] = 'https://t.me/MozhnoVPN' # Заменено в кнопке на динамический URL из настроек
 
 # Фразы ошибок Telegram API
 OLD_QUERY_PHRASES: Final[tuple[str, ...]] = (
@@ -282,7 +283,7 @@ async def send_error_to_admin_chat(
         )
 
         message_text = (
-            f'<b>Remnawave Bedolaga Bot</b>\n\n'
+            f'<b>MozhnoVPN Bot</b>\n\n'
             f'⚠️ Ошибка во время работы\n\n'
             f'<b>Тип:</b> <code>{error_type}</code>\n'
             f'<b>Ошибок в отчёте:</b> {errors_count}\n'
@@ -301,8 +302,8 @@ async def send_error_to_admin_chat(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text='💬 Сообщить разработчику',
-                        url=DEVELOPER_CONTACT_URL,
+                        text='💬 Написать в поддержку',
+                        url=settings.get_support_contact_url() or 'https://t.me/',
                     ),
                 ],
             ]

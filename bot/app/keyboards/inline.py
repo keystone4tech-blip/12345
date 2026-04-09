@@ -25,6 +25,55 @@ from app.utils.validators import strip_html
 logger = structlog.get_logger(__name__)
 
 
+def get_dynamic_connect_button(
+    texts,
+    subscription_link: str | None = None,
+    callback_data: str = 'subscription_connect',
+    force_mode: str | None = None,
+) -> InlineKeyboardButton:
+    """
+    Генерирует динамическую кнопку подключения с учетом настроек текста, цвета и премиум-эмодзи.
+    
+    :param texts: Объект локализации
+    :param subscription_link: Прямая ссылка на подписку (если есть)
+    :param callback_data: Callback для режима по умолчанию или фоллбэка
+    :param force_mode: Принудительный режим (если не задан, берется из настроек)
+    """
+    connect_mode = force_mode or settings.CONNECT_BUTTON_MODE
+    button_text = settings.CONNECT_BUTTON_TEXT or texts.t('CONNECT_BUTTON', '🔗 Подключиться')
+    
+    btn_kwargs = {
+        'text': button_text,
+        'style': settings.CONNECT_BUTTON_STYLE or 'primary',
+    }
+    
+    # Обработка премиум-эмодзи
+    if settings.CONNECT_BUTTON_EMOJI:
+        try:
+            btn_kwargs['icon_custom_emoji_id'] = str(settings.CONNECT_BUTTON_EMOJI)
+            from app.utils.premium_emojis import extract_first_emoji
+            standard_emoji = extract_first_emoji(button_text)
+            if standard_emoji:
+                btn_kwargs['text'] = button_text.replace(standard_emoji, "", 1).strip()
+        except Exception:
+            pass
+            
+    # Определяем тип кнопки в зависимости от режима
+    if connect_mode == 'miniapp_subscription' and subscription_link:
+        btn_kwargs['web_app'] = types.WebAppInfo(url=subscription_link)
+    elif connect_mode == 'miniapp_custom' and settings.MINIAPP_CUSTOM_URL:
+        btn_kwargs['web_app'] = types.WebAppInfo(url=settings.MINIAPP_CUSTOM_URL)
+    elif connect_mode == 'link' and subscription_link:
+        btn_kwargs['url'] = subscription_link
+    elif connect_mode == 'happ_cryptolink' and subscription_link:
+        btn_kwargs['callback_data'] = 'open_subscription_link'
+    else:
+        # По умолчанию или если ссылка отсутствует
+        btn_kwargs['callback_data'] = callback_data
+        
+    return InlineKeyboardButton(**btn_kwargs)
+
+
 async def get_main_menu_keyboard_async(
     db: AsyncSession,
     language: str = DEFAULT_LANGUAGE,
@@ -403,7 +452,22 @@ def _build_cabinet_main_menu_keyboard(
     sub_cfg = cached_styles.get('subscription', {})
     if sub_cfg.get('enabled', True):
         sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or sub_cfg.get('labels', {}).get(language, '') or texts.MENU_SUBSCRIPTION
-        paired.append(_cabinet_button(sub_text, '/subscription', 'menu_subscription'))
+        
+        btn_kwargs = {
+            'text': sub_text,
+            'path': '/subscription',
+            'callback_fallback': 'menu_subscription',
+            'style': settings.SUBSCRIPTION_BUTTON_STYLE or sub_cfg.get('style') or None,
+            'icon_custom_emoji_id': settings.SUBSCRIPTION_BUTTON_EMOJI or sub_cfg.get('icon_custom_emoji_id') or None,
+        }
+        
+        if btn_kwargs['icon_custom_emoji_id']:
+            from app.utils.premium_emojis import extract_first_emoji
+            standard_emoji = extract_first_emoji(sub_text)
+            if standard_emoji:
+                btn_kwargs['text'] = sub_text.replace(standard_emoji, "", 1).strip()
+                
+        paired.append(_cabinet_button(**btn_kwargs))
 
     # Balance
     bal_cfg = cached_styles.get('balance', {})
@@ -554,63 +618,32 @@ def get_main_menu_keyboard(
     paired_buttons: list[InlineKeyboardButton] = []
 
     if has_active_subscription and subscription_is_active:
-        connect_mode = settings.CONNECT_BUTTON_MODE
         subscription_link = get_display_subscription_link(subscription)
-
-        def _fallback_connect_button() -> InlineKeyboardButton:
-            return InlineKeyboardButton(
-                text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                callback_data='subscription_connect',
-            )
-
-        if connect_mode == 'miniapp_subscription':
-            if subscription_link:
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                            web_app=types.WebAppInfo(url=subscription_link),
-                        )
-                    ]
-                )
-            else:
-                keyboard.append([_fallback_connect_button()])
-        elif connect_mode == 'miniapp_custom':
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                        web_app=types.WebAppInfo(url=settings.MINIAPP_CUSTOM_URL),
-                    )
-                ]
-            )
-        elif connect_mode == 'link':
-            if subscription_link:
-                keyboard.append(
-                    [InlineKeyboardButton(text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), url=subscription_link)]
-                )
-            else:
-                keyboard.append([_fallback_connect_button()])
-        elif connect_mode == 'happ_cryptolink':
-            if subscription_link:
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                            callback_data='open_subscription_link',
-                        )
-                    ]
-                )
-            else:
-                keyboard.append([_fallback_connect_button()])
-        else:
-            keyboard.append([_fallback_connect_button()])
+        keyboard.append([get_dynamic_connect_button(texts, subscription_link)])
 
         happ_row = get_happ_download_button_row(texts)
         if happ_row:
             keyboard.append(happ_row)
+            
         sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or texts.MENU_SUBSCRIPTION
-        paired_buttons.append(InlineKeyboardButton(text=sub_text, callback_data='menu_subscription'))
+        
+        btn_kwargs = {
+            'text': sub_text,
+            'callback_data': 'menu_subscription',
+            'style': settings.SUBSCRIPTION_BUTTON_STYLE or 'success',
+        }
+        
+        if settings.SUBSCRIPTION_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.SUBSCRIPTION_BUTTON_EMOJI)
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(sub_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = sub_text.replace(standard_emoji, "", 1).strip()
+            except Exception:
+                pass
+                
+        paired_buttons.append(InlineKeyboardButton(**btn_kwargs))
 
         # Добавляем кнопку докупки трафика для лимитированных подписок
         # В режиме тарифов проверяем tariff_id (детальная проверка в хендлере)
@@ -902,14 +935,7 @@ def get_happ_cryptolink_keyboard(
     buttons: list[list[InlineKeyboardButton]] = []
 
     if final_redirect_link:
-        buttons.append(
-            [
-                InlineKeyboardButton(
-                    text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                    url=final_redirect_link,
-                )
-            ]
-        )
+        buttons.append([get_dynamic_connect_button(texts, final_redirect_link, force_mode='link')])
 
     buttons.extend(
         [
@@ -1084,83 +1110,32 @@ def get_subscription_keyboard(
 
     if has_subscription:
         subscription_link = get_display_subscription_link(subscription) if subscription else None
-        if subscription_link:
-            connect_mode = settings.CONNECT_BUTTON_MODE
-
-            if connect_mode == 'miniapp_subscription':
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                            web_app=types.WebAppInfo(url=subscription_link),
-                        )
-                    ]
-                )
-            elif connect_mode == 'miniapp_custom':
-                if settings.MINIAPP_CUSTOM_URL:
-                    keyboard.append(
-                        [
-                            InlineKeyboardButton(
-                                text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                                web_app=types.WebAppInfo(url=settings.MINIAPP_CUSTOM_URL),
-                            )
-                        ]
-                    )
-                else:
-                    keyboard.append(
-                        [
-                            InlineKeyboardButton(
-                                text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), callback_data='subscription_connect'
-                            )
-                        ]
-                    )
-            elif connect_mode == 'link':
-                keyboard.append(
-                    [InlineKeyboardButton(text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), url=subscription_link)]
-                )
-            elif connect_mode == 'happ_cryptolink':
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                            callback_data='open_subscription_link',
-                        )
-                    ]
-                )
-            else:
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), callback_data='subscription_connect'
-                        )
-                    ]
-                )
-        elif settings.CONNECT_BUTTON_MODE == 'miniapp_custom':
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                        web_app=types.WebAppInfo(url=settings.MINIAPP_CUSTOM_URL),
-                    )
-                ]
-            )
-        else:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), callback_data='subscription_connect'
-                    )
-                ]
-            )
+        keyboard.append([get_dynamic_connect_button(texts, subscription_link)])
 
         happ_row = get_happ_download_button_row(texts)
         if happ_row:
             keyboard.append(happ_row)
 
         if is_trial:
-            keyboard.append(
-                [InlineKeyboardButton(text=texts.MENU_BUY_SUBSCRIPTION, callback_data='subscription_upgrade')]
-            )
+            buy_text = settings.BUY_SUBSCRIPTION_BUTTON_TEXT or texts.MENU_BUY_SUBSCRIPTION
+            
+            btn_kwargs = {
+                'text': buy_text,
+                'callback_data': 'subscription_upgrade',
+                'style': settings.BUY_SUBSCRIPTION_BUTTON_STYLE or 'primary',
+            }
+            
+            if settings.BUY_SUBSCRIPTION_BUTTON_EMOJI:
+                try:
+                    btn_kwargs['icon_custom_emoji_id'] = str(settings.BUY_SUBSCRIPTION_BUTTON_EMOJI)
+                    from app.utils.premium_emojis import extract_first_emoji
+                    standard_emoji = extract_first_emoji(buy_text)
+                    if standard_emoji:
+                        btn_kwargs['text'] = buy_text.replace(standard_emoji, "", 1).strip()
+                except Exception:
+                    pass
+            
+            keyboard.append([InlineKeyboardButton(**btn_kwargs)])
         else:
             # Проверяем, является ли тариф суточным
             tariff = getattr(subscription, 'tariff', None) if subscription else None
@@ -2462,37 +2437,12 @@ def get_connection_guide_keyboard(
             elif btn_type == 'subscriptionLink':
                 url = resolved_url or resolve_button_url(btn_url, subscription_url)
                 deep_link = create_deep_link(app.get('_raw', app), subscription_url)
-                final_url = deep_link or url or subscription_url
-                if final_url:
-                    keyboard.append(
-                        [
-                            InlineKeyboardButton(
-                                text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                                url=final_url,
-                                style='success',
-                            )
-                        ]
-                    )
-                elif settings.is_happ_cryptolink_mode():
-                    keyboard.append(
-                        [
-                            InlineKeyboardButton(
-                                text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                                callback_data='open_subscription_link',
-                                style='success',
-                            )
-                        ]
-                    )
+                
+                if settings.is_happ_cryptolink_mode() and not deep_link:
+                    keyboard.append([get_dynamic_connect_button(texts, subscription_url, force_mode='happ_cryptolink')])
                 else:
-                    keyboard.append(
-                        [
-                            InlineKeyboardButton(
-                                text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                                url=subscription_url,
-                                style='success',
-                            )
-                        ]
-                    )
+                    final_url = deep_link or url or subscription_url
+                    keyboard.append([get_dynamic_connect_button(texts, final_url, force_mode='link')])
             elif btn_type == 'copyButton':
                 url = resolved_url or resolve_button_url(btn_url, subscription_url)
                 if url:

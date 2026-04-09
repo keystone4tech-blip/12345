@@ -1410,7 +1410,7 @@ async def confirm_daily_tariff_purchase(
 
         traffic = _format_traffic(tariff.traffic_limit_gb)
 
-        await callback.message.edit_text(
+        await callback.message.answer(
             f'🎉 <b>Суточная подписка оформлена!</b>\n\n'
             f'📦 Тариф: <b>{tariff.name}</b>\n'
             f'📊 Трафик: {traffic}\n'
@@ -1426,7 +1426,11 @@ async def confirm_daily_tariff_purchase(
                 ]
             ),
             parse_mode='HTML',
+            message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
         )
+        import contextlib
+        with contextlib.suppress(Exception):
+            await callback.message.delete()
         await callback.answer('Подписка оформлена!', show_alert=True)
 
     except Exception as e:
@@ -1764,7 +1768,7 @@ async def confirm_tariff_extend(
 
         traffic = _format_traffic(tariff.traffic_limit_gb)
 
-        await callback.message.edit_text(
+        await callback.message.answer(
             f'🎉 <b>Подписка успешно продлена!</b>\n\n'
             f'📦 Тариф: <b>{tariff.name}</b>\n'
             f'📊 Трафик: {traffic}\n'
@@ -1778,7 +1782,11 @@ async def confirm_tariff_extend(
                 ]
             ),
             parse_mode='HTML',
+            message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
         )
+        import contextlib
+        with contextlib.suppress(Exception):
+            await callback.message.delete()
         await callback.answer('Подписка продлена!', show_alert=True)
 
     except Exception as e:

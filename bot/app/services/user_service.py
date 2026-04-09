@@ -735,7 +735,9 @@ class UserService:
             logger.error('Ошибка разблокировки пользователя', error=e)
             return False
 
-    async def delete_user_account(self, db: AsyncSession, user_id: int, admin_id: int) -> bool:
+    async def delete_user_account(
+        self, db: AsyncSession, user_id: int, admin_id: int, force_remnawave_delete: bool = False
+    ) -> bool:
         try:
             user = await get_user_by_id(db, user_id)
             if not user:
@@ -751,14 +753,15 @@ class UserService:
                 from app.config import settings
                 from app.database.crud.subscription import is_active_paid_subscription
 
-                if is_active_paid_subscription(user.subscription):
+                if is_active_paid_subscription(user.subscription) and not force_remnawave_delete:
                     logger.info(
-                        '⏭️ Пропуск отключения RemnaWave при удалении: у пользователя активная оплаченная подписка',
+                        'Actualized: ⏭️ Пропуск отключения RemnaWave при удалении: у пользователя активная оплаченная подписка',
                         user_id=user_id,
                         remnawave_uuid=user.remnawave_uuid,
                     )
                 else:
-                    delete_mode = settings.get_remnawave_user_delete_mode()
+                    # Если force_remnawave_delete=True, всегда используем 'delete'
+                    delete_mode = 'delete' if force_remnawave_delete else settings.get_remnawave_user_delete_mode()
 
                     try:
                         from app.services.remnawave_service import RemnaWaveService

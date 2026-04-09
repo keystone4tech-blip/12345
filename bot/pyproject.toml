@@ -1,7 +1,7 @@
 [project]
-name = 'remnawave-bedolaga-telegram-bot'
+name = 'mozhnovpn-bot'
 version = "3.20.1"
-description = 'Telegram bot for RemnaWave VPN service'
+description = 'Telegram bot for MozhnoVPN service'
 readme = 'README.md'
 license = { text = 'MIT' }
 requires-python = '==3.13.*'

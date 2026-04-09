@@ -621,7 +621,15 @@ async def handle_simple_subscription_pay_with_balance(
 
         keyboard = types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
 
-        await callback.message.edit_text(success_message, reply_markup=keyboard, parse_mode='HTML')
+        await callback.message.answer(
+            success_message,
+            reply_markup=keyboard,
+            parse_mode='HTML',
+            message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
+        )
+        import contextlib
+        with contextlib.suppress(Exception):
+            await callback.message.delete()
 
         # Отправляем уведомление админам
         try:

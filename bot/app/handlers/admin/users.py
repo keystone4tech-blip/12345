@@ -1045,6 +1045,60 @@ async def delete_user_account(callback: types.CallbackQuery, db_user: User, db: 
 
 @admin_required
 @error_handler
+async def confirm_user_wipe(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
+    user_id = int(callback.data.split('_')[-1])
+
+    await callback.message.edit_text(
+        '☢️ <b>ПОЛНОЕ СТИРАНИЕ ПОЛЬЗОВАТЕЛЯ</b>\n\n'
+        '⚠️ <b>КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ!</b>\n'
+        'Вы собираетесь <b>ПОЛНОСТЬЮ И БЕЗВОЗВРАТНО</b> стереть все данные пользователя:\n\n'
+        '• Удаление из базы данных бота (все транзакции, история, записи)\n'
+        '• Принудительное удаление из панели Remnawave\n'
+        '• Очистка всех связей и настроек\n\n'
+        '<b>ЭТО ДЕЙСТВИЕ НЕВОЗМОЖНО ОТМЕНИТЬ!</b>\n'
+        'Пользователь будет удален так, будто его никогда не было.',
+        reply_markup=get_confirmation_keyboard(
+            f'admin_user_wipe_confirm_{user_id}', f'admin_user_manage_{user_id}', db_user.language
+        ),
+    )
+    await callback.answer()
+
+
+@admin_required
+@error_handler
+async def wipe_user_account(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
+    user_id = int(callback.data.split('_')[-1])
+
+    user_service = UserService()
+    # force_remnawave_delete=True для принудительного удаления
+    success = await user_service.delete_user_account(db, user_id, db_user.id, force_remnawave_delete=True)
+
+    if success:
+        await callback.message.edit_text(
+            '✅ Пользователь полностью стерт из системы.\n'
+            'Все данные и аккаунт в Remnawave удалены.',
+            reply_markup=types.InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [types.InlineKeyboardButton(text='👥 К списку пользователей', callback_data='admin_users_list')]
+                ]
+            ),
+        )
+    else:
+        await callback.message.edit_text(
+            '❌ Ошибка при полном стирании пользователя.\n'
+            'Проверьте логи для получения дополнительной информации.',
+            reply_markup=types.InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [types.InlineKeyboardButton(text='👤 К пользователю', callback_data=f'admin_user_manage_{user_id}')]
+                ]
+            ),
+        )
+
+    await callback.answer()
+
+
+@admin_required
+@error_handler
 async def process_user_search(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
     query = message.text.strip()
 
@@ -5404,6 +5458,7 @@ def register_handlers(dp: Dispatcher):
     dp.callback_query.register(block_user, F.data.startswith('admin_user_block_confirm_'))
 
     dp.callback_query.register(delete_user_account, F.data.startswith('admin_user_delete_confirm_'))
+    dp.callback_query.register(wipe_user_account, F.data.startswith('admin_user_wipe_confirm_'))
 
     dp.callback_query.register(confirm_user_block, F.data.startswith('admin_user_block_') & ~F.data.contains('confirm'))
 
@@ -5415,6 +5470,9 @@ def register_handlers(dp: Dispatcher):
 
     dp.callback_query.register(
         confirm_user_delete, F.data.startswith('admin_user_delete_') & ~F.data.contains('confirm')
+    )
+    dp.callback_query.register(
+        confirm_user_wipe, F.data.startswith('admin_user_wipe_') & ~F.data.contains('confirm')
     )
 
     # Регистрация хендлеров ограничений пользователя

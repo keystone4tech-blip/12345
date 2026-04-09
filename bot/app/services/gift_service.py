@@ -142,7 +142,8 @@ class GiftService:
                     await bot.send_message(
                         chat_id=gifter_tg_id,
                         text=f"✅ <b>Ваш подарок успешно получен!</b>\n\nПользователь {recipient_name} активировал подаренный вами тариф {tariff_name}.",
-                        parse_mode='HTML'
+                        parse_mode='HTML',
+                        message_effect_id='5107584321108051014' # Эффект "Лайк" 👍
                     )
                 except Exception as e:
                     logger.error("Ошибка уведомления дарителя", gifter_tg_id=gifter_tg_id, error=e)

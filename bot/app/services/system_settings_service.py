@@ -229,6 +229,9 @@ class BotConfigurationService:
         'MINIAPP_CUSTOM_URL': 'Кастомный URL MiniApp',
         'MINIAPP_PURCHASE_URL': 'URL покупки в MiniApp',
         'CONNECT_BUTTON_HAPP_DOWNLOAD_ENABLED': 'Кнопка загрузки Happ',
+        'CONNECT_BUTTON_TEXT': 'Текст кнопки подключения',
+        'CONNECT_BUTTON_STYLE': 'Цвет кнопки подключения',
+        'CONNECT_BUTTON_EMOJI': 'Премиум-эмодзи кнопки подключения',
         'HAPP_DOWNLOAD_LINK_IOS': 'Happ: Ссылка iOS',
         'HAPP_DOWNLOAD_LINK_ANDROID': 'Happ: Ссылка Android',
         'HAPP_DOWNLOAD_LINK_WINDOWS': 'Happ: Ссылка Windows',
@@ -334,6 +337,8 @@ class BotConfigurationService:
         'BUY_SUBSCRIPTION_BUTTON_STYLE': 'Цвет кнопки покупки',
         'BUY_SUBSCRIPTION_BUTTON_EMOJI': 'Премиум-эмодзи кнопки покупки',
         'SUBSCRIPTION_BUTTON_TEXT': 'Текст раздела «Подписка»',
+        'SUBSCRIPTION_BUTTON_STYLE': 'Цвет кнопки раздела «Подписка»',
+        'SUBSCRIPTION_BUTTON_EMOJI': 'Премиум-эмодзи кнопки «Подписка»',
         'BUY_TRAFFIC_BUTTON_VISIBLE': 'Кнопка докупки трафика',
 
         # OAUTH
@@ -611,6 +616,8 @@ class BotConfigurationService:
         'BUY_SUBSCRIPTION_BUTTON_STYLE': 'SUBSCRIPTIONS_CORE',
         'BUY_SUBSCRIPTION_BUTTON_EMOJI': 'SUBSCRIPTIONS_CORE',
         'SUBSCRIPTION_BUTTON_TEXT': 'SUBSCRIPTIONS_CORE',
+        'SUBSCRIPTION_BUTTON_STYLE': 'SUBSCRIPTIONS_CORE',
+        'SUBSCRIPTION_BUTTON_EMOJI': 'SUBSCRIPTIONS_CORE',
         'BUY_TRAFFIC_BUTTON_VISIBLE': 'SUBSCRIPTIONS_CORE',
         'DEFAULT_TRAFFIC_LIMIT_GB': 'SUBSCRIPTIONS_CORE',
         'MAX_DEVICES_LIMIT': 'SUBSCRIPTIONS_CORE',
@@ -701,6 +708,9 @@ class BotConfigurationService:
         'MAIN_MENU_MODE': 'INTERFACE',
         'CABINET_BUTTON_STYLE': 'INTERFACE',
         'CONNECT_BUTTON_MODE': 'CONNECT_BUTTON',
+        'CONNECT_BUTTON_TEXT': 'CONNECT_BUTTON',
+        'CONNECT_BUTTON_STYLE': 'CONNECT_BUTTON',
+        'CONNECT_BUTTON_EMOJI': 'CONNECT_BUTTON',
         'MINIAPP_CUSTOM_URL': 'CONNECT_BUTTON',
         'ENABLE_DEEP_LINKS': 'ADDITIONAL',
         'APP_CONFIG_CACHE_TTL': 'ADDITIONAL',
@@ -919,6 +929,18 @@ class BotConfigurationService:
             ChoiceOption('danger', '🔴 Красный'),
             ChoiceOption('default', '⚪ Серый'),
         ],
+        'CONNECT_BUTTON_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
+        'SUBSCRIPTION_BUTTON_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
     }
 
     SETTING_HINTS: dict[str, dict[str, str]] = {
@@ -958,10 +980,41 @@ class BotConfigurationService:
             'format': 'ID премиум-эмодзи.',
             'warning': 'Будет работать только в официальных приложениях Telegram.',
         },
+        'CONNECT_BUTTON_TEXT': {
+            'description': 'Текст кнопки для подключения к VPN (в различных меню и инструкциях).',
+            'format': 'Текстовая строка.',
+            'example': '🚀 Подключиться',
+        },
+        'CONNECT_BUTTON_STYLE': {
+            'description': 'Цветовое оформление кнопки подключения во всем боте.',
+            'format': 'Выберите один из четырех цветов.',
+            'example': 'Синий (рекомендуется)',
+        },
+        'CONNECT_BUTTON_EMOJI': {
+            'description': (
+                'Позволяет использовать красивый анимированный премиум-эмодзи для кнопки подключения. '
+                'Для этого отправьте нужный эмодзи боту @EmojiIdBot и вставьте полученный ID сюда.'
+            ),
+            'format': 'ID премиум-эмодзи.',
+            'warning': 'Будет работать только в официальных приложениях Telegram.',
+        },
         'SUBSCRIPTION_BUTTON_TEXT': {
             'description': 'Текст для общего раздела подписки (в нижней Reply-клавиатуре и в меню личного кабинета).',
             'format': 'Текстовая строка.',
             'example': '📱 Моя подписка',
+        },
+        'SUBSCRIPTION_BUTTON_STYLE': {
+            'description': 'Цветовое оформление основной кнопки раздела подписки в главном меню.',
+            'format': 'Выберите один из четырех цветов.',
+            'example': 'Зелёный (рекомендуется)',
+        },
+        'SUBSCRIPTION_BUTTON_EMOJI': {
+            'description': (
+                'Позволяет использовать красивый анимированный премиум-эмодзи для основной кнопки подписки. '
+                'Для этого отправьте нужный эмодзи боту @EmojiIdBot и вставьте полученный ID сюда.'
+            ),
+            'format': 'ID премиум-эмодзи.',
+            'warning': 'Будет работать только в официальных приложениях Telegram.',
         },
         'PRICE_14_DAYS': {
             'description': 'Стоимость подписки на 14 дней. Часто используется как «Пробная платная версия» для новых клиентов.',
@@ -1350,10 +1403,10 @@ class BotConfigurationService:
                 'Шаблон имени пользователя, которое создаётся в панели RemnaWave для телеграм-пользователя.'
             ),
             'format': ('Доступные плейсхолдеры: {full_name}, {username}, {username_clean}, {telegram_id}.'),
-            'example': 'vpn_{username_clean}_{telegram_id}',
+            'example': 'MozhnoVPN_{telegram_id}',
             'warning': (
                 'Недопустимые символы автоматически заменяются на подчёркивания. '
-                'Если результат пустой, используется user_{telegram_id}.'
+                'Если результат пустой, используется MozhnoVPN_{telegram_id}.'
             ),
         },
         'EXTERNAL_ADMIN_TOKEN': {

@@ -23,6 +23,7 @@ async def send_referral_notification(
     user: User | None = None,
     bonus_kopeks: int = 0,
     referral_name: str = '',
+    message_effect_id: str | None = None,
 ):
     """
     Отправляет реферальное уведомление в Telegram или по email.
@@ -53,7 +54,12 @@ async def send_referral_notification(
         return
 
     try:
-        await bot.send_message(telegram_id, message, parse_mode='HTML')
+        await bot.send_message(
+            telegram_id,
+            message,
+            parse_mode='HTML',
+            message_effect_id=message_effect_id,
+        )
         logger.info('✅ Уведомление отправлено пользователю', telegram_id=telegram_id)
     except Exception as e:
         logger.error('❌ Ошибка отправки уведомления пользователю', telegram_id=telegram_id, error=e)
@@ -115,7 +121,12 @@ async def process_referral_registration(db: AsyncSession, new_user_id: int, refe
                 f'📈 С каждого последующего пополнения вы будете получать {commission_percent}% комиссии.'
             )
             await send_referral_notification(
-                bot, referrer.telegram_id, inviter_notification, user=referrer, referral_name=new_user.full_name
+                bot,
+                referrer.telegram_id,
+                inviter_notification,
+                user=referrer,
+                referral_name=new_user.full_name,
+                message_effect_id='5190950319208240502',  # 👏 Эффект аплодисментов
             )
 
         logger.info(

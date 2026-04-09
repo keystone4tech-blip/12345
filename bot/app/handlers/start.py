@@ -318,6 +318,7 @@ async def _continue_registration_after_language(
                         "У вас есть реферальный код? Введите его или нажмите 'Пропустить'",
                     ),
                     reply_markup=get_referral_code_keyboard(language),
+                    message_effect_id='5190950319208240502' # Эффект 👏
                 )
                 await state.set_state(RegistrationStates.waiting_for_referral_code)
                 logger.info('🔍 LANGUAGE: Ожидание ввода реферального кода')
@@ -328,7 +329,11 @@ async def _continue_registration_after_language(
 
     rules_text = await get_rules(language)
     try:
-        await target_message.answer(rules_text, reply_markup=get_rules_keyboard(language))
+        await target_message.answer(
+            rules_text, 
+            reply_markup=get_rules_keyboard(language),
+            message_effect_id='5046509860389126442' # Эффект 🎉
+        )
     except TelegramForbiddenError:
         logger.warning(
             '⚠️ Пользователь заблокировал бота, пропускаем отправку правил',
@@ -411,6 +416,16 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
             gift_token = start_parameter.replace('gift_', '', 1)
             await state.update_data(gift_token=gift_token)
             logger.info('🎁 Найден токен подарка в ссылке', gift_token=gift_token)
+            
+            # РЕФЕРАЛЬНАЯ ПРИВЯЗКА: получаем ID дарителя из подарка
+            from app.services.gift_service import GiftService
+            gift_info = await GiftService.get_gift_by_token(db, gift_token)
+            if gift_info and gift_info.get('gifter_id'):
+                # Сохраняем ID дарителя как реферера, чтобы при завершении регистрации
+                # пользователь был привязан к нему.
+                await state.update_data(referrer_id=gift_info['gifter_id'])
+                logger.info('👤 Установлен реферер из данных подарка', referrer_id=gift_info['gifter_id'])
+            
             referral_code = None
         else:
             referral_code = start_parameter
@@ -549,7 +564,12 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                     [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
                                           callback_data=f"gift_accept:{gift_token}")]
                 ])
-                await message.answer(offer_text, reply_markup=accept_kb, parse_mode='HTML')
+                await message.answer(
+                    offer_text, 
+                    reply_markup=accept_kb, 
+                    parse_mode='HTML',
+                    message_effect_id='5159385139981059251' # Эффект "Сердце" ❤️ для подарка существующему пользователю
+                )
             else:
                 await message.answer(texts.t('GIFT_INVALID_TOKEN', "😔 Ссылка на подарок недействительна или уже была использована."))
             
@@ -653,21 +673,26 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
 
     data = await state.get_data() or {}
     if not data.get('language'):
+        # Автоопределение языка пользователя из профиля Telegram
+        user_lang_code = message.from_user.language_code
+        detected_lang = DEFAULT_LANGUAGE
+        if user_lang_code:
+            normalized_code = user_lang_code.split('-')[0].lower()
+            available_languages = [l.lower() for l in settings.get_available_languages()]
+            if normalized_code in available_languages:
+                detected_lang = normalized_code
+                logger.info('🌐 LANGUAGE: Автоматически определен язык пользователя', lang=detected_lang)
+        
+        data['language'] = detected_lang
+        await state.set_data(data)
+
         if settings.is_language_selection_enabled():
             await _prompt_language_selection(message, state)
             return
 
-        default_language = (
-            (settings.DEFAULT_LANGUAGE or DEFAULT_LANGUAGE)
-            if isinstance(settings.DEFAULT_LANGUAGE, str)
-            else DEFAULT_LANGUAGE
-        )
-        normalized_default = default_language.split('-')[0].lower()
-        data['language'] = normalized_default
-        await state.set_data(data)
         logger.info(
-            "🌐 LANGUAGE: выбор языка отключен, устанавливаем язык по умолчанию ''",
-            normalized_default=normalized_default,
+            "🌐 LANGUAGE: выбор языка отключен или автоопределен: ''",
+            detected_lang=detected_lang,
         )
 
     await _continue_registration_after_language(
@@ -900,12 +925,18 @@ async def process_rules_accept(callback: types.CallbackQuery, state: FSMContext,
             )
 
             try:
-                await callback.message.edit_text(rules_required_text, reply_markup=get_rules_keyboard(language))
-            except TelegramBadRequest as e:
-                if 'message is not modified' in str(e):
-                    pass  # Сообщение уже содержит нужный текст
-                else:
-                    logger.error('Ошибка при показе сообщения об отклонении правил', error=e)
+                # Используем answer вместо edit_text для работы эффектов
+                await callback.message.answer(
+                    rules_required_text, 
+                    reply_markup=get_rules_keyboard(language),
+                    message_effect_id='5159385139981059251' # Эффект ❤️
+                )
+                # Удаляем старое сообщение
+                import contextlib
+                with contextlib.suppress(Exception):
+                    await callback.message.delete()
+            except Exception as e:
+                logger.error('Ошибка при показе сообщения об отклонении правил', error=e)
 
         logger.info('✅ Правила обработаны для пользователя', from_user_id=callback.from_user.id)
 
@@ -1324,7 +1355,11 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
             await callback.message.answer(
                 offer_text,
                 reply_markup=get_post_registration_keyboard(user.language),
+                message_effect_id='5046509860389126442' # Эффект 🎉
             )
+            import contextlib
+            with contextlib.suppress(Exception):
+                await callback.message.delete()
             logger.info('✅ Приветственное сообщение отправлено пользователю', telegram_id=user.telegram_id)
             await _send_pinned_message(callback.bot, db, user)
         except TelegramBadRequest as e:
@@ -1381,7 +1416,15 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
                 is_moderator=is_moderator,
                 custom_buttons=custom_buttons,
             )
-            await callback.message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+            await callback.message.answer(
+                menu_text, 
+                reply_markup=keyboard, 
+                parse_mode='HTML',
+                message_effect_id='5104841245755180586' # Эффект 🔥
+            )
+            import contextlib
+            with contextlib.suppress(Exception):
+                await callback.message.delete()
             await _send_pinned_message(callback.bot, db, user)
             logger.info('✅ Главное меню показано пользователю', telegram_id=user.telegram_id)
         except Exception as e:
@@ -1446,7 +1489,12 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                 is_moderator=is_moderator,
                 custom_buttons=custom_buttons,
             )
-            await message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+            await message.answer(
+                menu_text, 
+                reply_markup=keyboard, 
+                parse_mode='HTML',
+                message_effect_id='5104841245755180586' # Эффект 🔥
+            )
 
             # ПРОВЕРКА ПОДАРКА ПРИ ЗАВЕРШЕНИИ РЕГИСТРАЦИИ (существующий)
             gift_token = data.get('gift_token')
@@ -1467,7 +1515,12 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                         [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
                                               callback_data=f"gift_accept:{gift_token}")]
                     ])
-                    await message.answer(offer_text, reply_markup=accept_kb, parse_mode='HTML')
+                    await message.answer(
+                        offer_text, 
+                        reply_markup=accept_kb, 
+                        parse_mode='HTML',
+                        message_effect_id='5159385139981059251' # Эффект "Сердце" ❤️ для подарка
+                    )
 
             await _send_pinned_message(message.bot, db, existing_user)
         except Exception as e:
@@ -1704,7 +1757,12 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                 is_moderator=is_moderator,
                 custom_buttons=custom_buttons,
             )
-            await message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+            await message.answer(
+                menu_text, 
+                reply_markup=keyboard, 
+                parse_mode='HTML',
+                message_effect_id='5190950319208240502' # Эффект "Аплодисменты" 👏 при первом входе (после регистрации)
+            )
 
             # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
             data = await state.get_data() or {}
@@ -2217,6 +2275,7 @@ async def required_sub_channel_check(
                         chat_id=query.from_user.id,
                         text=rules_text,
                         reply_markup=get_rules_keyboard(language),
+                        message_effect_id='5046509860389126442' # Эффект "Праздник" 🎉
                     )
                 await state.set_state(RegistrationStates.waiting_for_rules_accept)
 

@@ -99,8 +99,8 @@
 
 1. **Форкните и клонируйте репозиторий:**
 ```bash
-git clone https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot.git
-cd remnawave-bedolaga-telegram-bot
+git clone https://github.com/keystone4tech-blip/12345.git
+cd 12345
 ```
 
 2. **Создайте виртуальное окружение:**
@@ -425,7 +425,7 @@ async def test_calculate_price():
 ### Сообщения о уязвимостях
 
 Для сообщений о критических уязвимостях безопасности:
-- Свяжитесь с [@fringg](https://t.me/fringg) напрямую
+- Свяжитесь с [@MozhnoVPN](https://t.me/MozhnoVPN) напрямую
 - Не создавайте публичные issues для уязвимостей
 - Дайте время на исправление перед публичным раскрытием
 
@@ -442,7 +442,7 @@ async def test_calculate_price():
 
 - **💬 Telegram Group:** [Bedolaga Chat](https://t.me/+wTdMtSWq8YdmZmVi) - общие вопросы
 - **🐛 GitHub Issues:** Технические вопросы и баги
-- **📧 Прямой контакт:** [@fringg](https://t.me/fringg) - только критические вопросы
+- **📧 Прямой контакт:** [@MozhnoVPN](https://t.me/MozhnoVPN) - только критические вопросы
 
 ### Часто задаваемые вопросы
 

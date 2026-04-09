@@ -21,6 +21,9 @@ from app.handlers.subscription.tariff_purchase import (
     _get_user_period_discount,
     format_tariffs_list_text,
 )
+from app.keyboards.inline import (
+    get_dynamic_connect_button,
+)
 from app.localization.texts import get_texts
 from app.services.gift_service import GiftService
 from app.utils.decorators import error_handler
@@ -367,7 +370,8 @@ async def gift_confirm_purchase(
                 [InlineKeyboardButton(text='🏠 На главную', callback_data='back_to_menu')],
             ]
         ),
-        parse_mode='HTML'
+        parse_mode='HTML',
+        message_effect_id='5046509860389126442'  # 🎉 Эффект праздника
     )
     await callback.answer()
 
@@ -390,7 +394,7 @@ async def gift_accept(
     if result['success']:
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), callback_data="subscription_connect")],
+                [get_dynamic_connect_button(texts, result.get('subscription_url'))],
                 [InlineKeyboardButton(text=texts.t('BACK_TO_MAIN_MENU_BUTTON', '⬅️ В главное меню'), callback_data="back_to_menu")],
             ]
         )
@@ -410,7 +414,8 @@ async def gift_accept(
                 period_days=result['period']
             ),
             reply_markup=keyboard,
-            parse_mode='HTML'
+            parse_mode='HTML',
+            message_effect_id='5159385139981059251' # Эффект ❤️
         )
     else:
         error = result.get('error')

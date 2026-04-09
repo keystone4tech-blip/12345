@@ -6,6 +6,7 @@ from app.config import settings
 from app.database.models import User
 from app.keyboards.inline import (
     get_device_selection_keyboard,
+    get_dynamic_connect_button,
     get_happ_cryptolink_keyboard,
     get_happ_download_button_row,
 )
@@ -40,109 +41,36 @@ async def handle_connect_subscription(callback: types.CallbackQuery, db_user: Us
         )
         return
 
-    connect_mode = settings.CONNECT_BUTTON_MODE
+    if connect_mode != 'guide':
+        keyboard_rows = [[get_dynamic_connect_button(texts, subscription_link)]]
+        
+        if connect_mode in ['link', 'happ_cryptolink']:
+            happ_row = get_happ_download_button_row(texts)
+            if happ_row:
+                keyboard_rows.append(happ_row)
+        
+        keyboard_rows.append([InlineKeyboardButton(text=texts.BACK, callback_data='menu_subscription')])
+        reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
 
-    if connect_mode == 'miniapp_subscription':
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                        web_app=types.WebAppInfo(url=subscription_link),
-                    )
-                ],
-                [InlineKeyboardButton(text=texts.BACK, callback_data='menu_subscription')],
-            ]
-        )
-
-        await callback.message.edit_text(
-            texts.t(
+        if connect_mode == 'miniapp_subscription':
+            message_text = texts.t(
                 'SUBSCRIPTION_CONNECT_MINIAPP_MESSAGE',
-                """📱 <b>Подключить подписку</b>
-
-🚀 Нажмите кнопку ниже, чтобы открыть подписку в мини-приложении Telegram:""",
-            ),
-            reply_markup=keyboard,
-            parse_mode='HTML',
-        )
-
-    elif connect_mode == 'miniapp_custom':
-        if not settings.MINIAPP_CUSTOM_URL:
-            await callback.answer(
-                texts.t(
-                    'CUSTOM_MINIAPP_URL_NOT_SET',
-                    '⚠ Кастомная ссылка для мини-приложения не настроена',
-                ),
-                show_alert=True,
+                """📱 <b>Подключить подписку</b>\n\n🚀 Нажмите кнопку ниже, чтобы открыть подписку в мини-приложении Telegram:""",
             )
-            return
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                        web_app=types.WebAppInfo(url=settings.MINIAPP_CUSTOM_URL),
-                    )
-                ],
-                [InlineKeyboardButton(text=texts.BACK, callback_data='menu_subscription')],
-            ]
-        )
-
-        await callback.message.edit_text(
-            texts.t(
+        elif connect_mode == 'miniapp_custom':
+            message_text = texts.t(
                 'SUBSCRIPTION_CONNECT_CUSTOM_MESSAGE',
-                """🚀 <b>Подключить подписку</b>
-
-📱 Нажмите кнопку ниже, чтобы открыть приложение:""",
-            ),
-            reply_markup=keyboard,
-            parse_mode='HTML',
-        )
-
-    elif connect_mode == 'link':
-        rows = [[InlineKeyboardButton(text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), url=subscription_link)]]
-        happ_row = get_happ_download_button_row(texts)
-        if happ_row:
-            rows.append(happ_row)
-        rows.append([InlineKeyboardButton(text=texts.BACK, callback_data='menu_subscription')])
-
-        keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
+                """🚀 <b>Подключить подписку</b>\n\n📱 Нажмите кнопку ниже, чтобы открыть приложение:""",
+            )
+        else: # link or happ_cryptolink
+            message_text = texts.t(
+                'SUBSCRIPTION_CONNECT_LINK_MESSAGE',
+                """🚀 <b>Подключить подписку</b>\n\n🔗 Нажмите кнопку ниже, чтобы открыть ссылку подписки:""",
+            )
 
         await callback.message.edit_text(
-            texts.t(
-                'SUBSCRIPTION_CONNECT_LINK_MESSAGE',
-                """🚀 <b>Подключить подписку</b>",
-
-🔗 Нажмите кнопку ниже, чтобы открыть ссылку подписки:""",
-            ),
-            reply_markup=keyboard,
-            parse_mode='HTML',
-        )
-    elif connect_mode == 'happ_cryptolink':
-        rows = [
-            [
-                InlineKeyboardButton(
-                    text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'),
-                    callback_data='open_subscription_link',
-                )
-            ]
-        ]
-        happ_row = get_happ_download_button_row(texts)
-        if happ_row:
-            rows.append(happ_row)
-        rows.append([InlineKeyboardButton(text=texts.BACK, callback_data='menu_subscription')])
-
-        keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
-
-        await callback.message.edit_text(
-            texts.t(
-                'SUBSCRIPTION_CONNECT_LINK_MESSAGE',
-                """🚀 <b>Подключить подписку</b>",
-
-🔗 Нажмите кнопку ниже, чтобы открыть ссылку подписки:""",
-            ),
-            reply_markup=keyboard,
+            message_text,
+            reply_markup=reply_markup,
             parse_mode='HTML',
         )
     else:
@@ -297,11 +225,7 @@ async def handle_open_subscription_link(callback: types.CallbackQuery, db_user: 
         link_text,
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=texts.t('CONNECT_BUTTON', '🔗 Подключиться'), callback_data='subscription_connect'
-                    )
-                ],
+                [get_dynamic_connect_button(texts, subscription_link)],
                 [InlineKeyboardButton(text=texts.BACK, callback_data='menu_subscription')],
             ]
         ),

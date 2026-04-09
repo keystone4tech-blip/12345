@@ -32,6 +32,9 @@ from app.database.crud.subscription import (
 )
 from app.database.crud.user import get_user_by_id, get_user_by_remnawave_uuid, get_user_by_telegram_id
 from app.database.models import Subscription, SubscriptionServer, SubscriptionStatus, User
+from app.keyboards.inline import (
+    get_dynamic_connect_button,
+)
 from app.localization.texts import get_texts
 from app.services.admin_notification_service import AdminNotificationService
 from app.services.notification_delivery_service import NotificationType, notification_delivery_service
@@ -364,10 +367,14 @@ class RemnaWaveWebhookService:
 
     def _get_connect_keyboard(self, user: User) -> InlineKeyboardMarkup:
         texts = get_texts(user.language)
-        button_text = texts.get('CONNECT_BUTTON', 'Connect')
+        subscription_url = None
+        if hasattr(user, 'subscription') and user.subscription:
+            from app.utils.subscription_utils import get_display_subscription_link
+            subscription_url = get_display_subscription_link(user.subscription)
+            
         return InlineKeyboardMarkup(
             inline_keyboard=[
-                [build_miniapp_or_callback_button(text=button_text, callback_data='subscription_connect')],
+                [get_dynamic_connect_button(texts, subscription_url)],
             ]
         )
 

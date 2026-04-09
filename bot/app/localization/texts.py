@@ -53,7 +53,7 @@ _DYNAMIC_LANGUAGE_CONFIGS = {
         'traffic_pattern': '📊 {size} GB - {price}',
         'unlimited_pattern': '📊 Unlimited - {price}',
         'support_info': (
-            '\n🛟 <b>RemnaWave Support</b>\n\n'
+            '\n🛟 <b>MozhnoVPN Support</b>\n\n'
             'This is the ticket center: create requests, view replies and history.\n\n'
             '• 🎫 Create ticket — describe your issue or question\n'
             '• 📋 My tickets — status and conversation\n'

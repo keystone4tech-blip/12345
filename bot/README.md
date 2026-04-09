@@ -1,6 +1,6 @@
-# 🚀 Remnawave Bedolaga Bot
+# 🚀 MozhnoVPN Bot
 
-> **🆕 Новый веб-кабинет (Cabinet WebApp) https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/**
+> **🆕 Новый веб-кабинет (Cabinet WebApp) https://github.com/keystone4tech-blip/12345/**
 >
 > Вышла новая версия личного кабинета пользователя — веб-интерфейс для управления подписками!
 >
@@ -29,7 +29,7 @@ _Полнофункциональное решение с управлением
 [![Python](https://img.shields.io/badge/Python-3.13+-blue?logo=python&logoColor=white)](https://python.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue?logo=postgresql&logoColor=white)](https://postgresql.org)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/Fr1ngg/remnawave-bedolaga-telegram-bot?style=social)](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/keystone4tech-blip/12345?style=social)](https://github.com/keystone4tech-blip/12345/stargazers)
 
 [🚀 Быстрый старт](#-быстрый-старт) • [📖 Функционал](#-функционал) • [🳠Docker](#-docker-развертывание) • [💻 Локальная разработка](#-локальная-разработка) • [💬 Поддержка](#-поддержка-и-сообщество)
 
@@ -37,15 +37,13 @@ _Полнофункциональное решение с управлением
 
 ---
 
-## 🧪 [Тестирование бота](https://t.me/zero_ping_vpn_bot?start=Git)
-
-## 💬 **[Bedolaga Chat](https://t.me/+wTdMtSWq8YdmZmVi)** - Для общения, вопросов, предложений
+## 🧪 [Тестирование бота](https://t.me/MozhnoVPN)
 
 ---
 
-## 🌟 Почему Bedolaga?
+## 🌟 Почему MozhnoVPN?
 
-Бот Бедолага не добрый и не милый.
+Бот MozhnoVPN не добрый и не милый.
 Он просто делает вашу работу вместо вас, принимает оплату, выдаёт подписки, интегрируется с Remnawave и тихо ненавидит всех, кто ещё не подключил его.
 
 Вы хотите продавать VPN — Бедолага позволит это делать.
@@ -100,8 +98,8 @@ _Полнофункциональное решение с управлением
 
 ```bash
 # 1. Скачай репозиторий
-git clone https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot.git
-cd remnawave-bedolaga-telegram-bot
+git clone https://github.com/keystone4tech-blip/12345.git
+cd mozhnovpn-bot
 
 # 2. Создай необходимые директории
 mkdir -p ./logs ./data ./data/backups ./data/referral_qr
@@ -129,8 +127,8 @@ make test           # Запустить тесты
 
 ```bash
 # 1. Скачай репозиторий
-git clone https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot.git
-cd remnawave-bedolaga-telegram-bot
+git clone https://github.com/keystone4tech-blip/12345.git
+cd mozhnovpn-bot
 
 # 2. Настрой конфиг
 cp .env.example .env
@@ -1858,11 +1856,10 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 
 ## 🤝 Как помочь проекту
 
-- 🐛 [**Сообщай о багах**](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/issues) с подробным описанием
-- 💡 [**Предлагай идеи**](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/discussions) для улучшения
+- 🐛 [**Сообщай о багах**](https://github.com/keystone4tech-blip/12345/issues) с подробным описанием
+- 💡 [**Предлагай идеи**](https://github.com/keystone4tech-blip/12345/discussions) для улучшения
 - ⭐ **Ставь звезды** проекту - это мотивирует разработку!
 - 📢 **Рассказывай друзьям** о проекте
-- 👍 **[Поддержи разработку](https://t.me/tribute/app?startapp=duUO)** - помоги проекту расти
 - 🔧 **Отправляй Pull Requests** - внеси свой вклад в код
 
 ---
@@ -1871,9 +1868,8 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 
 ### 📞 **Контакты**
 
-- **💬 Telegram:** [@fringg](https://t.me/fringg) - вопросы по разработке (только по делу!)
-- **💬 Telegram Group:** [Bedolaga Chat](https://t.me/+wTdMtSWq8YdmZmVi) - общение, вопросы, предложения
-- **🐛 Issues:** [GitHub Issues](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/issues) - баги и предложения
+- **💬 Telegram:** [@MozhnoVPN](https://t.me/MozhnoVPN) - поддержка и вопросы
+- **🐛 Issues:** [GitHub Issues](https://github.com/keystone4tech-blip/12345/issues) - баги и предложения
 
 ### 📚 **Полезные ресурсы**
 
@@ -1886,8 +1882,7 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 
 ### 🎉 **Сообщество**
 
-- **Remnawave Team** - за отличную панель и стабильный API
-- **Сообщество Bedolaga** - за активное тестирование и обратную связь
+- **MozhnoVPN Team** - за развитие проекта
 - **Всем пользователям** - за доверие и использование бота
 
 ---
@@ -1915,29 +1910,9 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 <table align="center">
 <tr>
 <td align="center">
-<h3>🧪 Протестируй бота</h3>
-<a href="https://t.me/FringVPN_bot">
-<img src="https://img.shields.io/badge/Telegram-Тестовый_бот-blue?style=for-the-badge&logo=telegram" alt="Test Bot">
-</a>
-</td>
-<td align="center">
-<h3>💬 Присоединись к сообществу</h3>
-<a href="https://t.me/+wTdMtSWq8YdmZmVi">
-<img src="https://img.shields.io/badge/Telegram-Bedolaga_Chat-blue?style=for-the-badge&logo=telegram" alt="Community">
-</a>
-</td>
-</tr>
-<tr>
-<td align="center">
 <h3>⭐ Поставь звезду</h3>
-<a href="https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot">
+<a href="https://github.com/keystone4tech-blip/12345">
 <img src="https://img.shields.io/badge/GitHub-Звезда-yellow?style=for-the-badge&logo=github" alt="Star">
-</a>
-</td>
-<td align="center">
-<h3>💝 Поддержи проект</h3>
-<a href="https://t.me/tribute/app?startapp=duUO">
-<img src="https://img.shields.io/badge/Tribute-Донат-green?style=for-the-badge&logo=heart" alt="Donate">
 </a>
 </td>
 </tr>
@@ -1947,17 +1922,17 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 
 ## 📈 Статистика проекта
 
-![GitHub stars](https://img.shields.io/github/stars/Fr1ngg/remnawave-bedolaga-telegram-bot?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Fr1ngg/remnawave-bedolaga-telegram-bot?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/Fr1ngg/remnawave-bedolaga-telegram-bot?style=social)
+![GitHub stars](https://img.shields.io/github/stars/keystone4tech-blip/12345?style=social)
+![GitHub forks](https://img.shields.io/github/forks/keystone4tech-blip/12345?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/keystone4tech-blip/12345?style=social)
 
-![GitHub last commit](https://img.shields.io/github/last-commit/Fr1ngg/remnawave-bedolaga-telegram-bot)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Fr1ngg/remnawave-bedolaga-telegram-bot)
-![GitHub contributors](https://img.shields.io/github/contributors/Fr1ngg/remnawave-bedolaga-telegram-bot)
+![GitHub last commit](https://img.shields.io/github/last-commit/keystone4tech-blip/12345)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/keystone4tech-blip/12345)
+![GitHub contributors](https://img.shields.io/github/contributors/keystone4tech-blip/12345)
 
-![GitHub issues](https://img.shields.io/github/issues/Fr1ngg/remnawave-bedolaga-telegram-bot)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/Fr1ngg/remnawave-bedolaga-telegram-bot)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/Fr1ngg/remnawave-bedolaga-telegram-bot)
+![GitHub issues](https://img.shields.io/github/issues/keystone4tech-blip/12345)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/keystone4tech-blip/12345)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/keystone4tech-blip/12345)
 
 </div>
 
@@ -1978,7 +1953,7 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 
 ---
 
-## 🔥 Почему выбирают Bedolaga?
+## 🔥 Почему выбирают MozhnoVPN?
 
 ### 💼 **Для бизнеса**
 
@@ -1992,11 +1967,11 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 ### 🛠️ **Для разработчиков**
 
 ✅ **Современный стек** - Python 3.13, AsyncIO, PostgreSQL, Redis  
-✅ **Модульная архитектура** - легко расширять и модифицировать  
+✅ **Аккуратный код** - легко расширять и модифицировать  
 ✅ **Полное API** - интегрируйте с любыми сервисами  
 ✅ **Docker-ready** - разворачивается за минуты  
 ✅ **Подробная документация** - все описано и понятно  
-✅ **Активное сообщество** - помощь в Telegram чате
+✅ **Поддержка** - помощь в Telegram поддержке
 
 ### 👥 **Для пользователей**
 
@@ -2102,7 +2077,7 @@ REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
 **Вручную:**
 
 ```bash
-cd /root/remnawave-bedolaga-telegram-bot
+cd /root/mozhnovpn-bot
 
 # Обновление до последнего коммита (до последней мастер ветки, не всегда стабильно):
 
@@ -2155,20 +2130,19 @@ make reload-follow
 
 ### 💬 Куда обратиться?
 
-- 🐛 **Баг?** → [GitHub Issues](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/issues)
-- 💡 **Идея?** → [GitHub Discussions](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/discussions)
-- 🆘 **Вопрос?** → [Bedolaga Chat](https://t.me/+wTdMtSWq8YdmZmVi)
-- 📧 **Личное?** → [@fringg](https://t.me/fringg)
+- 🐛 **Баг?** → [GitHub Issues](https://github.com/keystone4tech-blip/12345/issues)
+- 💡 **Идея?** → [GitHub Discussions](https://github.com/keystone4tech-blip/12345/discussions)
+- 📧 **Личное?** → [@MozhnoVPN](https://t.me/MozhnoVPN)
 
 ---
 
-**Made with ❤️ by [@fringg](https://t.me/fringg) and amazing [contributors](https://github.com/Fr1ngg/remnawave-bedolaga-telegram-bot/graphs/contributors)**
+**Made with ❤️ by [@MozhnoVPN](https://t.me/MozhnoVPN) and amazing [contributors](https://github.com/keystone4tech-blip/12345/graphs/contributors)**
 
 <div align="center">
 
 ### ⭐ Не забудь поставить звезду проекту!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Fr1ngg/remnawave-bedolaga-telegram-bot&type=Date)](https://star-history.com/#Fr1ngg/remnawave-bedolaga-telegram-bot&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=keystone4tech-blip/12345&type=Date)](https://star-history.com/#keystone4tech-blip/12345&Date)
 
 </div>
 
