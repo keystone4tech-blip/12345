@@ -136,6 +136,7 @@ class BotConfigurationService:
         'BAN_NOTIFICATIONS': '🚫 Тексты уведомлений о блокировках',
         'SUPPORT_AI': '🤖 DonMatteo-AI-Tiket',
         'GIFTS': '🎁 Система подарков',
+        'NALOGO': '🧾 NaloGO (Самозанятые)',
     }
 
     SETTING_LABELS: dict[str, str] = {
@@ -144,16 +145,36 @@ class BotConfigurationService:
         'SUPPORT_USERNAME': '💬 Контакт поддержки',
         'MAINTENANCE_MODE': '🔧 Режим тех. работ',
         'MAINTENANCE_MESSAGE': '📝 Текст заглушки тех. работ',
+        'MAINTENANCE_CHECK_INTERVAL': '⏱ Интервал проверок (сек)',
+        'MAINTENANCE_AUTO_ENABLE': '🤖 Авто-включение при сбоях',
+        'MAINTENANCE_MONITORING_ENABLED': '📡 Мониторинг доступности',
         'BOT_RUN_MODE': '🚀 Режим запуска (polling/webhook)',
         'EXTERNAL_ADMIN_TOKEN': '🛡️ Токен внешней админки',
         'EXTERNAL_ADMIN_TOKEN_BOT_ID': '🆔 ID бота для внеш. админки',
+        'ACTIVATE_BUTTON_VISIBLE': '🔘 Показать кнопку активации',
+        'ACTIVATE_BUTTON_TEXT': '🔘 Текст кнопки активации',
+        'SKIP_REFERRAL_CODE': '⏩ Пропустить ввод реф-кода',
+        'SKIP_RULES_ACCEPT': '⏩ Пропустить принятие правил',
+        'ADMIN_EMAILS': '📧 Email-адреса администраторов',
+        'TEST_EMAIL': '🧪 Тестовый Email',
+        'TEST_EMAIL_PASSWORD': '🔑 Пароль тестового Email',
+        'DEBUG': '🧪 Режим отладки (логирование)',
+        'SERVER_STATUS_MODE': '📊 Режим статуса серверов',
+        'SERVER_STATUS_EXTERNAL_URL': '🌐 Внешняя ссылка статуса',
+        'SERVER_STATUS_METRICS_URL': '📈 URL метрик (Prometheus)',
+        'SERVER_STATUS_METRICS_USERNAME': '👤 Метрики: Логин',
+        'SERVER_STATUS_METRICS_PASSWORD': '🔑 Метрики: Пароль',
+        'SERVER_STATUS_REQUEST_TIMEOUT': '⏱ Тайм-аут запросов статуса',
 
         # SUPPORT
         'SUPPORT_MENU_ENABLED': 'Включить меню поддержки',
         'SUPPORT_SYSTEM_MODE': 'Режим системы поддержки',
         'SUPPORT_TICKET_SLA_ENABLED': 'Включить SLA для тикетов',
         'SUPPORT_TICKET_SLA_MINUTES': 'SLA: время ответа (мин)',
+        'SUPPORT_TICKET_SLA_CHECK_INTERVAL_SECONDS': 'SLA: интервал проверки (сек)',
+        'SUPPORT_TICKET_SLA_REMINDER_COOLDOWN_MINUTES': 'SLA: интервал напоминаний (мин)',
         'SUPPORT_AI_ENABLED': 'Включить AI-помощника',
+        'SUPPORT_AI_FORUM_ID': 'ID темы на форуме для ИИ',
         'MINIAPP_TICKETS_ENABLED': 'Тикеты в MiniApp',
 
         # REFERRAL
@@ -176,9 +197,9 @@ class BotConfigurationService:
         'REFERRAL_WITHDRAWAL_SUSPICIOUS_MAX_DEPOSITS_PER_MONTH': 'Анти-фрод: Макс. депозитов в месяц',
         'REFERRAL_WITHDRAWAL_SUSPICIOUS_NO_PURCHASES_RATIO': 'Анти-фрод: Коэфф. подозрительных трат',
         'REFERRAL_WITHDRAWAL_ONLY_REFERRAL_BALANCE': 'Вывод только партнерского баланса',
-        'REFERRAL_WITHDRAWAL_REQUISITES_TEXT': 'Инструкция по реквизитам',
+        'REFERRAL_WITHDRAWAL_REQUISITES_TEXT': 'Инструкция по реквизитам при выводе',
         'REFERRAL_WITHDRAWAL_NOTIFICATIONS_TOPIC_ID': 'Топик заявок на вывод',
-        'REFERRAL_WITHDRAWAL_TEST_MODE': 'Тестовый режим вывода',
+        'REFERRAL_WITHDRAWAL_TEST_MODE': 'Тестовый режим системы вывода',
 
         # GIFTS
         'GIFTS_ENABLED': 'Включить систему подарков',
@@ -214,12 +235,15 @@ class BotConfigurationService:
         'MINIAPP_SUPPORT_URL': 'Кастомная ссылка поддержки',
 
         # TRIAL
-        'TRIAL_DURATION_DAYS': 'Длительность триала (дней)',
-        'TRIAL_TRAFFIC_LIMIT_GB': 'Лимит трафика триала (ГБ)',
-        'TRIAL_DEVICE_LIMIT': 'Лимит устройств триала',
-        'TRIAL_ACTIVATION_PRICE': 'Цена активации триала',
-        'TRIAL_PAYMENT_ENABLED': 'Платная активация триала',
-        'TRIAL_ADD_REMAINING_DAYS_TO_PAID': 'Перенос дней при покупке',
+        'TRIAL_DURATION_DAYS': '⏳ Длительность триала (дней)',
+        'TRIAL_TRAFFIC_LIMIT_GB': '📊 Лимит трафика триала (ГБ)',
+        'TRIAL_DEVICE_LIMIT': '📱 Лимит устройств триала',
+        'TRIAL_ACTIVATION_PRICE': '💰 Цена активации триала',
+        'TRIAL_PAYMENT_ENABLED': '💳 Платная активация триала',
+        'TRIAL_ADD_REMAINING_DAYS_TO_PAID': '📅 Перенос дней триала при покупке',
+        'TRIAL_DISABLED_FOR': '🚫 Триал отключен для...',
+        'TRIAL_WARNING_HOURS': '🔔 Предупреждение об окончании (ч)',
+        'TRIAL_USER_TAG': '🏷️ Тег триал-пользователя (RemnaWave)',
 
         # SUBSCRIPTIONS
         'BASE_SUBSCRIPTION_PRICE': '💵 Базовая цена подписки',
@@ -236,41 +260,54 @@ class BotConfigurationService:
         'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': '🔄 Автопокупка после оплаты',
         'PRICE_ROUNDING_ENABLED': '🔢 Округление цен',
         'APP_CONFIG_CACHE_TTL': '🧠 TTL кэша конфига приложений',
+        'DEFAULT_AUTOPAY_ENABLED': '🔄 Автопродление по умолчанию',
+        'DEFAULT_AUTOPAY_DAYS_BEFORE': '⏳ Дней до оплаты (автопродление)',
+        'MIN_BALANCE_FOR_AUTOPAY_KOPEKS': '💰 Мин. баланс для автопродления',
+        'AUTOPAY_WARNING_DAYS': '🔔 Уведомлять об автопродлении за (дн)',
 
         # BACKUPS
         'BACKUP_AUTO_ENABLED': 'Включить авто-бэкапы',
         'BACKUP_TIME': 'Время создания бэкапа',
-        'BACKUP_INTERVAL_HOURS': 'Интервал бэкапов (часов)',
-        'BACKUP_MAX_KEEP': 'Хранить бэкапов (шт)',
-        'BACKUP_COMPRESSION': 'Сжимать бэкапы',
-        'BACKUP_LOCATION': 'Путь хранения бэкапов',
+        'BACKUP_INTERVAL_HOURS': 'Интервал бэкапов (час)',
+        'BACKUP_MAX_KEEP': 'Кол-во хранимых архивов',
+        'BACKUP_COMPRESSION': 'Сжатие архивов (Zip)',
+        'BACKUP_LOCATION': 'Путь к хранилищу бэкапов',
         'BACKUP_SEND_ENABLED': 'Отправлять бэкапы в Telegram',
         'BACKUP_SEND_CHAT_ID': 'ID чата для бэкапов',
-        'BACKUP_SEND_TOPIC_ID': 'ID топика для бэкапов',
-        'BACKUP_INCLUDE_LOGS': 'Включать логи в бэкап',
-        'BACKUP_ARCHIVE_PASSWORD': 'Пароль архива бэкапа',
+        'BACKUP_SEND_TOPIC_ID': 'ID топика в чате бэкапов',
+        'BACKUP_INCLUDE_LOGS': 'Включать логи в архив',
+        'BACKUP_ARCHIVE_PASSWORD': '🛡️ Пароль архива бэкапа',
 
         # NOTIFICATIONS & TOPICS
         'ADMIN_NOTIFICATIONS_ENABLED': 'Включить уведомления админа',
         'ADMIN_NOTIFICATIONS_CHAT_ID': 'ID чата уведомлений',
-        'ADMIN_NOTIFICATIONS_TICKET_TOPIC_ID': 'Топик для тикетов',
-        'ADMIN_NOTIFICATIONS_NALOG_TOPIC_ID': 'Топик для налоговой',
-        'SUSPICIOUS_NOTIFICATIONS_TOPIC_ID': 'Топик для подозрений',
-        'ADMIN_REPORTS_CHAT_ID': 'ID чата отчетов',
-        'ADMIN_REPORTS_TOPIC_ID': 'Топик отчетов',
-        'ADMIN_REPORTS_SEND_TIME': 'Время отправки отчета',
+        'ADMIN_NOTIFICATIONS_TICKET_TOPIC_ID': 'Топик для тикетов поддержки',
+        'ADMIN_NOTIFICATIONS_NALOG_TOPIC_ID': 'Топик для чеков NaloGO',
+        'SUSPICIOUS_NOTIFICATIONS_TOPIC_ID': 'Топик подозрительного трафика',
+        'ADMIN_REPORTS_ENABLED': 'Включить автоматические отчеты',
+        'ADMIN_REPORTS_CHAT_ID': 'ID чата для отчетов',
+        'ADMIN_REPORTS_TOPIC_ID': 'ID топика для отчетов',
+        'ADMIN_REPORTS_SEND_TIME': 'Время ежедневного отчета',
 
         # WEB API & CABINET
         'WEB_API_ENABLED': 'Включить Web API',
-        'WEB_API_HOST': 'Хост Web API',
-        'WEB_API_PORT': 'Порт Web API',
-        'WEB_API_ALLOWED_ORIGINS': 'Разрешенные домены (CORS)',
-        'WEB_API_DOCS_ENABLED': 'Включить Swagger-документацию',
+        'WEB_API_HOST': 'Web API: Хост',
+        'WEB_API_PORT': 'Web API: Порт',
+        'WEB_API_ALLOWED_ORIGINS': 'Web API: Разрешенные CORS',
+        'WEB_API_DOCS_ENABLED': 'Web API: Swagger докс',
+        'WEB_API_WORKERS': 'Web API: Кол-во воркеров',
+        'WEB_API_TITLE': 'Web API: Заголовок',
+        'WEB_API_VERSION': 'Web API: Версия',
+        'WEB_API_DEFAULT_TOKEN': 'Web API: Дефолтный токен',
+        'WEB_API_REQUEST_LOGGING': 'Web API: Логирование запросов',
         'CABINET_ENABLED': 'Включить Личный Кабинет',
         'CABINET_URL': 'URL Личного Кабинета',
         'CABINET_ALLOWED_ORIGINS': 'Разрешенные домены Кабинета',
         'CABINET_EMAIL_VERIFICATION_ENABLED': 'Подтверждение почты',
-        'CABINET_ACCESS_TOKEN_EXPIRE_MINUTES': 'Время жизни JWT (мин)',
+        'CABINET_ACCESS_TOKEN_EXPIRE_MINUTES': 'JWT: Время жизни (мин)',
+        'CABINET_REFRESH_TOKEN_EXPIRE_DAYS': 'JWT: Время обновления (дни)',
+        'CABINET_JWT_SECRET': 'JWT: Секретный ключ (Secret)',
+        'CABINET_EMAIL_AUTH_ENABLED': 'Включить вход по Email',
 
         # SMTP & EMAILS
         'SMTP_HOST': 'SMTP: Хост',
@@ -282,20 +319,33 @@ class BotConfigurationService:
         'SMTP_USE_TLS': 'SMTP: Использовать TLS',
 
         # OAUTH
-        'OAUTH_GOOGLE_ENABLED': 'Авторизация Google',
-        'OAUTH_YANDEX_ENABLED': 'Авторизация Yandex',
-        'OAUTH_DISCORD_ENABLED': 'Авторизация Discord',
-        'OAUTH_VK_ENABLED': 'Авторизация VK',
+        'OAUTH_GOOGLE_ENABLED': 'Включить Google OAuth',
+        'OAUTH_GOOGLE_CLIENT_ID': 'Google: Client ID',
+        'OAUTH_GOOGLE_CLIENT_SECRET': 'Google: Client Secret',
+        'OAUTH_YANDEX_ENABLED': 'Включить Yandex OAuth',
+        'OAUTH_YANDEX_CLIENT_ID': 'Yandex: Client ID',
+        'OAUTH_YANDEX_CLIENT_SECRET': 'Yandex: Client Secret',
+        'OAUTH_DISCORD_ENABLED': 'Включить Discord OAuth',
+        'OAUTH_DISCORD_CLIENT_ID': 'Discord: Client ID',
+        'OAUTH_DISCORD_CLIENT_SECRET': 'Discord: Client Secret',
+        'OAUTH_VK_ENABLED': 'Включить VK OAuth',
+        'OAUTH_VK_CLIENT_ID': 'VK: Client ID',
+        'OAUTH_VK_CLIENT_SECRET': 'VK: Client Secret',
 
         # UPDATES & SECURITY
-        'VERSION_CHECK_ENABLED': 'Проверка обновлений бота',
-        'VERSION_CHECK_REPO': 'Репозиторий для обновлений',
-        'VERSION_CHECK_INTERVAL_HOURS': 'Интервал проверки (часов)',
-        'SERVER_PUBLIC_IP': 'Публичный IP сервера',
-        'BAN_SYSTEM_ENABLED': 'Интеграция с бан-системой',
-        'BAN_SYSTEM_API_URL': 'URL бан-системы',
         'BAN_SYSTEM_API_TOKEN': 'Токен бан-системы',
+        'BAN_MSG_PUNISHMENT': 'Текст уведомления о бане',
+        'BAN_MSG_ENABLED': 'Текст уведомления об активации',
+        'BAN_MSG_WIFI': 'Текст бана за WiFi',
+        'BAN_MSG_MOBILE': 'Текст бана за мобильную сеть',
+        'BAN_MSG_WARNING': 'Текст общего предупреждения',
+        'BLACKLIST_CHECK_ENABLED': 'Включить черный список (GitHub)',
+        'BLACKLIST_GITHUB_URL': 'URL черного списка пользователей',
+        'BLACKLIST_UPDATE_INTERVAL_HOURS': 'Интервал обновления списка (ч)',
+        'BLACKLIST_IGNORE_ADMINS': 'Игнорировать админов в ЧС',
+        'DISPLAY_NAME_BANNED_KEYWORDS': 'Запрещенные слова в именах',
         'DISPOSABLE_EMAIL_CHECK_ENABLED': 'Блокировка временных почт',
+        'VERSION_CHECK_ENABLED': 'Проверка обновлений бота',
 
         # LOGS & ROTATION
         'LOG_ROTATION_ENABLED': 'Включить ротацию логов',
@@ -312,17 +362,28 @@ class BotConfigurationService:
 
         # DATABASE
         'DATABASE_MODE': 'Режим базы данных',
+        'DATABASE_URL': 'Прямой URL базы данных',
         'POSTGRES_HOST': 'Хост PostgreSQL',
         'POSTGRES_PORT': 'Порт PostgreSQL',
         'POSTGRES_DB': 'Имя базы данных',
+        'POSTGRES_USER': 'Пользователь PostgreSQL',
+        'POSTGRES_PASSWORD': 'Пароль PostgreSQL',
+        'SQLITE_PATH': 'Путь к файлу SQLite',
         'REDIS_URL': 'URL Redis',
+        'LOCALES_PATH': 'Путь к файлам локализации',
+        'CART_TTL_SECONDS': 'Время жизни корзины (сек)',
 
         # REMNAWAVE
         'REMNAWAVE_API_URL': 'URL API RemnaWave',
-        'REMNAWAVE_AUTH_TYPE': 'Тип авторизации API',
-        'REMNAWAVE_AUTO_SYNC_ENABLED': 'Автосинхронизация',
-        'REMNAWAVE_AUTO_SYNC_TIMES': 'Время синхронизации',
-        'REMNAWAVE_WEBHOOK_ENABLED': 'Вебхуки RemnaWave',
+        'REMNAWAVE_API_KEY': 'API ключ (RemnaWave)',
+        'REMNAWAVE_SECRET_KEY': 'Секретный ключ (RemnaWave)',
+        'REMNAWAVE_USERNAME': 'Логин в панель RemnaWave',
+        'REMNAWAVE_PASSWORD': 'Пароль в панель RemnaWave',
+        'REMNAWAVE_AUTH_TYPE': 'Метод авторизации API',
+        'REMNAWAVE_AUTO_SYNC_ENABLED': 'Автоматическая синхронизация',
+        'REMNAWAVE_AUTO_SYNC_TIMES': 'График синхронизации (03:00, 15:00)',
+        'REMNAWAVE_WEBHOOK_ENABLED': 'Вебхуки RemnaWave (real-time)',
+        'REMNAWAVE_WEBHOOK_SECRET': 'Секрет вебхука (HMAC SHA-256)',
 
         # PAYMENTS - GENERAL
         'TELEGRAM_STARS_ENABLED': 'Включить Telegram Stars',
@@ -356,26 +417,92 @@ class BotConfigurationService:
         'YOOKASSA_ENABLED': 'Включить YooKassa',
         'YOOKASSA_SHOP_ID': 'YooKassa: Shop ID',
         'YOOKASSA_SECRET_KEY': 'YooKassa: Secret Key',
+        'YOOKASSA_RETURN_URL': 'YooKassa: URL возврата',
+        'YOOKASSA_DEFAULT_RECEIPT_EMAIL': 'YooKassa: Email для чеков',
+        'YOOKASSA_VAT_CODE': 'YooKassa: Код НДС',
+        'YOOKASSA_SBP_ENABLED': 'YooKassa: Включить СБП',
+        'YOOKASSA_PAYMENT_MODE': 'YooKassa: Признак способа расчета',
+        'YOOKASSA_PAYMENT_SUBJECT': 'YooKassa: Признак предмета расчета',
+        'YOOKASSA_MIN_AMOUNT_KOPEKS': 'YooKassa: Мин. сумма пополнения',
+        'YOOKASSA_MAX_AMOUNT_KOPEKS': 'YooKassa: Макс. сумма пополнения',
+        'YOOKASSA_QUICK_AMOUNT_SELECTION_ENABLED': 'YooKassa: Быстрый выбор сумм',
 
         # PAYMENTS - CRYPTOBOT
         'CRYPTOBOT_ENABLED': 'Включить CryptoBot',
-        'CRYPTOBOT_API_TOKEN': 'CryptoBot: API Token',
+        'CRYPTOBOT_API_TOKEN': 'CryptoBot: API Токен',
+        'CRYPTOBOT_WEBHOOK_SECRET': 'CryptoBot: Секрет вебхука',
+        'CRYPTOBOT_TESTNET': 'CryptoBot: Тестовая сеть (Testnet)',
+        'CRYPTOBOT_DEFAULT_ASSET': 'CryptoBot: Валюта по умолчанию',
+        'CRYPTOBOT_ASSETS': 'CryptoBot: Доступные валюты',
+        'CRYPTOBOT_INVOICE_EXPIRES_HOURS': 'CryptoBot: Срок жизни счета (ч)',
 
         # PAYMENTS - FREEKASSA / KASSA.AI
         'FREEKASSA_ENABLED': 'Включить Freekassa',
+        'FREEKASSA_SHOP_ID': 'Freekassa: ID магазина',
+        'FREEKASSA_API_KEY': 'Freekassa: API ключ',
+        'FREEKASSA_SECRET_WORD_1': 'Freekassa: Секретное слово 1',
+        'FREEKASSA_SECRET_WORD_2': 'Freekassa: Секретное слово 2',
+        'FREEKASSA_SBP_ENABLED': 'Freekassa: Включить СБП',
+        'FREEKASSA_CARD_ENABLED': 'Freekassa: Включить Карты РФ',
         'KASSA_AI_ENABLED': 'Включить KassaAI',
+        'KASSA_AI_SHOP_ID': 'KassaAI: ID магазина',
+        'KASSA_AI_API_KEY': 'KassaAI: API ключ',
+        'KASSA_AI_SECRET_WORD_2': 'KassaAI: Секретное слово 2',
 
         # PAYMENTS - PAL24
         'PAL24_ENABLED': 'Включить PayPalych (PAL24)',
-        'PAL24_API_TOKEN': 'PAL24: API Token',
+        'PAL24_API_TOKEN': 'PAL24: API Токен',
         'PAL24_SHOP_ID': 'PAL24: Shop ID',
+        'PAL24_SIGNATURE_TOKEN': 'PAL24: Секрет подписи',
+        'PAL24_SBP_BUTTON_VISIBLE': 'PAL24: Показать кнопку СБП',
+        'PAL24_CARD_BUTTON_VISIBLE': 'PAL24: Показать кнопку Карт',
 
         # PAYMENTS - OTHER
         'MULENPAY_ENABLED': 'Включить MulenPay',
+        'MULENPAY_SHOP_ID': 'MulenPay: Shop ID',
+        'MULENPAY_API_KEY': 'MulenPay: API Key',
+        'MULENPAY_SECRET_KEY': 'MulenPay: Secret Key',
         'WATA_ENABLED': 'Включить Wata',
+        'WATA_ACCESS_TOKEN': 'Wata: Токен доступа',
+        'WATA_TERMINAL_PUBLIC_ID': 'Wata: ID терминала',
         'CLOUDPAYMENTS_ENABLED': 'Включить CloudPayments',
+        'CLOUDPAYMENTS_PUBLIC_ID': 'CloudPayments: Public ID',
+        'CLOUDPAYMENTS_API_SECRET': 'CloudPayments: API Secret',
+        'CLOUDPAYMENTS_SKIN': 'CloudPayments: Дизайн виджета',
         'HELEKET_ENABLED': 'Включить Heleket Crypto',
-        'TRIBUTE_ENABLED': 'Включить Tribute',
+        'HELEKET_MERCHANT_ID': 'Heleket: Merchant ID',
+        'HELEKET_API_KEY': 'Heleket: API Key',
+        'HELEKET_DEFAULT_CURRENCY': 'Heleket: Валюта (USDT)',
+        'PLATEGA_ENABLED': 'Включить Platega',
+        'PLATEGA_MERCHANT_ID': 'Platega: Merchant ID',
+        'PLATEGA_SECRET': 'Platega: Секрет (Secret)',
+        'TRIBUTE_ENABLED': 'Включить Tribute (карты)',
+        'TRIBUTE_API_KEY': 'Tribute: API Key',
+        'TRIBUTE_DONATE_LINK': 'Tribute: Ссылка на донат',
+        
+        # WEBHOOK NOTIFICATIONS
+        'WEBHOOK_NOTIFY_USER_ENABLED': 'Включить уведомления по вебхукам',
+        'WEBHOOK_NOTIFY_SUB_STATUS': 'Увед: Изменение статуса',
+        'WEBHOOK_NOTIFY_SUB_EXPIRED': 'Увед: Подписка истекла',
+        'WEBHOOK_NOTIFY_SUB_EXPIRING': 'Увед: Подписка истекает',
+        'WEBHOOK_NOTIFY_SUB_LIMITED': 'Увед: Лимит трафика исчерпан',
+        'WEBHOOK_NOTIFY_TRAFFIC_RESET': 'Увед: Сброс трафика',
+        'WEBHOOK_NOTIFY_SUB_DELETED': 'Увед: Удаление подписки',
+        'WEBHOOK_NOTIFY_SUB_REVOKED': 'Увед: Отзыв подписки (Revoke)',
+        'WEBHOOK_NOTIFY_FIRST_CONNECTED': 'Увед: Первое подключение к VPN',
+        'WEBHOOK_NOTIFY_NOT_CONNECTED': 'Увед: Напоминание о подключении',
+        'WEBHOOK_NOTIFY_BANDWIDTH_THRESHOLD': 'Увед: Порог трафика (%)',
+        'WEBHOOK_NOTIFY_DEVICES': 'Увед: Изменение лимита устройств',
+
+        # NALOGO
+        'NALOGO_ENABLED': 'Включить чеки NaloGO (Самозанятые)',
+        'NALOGO_INN': 'NaloGO: ИНН самозанятого',
+        'NALOGO_PASSWORD': 'NaloGO: Пароль (ЛК Мой Налог)',
+        'NALOGO_DEVICE_ID': 'NaloGO: ID устройства',
+        'NALOGO_STORAGE_PATH': 'NaloGO: Путь к токенам (.json)',
+        'NALOGO_QUEUE_CHECK_INTERVAL': 'Интервал обработки очереди (сек)',
+        'NALOGO_QUEUE_RECEIPT_DELAY': 'Задержка отправки чеков (сек)',
+        'NALOGO_QUEUE_MAX_ATTEMPTS': 'Макс. попыток отправки чека',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -431,13 +558,16 @@ class BotConfigurationService:
         'VERSION': 'Отслеживание обновлений репозитория.',
         'WEB_API': 'Web API, токены и права доступа.',
         'WEBHOOK': 'Пути и секреты вебхуков.',
-        'WEBHOOK_NOTIFICATIONS': 'Управление уведомлениями, которые получают пользователи при событиях RemnaWave (отключение/активация подписки, устройства, трафик и т.д.).',
-        'LOG': 'Уровни логирования и ротация.',
+        'WEBHOOK_NOTIFICATIONS': 'Управление уведомлениями, которые получают пользователи при событиях RemnaWave (отключение/активация подписки, устройства, трафик и т.д.) в реальном времени.',
+        'LOG': 'Уровни логирования и ротация логов.',
         'DEBUG': 'Отладочные функции и безопасный режим.',
         'MODERATION': 'Настройки фильтров отображаемых имен и защиты от фишинга.',
         'BAN_NOTIFICATIONS': 'Тексты уведомлений о блокировках, которые отправляются пользователям.',
         'SUPPORT_AI': 'Настройки AI-ассистента первой линии: Telegram Forum группа, провайдеры, ключи и системный промпт.',
         'GIFTS': 'Настройка функционала подарков: включение системы, оформление кнопки в меню и шаблоны приглашений.',
+        'NALOGO': 'Интеграция с сервисом NaloGO для автоматического формирования чеков самозанятых при оплате.',
+        'CABINET': 'Настройки Личного Кабинета: URL, авторизация через OAuth, сессии (JWT) и подтверждение почты.',
+        'OAUTH': 'Настройки интеграции с внешними провайдерами авторизации (Google, Yandex, Discord, VK).',
     }
 
     @staticmethod
@@ -623,8 +753,13 @@ class BotConfigurationService:
         'DEBUG': 'DEBUG',
         'DISPLAY_NAME_': 'MODERATION',
         'BAN_MSG_': 'BAN_NOTIFICATIONS',
+        'BLACKLIST_': 'MODERATION',
+        'CABINET_': 'CABINET',
+        'OAUTH_': 'OAUTH',
+        'SMTP_': 'CABINET',
         'SUPPORT_AI_': 'SUPPORT_AI',
         'GIFTS_': 'GIFTS',
+        'NALOGO_': 'NALOGO',
     }
 
     CHOICES: dict[str, list[ChoiceOption]] = {
@@ -751,112 +886,81 @@ class BotConfigurationService:
 
     SETTING_HINTS: dict[str, dict[str, str]] = {
         'SALES_MODE': {
-            'description': (
-                'Режим продажи подписок. '
-                '«Классический» — выбор периода из .env (PRICE_14_DAYS и т.д.). '
-                '«Тарифы» — готовые тарифные планы из кабинета с серверами и лимитами.'
-            ),
-            'format': 'Выберите один из доступных режимов.',
-            'example': 'tariffs',
-            'warning': (
-                'При смене режима логика покупки подписки полностью меняется. '
-                'В режиме «Тарифы» пользователи выбирают готовый тарифный план.'
-            ),
+            'description': 'Определяет, как пользователи будут выбирать услуги. «Классический» — гибкий конструктор (периоды, трафик, устройства отдельно). «Тарифы» — готовые пакеты с фиксированными параметрами из вашего Личного Кабинета.',
+            'format': 'Выберите один из двух стилей продаж.',
+            'example': 'tariffs — для простоты и скорости покупки.',
+            'warning': 'Смена режима полностью меняет интерфейс покупки для всех пользователей.',
+        },
+        'AVAILABLE_SUBSCRIPTION_PERIODS': {
+            'description': 'Список периодов (в днях), которые будут предложены пользователю при первой покупке или продлении по кнопке «Продлить».',
+            'format': 'Дни через запятую.',
+            'example': '30, 90, 180, 360',
+            'warning': 'Для каждого дня из этого списка должна быть задана соответствующая цена в блоке «Стоимость».',
+        },
+        'AVAILABLE_RENEWAL_PERIODS': {
+            'description': 'Специальный список дней для быстрого продления текущей подписки. Можно сделать его короче основного.',
+            'format': 'Дни через запятую.',
+            'example': '30, 90',
+        },
+        'PRICE_14_DAYS': {
+            'description': 'Стоимость подписки на 14 дней. Часто используется как «Пробная платная версия» для новых клиентов.',
+            'format': 'Цена в копейках (100 руб = 10000).',
+            'example': '50000 (500 руб)',
+        },
+        'PRICE_30_DAYS': {
+            'description': 'Основная цена за 30 дней (1 месяц) использования VPN. Самая важная настройка доходности.',
+            'format': 'Цена в копейках.',
+            'example': '99000 (990 руб)',
+        },
+        'PRICE_60_DAYS': {
+            'description': 'Стоимость подписки на 2 месяца. Рекомендуется ставить цену чуть ниже, чем за два отдельных месяца.',
+            'format': 'Цена в копейках.',
+        },
+        'PRICE_90_DAYS': {
+            'description': 'Стоимость квартальной подписки (3 месяца). Психологически важный рубеж для удержания клиентов.',
+            'format': 'Цена в копейках.',
+        },
+        'PRICE_180_DAYS': {
+            'description': 'Стоимость подписки на полгода (6 месяцев). Обычно на этот период ставят значительную скидку (15-20%).',
+            'format': 'Цена в копейках.',
+        },
+        'PRICE_360_DAYS': {
+            'description': 'Годовая подписка. Позволяет получить максимальную сумму с клиента сразу. Рекомендуется самая выгодная цена.',
+            'format': 'Цена в копейках.',
+        },
+        'PRICE_PER_DEVICE': {
+            'description': 'Стоимость добавления одного дополнительного устройства к подписке. Если пользователю мало лимита по умолчанию, он может докупить его.',
+            'format': 'Цена за 1 устройство в копейках.',
+            'example': '5000 (50 руб)',
+        },
+        'TRAFFIC_SELECTION_MODE': {
+            'description': 'Как пользователь получает трафик: «Выбор пакетов» (сам выбирает ГБ при покупке и может докупать) или «Фикс. лимит» (получает строго по тарифу без выбора).',
+            'format': 'Выберите режим распределения ГБ.',
+            'example': 'selectable — дает пользователю гибкость.',
+        },
+        'PRICE_TRAFFIC_5GB': { 'description': 'Стоимость пакета 5 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_10GB': { 'description': 'Стоимость пакета 10 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_25GB': { 'description': 'Стоимость пакета 25 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_50GB': { 'description': 'Стоимость пакета 50 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_100GB': { 'description': 'Стоимость пакета 100 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_250GB': { 'description': 'Стоимость пакета 250 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_500GB': { 'description': 'Стоимость пакета 500 ГБ трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_1000GB': { 'description': 'Стоимость пакета 1000 ГБ (1 ТБ) трафика.', 'format': 'Копейки.' },
+        'PRICE_TRAFFIC_UNLIMITED': {
+            'description': 'Стоимость полной отмены лимитов трафика. Пользователь получит безлимитный доступ.',
+            'format': 'Цена в копейках.',
+            'example': '200000 (2000 руб)',
         },
         'YOOKASSA_ENABLED': {
-            'description': (
-                'Включает оплату через YooKassa. Требует корректных идентификаторов магазина и секретного ключа.'
-            ),
-            'format': 'Булево значение: выберите "Включить" или "Выключить".',
-            'example': 'Включено при полностью настроенной интеграции.',
-            'warning': 'При включении без Shop ID и Secret Key пользователи увидят ошибки при оплате.',
-            'dependencies': 'YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, YOOKASSA_RETURN_URL',
-        },
-        'SIMPLE_SUBSCRIPTION_ENABLED': {
-            'description': 'Показывает в меню пункт с быстрой покупкой подписки.',
-            'format': 'Булево значение.',
-            'example': 'true',
-            'warning': 'Если остались не настроенные параметры, предложение может вести себя некорректно.',
-        },
-        'REFERRAL_CONTESTS_ENABLED': {
-            'description': 'Включение системы конкурсов между партнерами.',
-            'format': 'Булево значение.',
-        },
-        'REFERRAL_WITHDRAWAL_SUSPICIOUS_MAX_DEPOSITS_PER_MONTH': {
-            'description': 'Максимальное количество пополнений рефералов в месяц для одного партнера. Превышение помечает вывод как подозрительный.',
-            'format': 'Целое число.',
-            'example': '10',
-            'warning': 'Слишком низкое значение может блокировать честных партнеров с активным трафиком.',
-        },
-        'REFERRAL_WITHDRAWAL_SUSPICIOUS_NO_PURCHASES_RATIO': {
-            'description': 'Коэффициент подозрительности: во сколько раз сумма пополнений рефералов превышает сумму их покупок.',
-            'format': 'Дробное число.',
-            'example': '2.0',
-            'warning': 'Значение 2.0 означает, что если рефералы пополнили баланс на 2000р, но купили только на 1000р, вывод считается подозрительным.',
-        },
-        'REFERRAL_WITHDRAWAL_SUSPICIOUS_MIN_DEPOSIT_KOPEKS': {
-            'description': 'Минимальная сумма пополнения одного реферала, чтобы партнер мог подать заявку на вывод средств.',
-            'format': 'Сумма в копейках (напр. 50000 = 500 руб).',
-            'example': '50000',
-        },
-        'REFERRAL_WITHDRAWAL_ONLY_REFERRAL_BALANCE': {
-            'description': 'Если включено, пользователь может вывести только те средства, которые он заработал на рефералах. Если выключено — весь доступный баланс.',
-            'format': 'Булево значение.',
-        },
-        'REFERRAL_WITHDRAWAL_REQUISITES_TEXT': {
-            'description': 'Текст инструкции, который увидит партнер при подаче заявки на вывод (например, формат номера карты).',
-            'format': 'Строка (поддерживает HTML).',
-            'example': 'Введите номер карты РФ или номер телефона для СБП.',
-        },
-        'REFERRAL_WITHDRAWAL_NOTIFICATIONS_TOPIC_ID': {
-            'description': 'ID топика в группе администраторов для уведомлений о новых заявках на вывод партнерских средств.',
-            'format': 'Числовой ID топика.',
-        },
-        'SIMPLE_SUBSCRIPTION_PERIOD_DAYS': {
-            'description': 'Период подписки, который предлагается при быстрой покупке.',
-            'format': 'Выберите один из доступных периодов.',
-            'example': '30 дн. — 990 ₽',
-            'warning': 'Не забудьте настроить цену периода в блоке «Стоимость тарифов».',
-        },
-        'SIMPLE_SUBSCRIPTION_DEVICE_LIMIT': {
-            'description': 'Сколько устройств получит пользователь вместе с подпиской по быстрой покупке.',
-            'format': 'Выберите число устройств.',
-            'example': '2 устройства',
-            'warning': 'Значение не должно превышать допустимый лимит в настройках подписок.',
-        },
-        'SIMPLE_SUBSCRIPTION_TRAFFIC_GB': {
-            'description': 'Объём трафика, включённый в простую подписку (0 = безлимит).',
-            'format': 'Выберите пакет трафика.',
-            'example': 'Безлимит',
-        },
-        'SIMPLE_SUBSCRIPTION_SQUAD_UUID': {
-            'description': (
-                'Привязка быстрой подписки к конкретному скваду. Оставьте пустым для любого доступного сервера.'
-            ),
-            'format': 'Выберите сквад из списка или очистите значение.',
-            'example': 'd4aa2b8c-9a36-4f31-93a2-6f07dad05fba',
-            'warning': 'Убедитесь, что выбранный сквад активен и доступен для подписки.',
-        },
-        'DEVICES_SELECTION_ENABLED': {
-            'description': 'Разрешает пользователям выбирать количество устройств при покупке и продлении подписки.',
-            'format': 'Булево значение.',
-            'example': 'false',
-            'warning': 'При отключении пользователи не смогут докупать устройства из интерфейса бота.',
-        },
-        'DEVICES_SELECTION_DISABLED_AMOUNT': {
-            'description': (
-                'Лимит устройств, который автоматически назначается, когда выбор количества устройств выключен. '
-                'Значение 0 отключает назначение устройств.'
-            ),
-            'format': 'Целое число от 0 и выше.',
-            'example': '3',
-            'warning': 'При 0 RemnaWave не получит лимит устройств, пользователям не показываются цифры в интерфейсе.',
+            'description': 'Включает прием платежей через YooKassa. Это основной шлюз для работы с российскими картами и СБП.',
+            'format': 'Включите после настройки Shop ID.',
+            'warning': 'Для работы обязателен договор с YooKassa и заполненные API ключи.',
+            'dependencies': 'YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY',
         },
         'CRYPTOBOT_ENABLED': {
-            'description': 'Разрешает принимать криптоплатежи через CryptoBot.',
-            'format': 'Булево значение.',
-            'example': 'Включите после указания токена API и секрета вебхука.',
-            'warning': 'Пустой токен или неверный вебхук приведут к отказам платежей.',
+            'description': 'Разрешает оплату криптовалютой (USDT, TON, BTC) через популярного бота @CryptoBot.',
+            'format': 'Включите для работы с крипто-кошельками.',
+            'warning': 'Убедитесь, что токен API версии v1 корректен.',
             'dependencies': 'CRYPTOBOT_API_TOKEN, CRYPTOBOT_WEBHOOK_SECRET',
         },
         'PAYMENT_VERIFICATION_AUTO_CHECK_ENABLED': {
@@ -1093,8 +1197,22 @@ class BotConfigurationService:
             'warning': 'Уровень DEBUG может сильно замедлить работу и быстро заполнить диск.',
         },
         'BLACKLIST_CHECK_ENABLED': {
-            'description': 'Включает проверку пользователей по черным спискам (за спам или абузы).',
+            'description': 'Включает автоматическую проверку пользователей по глобальному черному списку спамеров.',
             'format': 'Булево значение.',
+            'warning': 'Пользователи из списка будут мгновенно заблокированы при попытке запуска бота.',
+        },
+        'BLACKLIST_GITHUB_URL': {
+            'description': 'Прямая ссылка на файл со списком ID заблокированных пользователей на GitHub.',
+            'format': 'URL (сырой текстовый файл).',
+        },
+        'BAN_MSG_PUNISHMENT': {
+            'description': 'Текст, который видит пользователь при попытке совершить действие, если он заблокирован.',
+            'format': 'Текстовое сообщение.',
+            'example': '❌ Вы были заблокированы за нарушение правил.',
+        },
+        'BAN_MSG_WIFI': {
+            'description': 'Предупреждение, которое видит пользователь при попытке подключения через публичный/запрещенный WiFi.',
+            'format': 'Текстовое сообщение.',
         },
 
         # SYSTEM
@@ -1539,44 +1657,206 @@ class BotConfigurationService:
                 'Автоматически сбрасывает счётчик использованного трафика '
                 'при любой оплате или продлении подписки.'
             ),
-            'format': 'Булево значение: выберите "Включить" или "Выключить".',
-            'example': 'Выключено по умолчанию.',
-            'warning': 'При включении трафик будет обнуляться при каждом продлении подписки.',
-        },
-        'GIFTS_ENABLED': {
-            'description': 'Включает или полностью отключает систему подарков в боте.',
             'format': 'Булево значение.',
             'example': 'true',
-            'warning': 'При отключении все разделы покупки и активации подарков станут недоступны.',
+        },
+        'YOOKASSA_RETURN_URL': {
+            'description': 'Ссылка, на которую бот перенаправит пользователя сразу после успешной оплаты. Обычно это ссылка на сам бот (https://t.me/your_bot), чтобы пользователь мог сразу продолжить работу.',
+            'format': 'Веб-ссылка (URL).',
+            'example': 'https://t.me/my_vpn_bot',
+        },
+        'CRYPTOBOT_WEBHOOK_SECRET': {
+            'description': 'Важнейший секретный ключ для защиты платежей через CryptoBot. Он позволяет боту убедиться, что уведомление об оплате пришло именно от CryptoBot, а не от злоумышленников.',
+            'format': 'Секретная строка из настроек CryptoBot App.',
+            'warning': 'Никогда не передавайте этот ключ третьим лицам.',
+        },
+        'FREEKASSA_API_KEY': {
+            'description': 'Служебный ключ для взаимодействия с вашим аккаунтом Freekassa. Позволяет боту автоматически проверять статусы ваших платежей через API v1.',
+            'format': 'Секретный API ключ.',
+        },
+        'NALOGO_INN': {
+            'description': 'Ваш ИНН самозанятого. Бот будет использовать его для автоматической регистрации доходов и выписки чеков пользователям через официальный сервис налоговой.',
+            'format': '12 цифр без пробелов.',
+            'example': '771234567890',
+        },
+        'NALOGO_PASSWORD': {
+            'description': 'Пароль, который вы используете для входа в личный кабинет налогоплательщика «Мой Налог». Это необходимо для автоматической авторизации бота.',
+            'format': 'Секретная строка.',
+            'warning': 'Указывайте пароль именно от кабинета lkfl.nalog.ru, а не от портала Госуслуг.',
+        },
+        'WEB_API_HOST': {
+            'description': 'Сетевой адрес, на котором будет «слушать» внешние запросы программный интерфейс бота (Web API). Это необходимо для интеграции с внешними панелями управления или сайтами.',
+            'format': 'IP-адрес. Оставьте 0.0.0.0, чтобы API был доступен извне.',
+            'example': '0.0.0.0',
+            'warning': 'Изменение этого параметра может привести к недоступности внешней админ-панели.',
+        },
+        'WEB_API_PORT': {
+            'description': 'Порт, который бот забронирует за своим Web API. По этому порту внешние сервисы будут обращаться к боту.',
+            'format': 'Число (рекомендуется выше 1024).',
+            'example': '8080',
+        },
+        'OAUTH_YANDEX_ENABLED': {
+            'description': 'Позволяет пользователям быстро регистрироваться и входить в Личный Кабинет через аккаунт Яндекс ID. Это значительно упрощает жизнь тем, кто не хочет запоминать лишние пароли.',
+            'format': 'Выберите "Включить", предварительно создав приложение в консоли Яндекс ID.',
+            'dependencies': 'OAUTH_YANDEX_CLIENT_ID, OAUTH_YANDEX_CLIENT_SECRET',
+        },
+        'SERVER_STATUS_MODE': {
+            'description': 'Определяет, как пользователи будут видеть статус ваших серверов. «Выключено» — скрыть раздел, «Внешняя ссылка» — направить на ваш сайт мониторинга, «XRay Checker» — запустить встроенную проверку нод в реальном времени.',
+            'format': 'Выберите один из трех режимов.',
+            'example': 'xray — рекомендуется для максимальной наглядности.',
+            'warning': 'Режим XRay Checker работает только при активном соединении с API RemnaWave.',
+        },
+        'SERVER_STATUS_EXTERNAL_URL': {
+            'description': 'Если вы используете сторонние сервисы (например, UptimeRobot или Grafana), укажите ссылку на них здесь. Она превратится в кнопку в меню статуса.',
+            'format': 'Полная ссылка на сайт.',
+            'example': 'https://status.my-proxy.com',
+        },
+        'SERVER_STATUS_REQUEST_TIMEOUT': {
+            'description': 'Максимальное время, которое бот готов ждать ответа от сервера метрик. Если сервер не ответит вовремя, бот пометит его как «недоступен».',
+            'format': 'Число в секундах.',
+            'example': '10',
+        },
+        'WEB_API_ALLOWED_ORIGINS': {
+            'description': 'Список доверенных сайтов (доменов), которым разрешено обращаться к вашему Web API. Это защита от выполнения нежелательных скриптов с чужих ресурсов.',
+            'format': 'Домены через запятую или знак * для доступа отовсюду.',
+            'example': 'https://admin.my-panel.ru, https://dashboard.com',
+            'warning': 'Значение * делает API уязвимым, используйте только для отладки.',
+        },
+        'WEB_API_DEFAULT_TOKEN': {
+            'description': 'Секретный пароль (токен) для авторизации внешних инструментов в вашем API. Бот будет сравнивать этот ключ с присылаемым, чтобы отсечь неавторизованные запросы.',
+            'format': 'Длинная случайная строка.',
+            'warning': 'Утрата или утечка этого токена дает полный контроль над API вашего бота.',
+        },
+        'MAINTENANCE_CHECK_INTERVAL': {
+            'description': 'Как часто бот должен обращаться к панели RemnaWave, чтобы проверить её "самочувствие". Если панель не ответит, бот поймет, что случился сбой.',
+            'format': 'Время в секундах.',
+            'example': '30',
+        },
+        'MAINTENANCE_AUTO_ENABLE': {
+            'description': 'Умный режим защиты: если бот обнаружит, что панель RemnaWave недоступна (например, из-за аварии на сервере), он сам включит "Режим тех. работ". Это нужно, чтобы пользователи не могли оплатить услуги, которые бот временно не может активировать.',
+            'format': 'Включите для автоматической защиты транзакций.',
+            'warning': 'При включении пользователи могут увидеть сообщение о тех. работах до того, как вы узнаете о сбое.',
+        },
+        'OAUTH_DISCORD_ENABLED': {
+            'description': 'Включает авторизацию в кабинете через Discord ID. Позволяет вашим пользователям использовать свои игровые аккаунты для входа.',
+            'format': 'Включите после настройки Client ID/Secret в панели разработчика Discord.',
+            'dependencies': 'OAUTH_DISCORD_CLIENT_ID, OAUTH_DISCORD_CLIENT_SECRET',
+        },
+        'OAUTH_VK_ENABLED': {
+            'description': 'Разрешает вход в Личный Кабинет через соцсеть ВКонтакте. Максимально привычный способ авторизации для пользователей из СНГ.',
+            'format': 'Включите, если у вас создано приложение в VK Dev.',
+            'dependencies': 'OAUTH_VK_CLIENT_ID, OAUTH_VK_CLIENT_SECRET',
+        },
+        'CABINET_JWT_SECRET': {
+            'description': 'Сверхсекретный ключ, которым бот "запечатывает" сессии пользователей в кабинете. Он защищает данные от подделки.',
+            'format': 'Случайный набор символов (чем длиннее, тем лучше).',
+            'warning': 'Если вы измените этот ключ, ВСЕ активные сессии пользователей будут прерваны, и им придется входить заново.',
+        },
+        'GIFTS_ENABLED': {
+            'description': 'Основной переключатель системы подарков. Позволяет пользователям покупать VPN-подписки не только для себя, но и в качестве подарка другим людям.',
+            'format': 'Включите, чтобы запустить функционал подарков.',
+            'example': 'true',
+            'warning': 'При отключении раздел покупки подарков исчезнет у всех пользователей.',
         },
         'GIFTS_BUTTON_VISIBLE': {
-            'description': 'Управляет отображением кнопки «🎁 Подарить VPN» в главном меню.',
+            'description': 'Управляет видимостью кнопки «🎁 Подарить VPN» в главном меню. Вы можете временно скрыть её, не выключая саму систему подарков.',
             'format': 'Булево значение.',
             'example': 'true',
         },
         'GIFTS_BUTTON_TEXT': {
-            'description': 'Надпись на кнопке в главном меню бота.',
-            'format': 'Текстовая строка.',
-            'example': '🎁 Сделать подарок',
+            'description': 'Текст, который будет написан на кнопке подарков. Сделайте его привлекательным, чтобы пользователи чаще делали подарки.',
+            'format': 'Яркая текстовая строка.',
+            'example': '🎁 Подарить другу VPN',
         },
         'GIFTS_BUTTON_STYLE': {
-            'description': 'Цвет кнопки в главном меню бота.',
-            'format': 'Выберите один из предустановленных стилей (Синий, Зеленый, Красный, Серый).',
+            'description': 'Цветовое оформление кнопки подарков в главном меню. Рекомендуется использовать «Зеленый», чтобы выделить её на фоне остальных.',
+            'format': 'Выберите один из четырех цветов.',
             'example': 'Зелёный',
         },
         'GIFTS_BUTTON_EMOJI': {
             'description': (
-                'ID премиум-эмодзи для кнопки подарков. Если пусто, используется стандартный смайлик 🎁. '
-                'Для получения ID отправьте эмодзи боту @EmojiIdBot.'
+                'Позволяет использовать красивый анимированный премиум-эмодзи вместо стандартного 🎁. '
+                'Для этого отправьте нужный эмодзи боту @EmojiIdBot и вставьте полученный ID сюда.'
             ),
-            'format': 'Числовой ID или пусто.',
-            'example': '5432345678901234567',
-            'warning': 'Работает только если у бота есть доступ к Premium-эмодзи.',
+            'format': 'ID премиум-эмодзи.',
+            'warning': 'Будет работать только в официальных приложениях Telegram.',
         },
         'GIFTS_SHARE_MESSAGE_TEMPLATE': {
-            'description': 'Шаблон текста, который будет предложен пользователю для отправки другу вместе с подарком.',
-            'format': 'Используйте плейсхолдер {link} для вставки ссылки на подарок.',
-            'example': 'Лови подарок! Активируй VPN тут: {link}',
+            'description': 'Текст сообщения, которое бот предложит пользователю скопировать после покупки подарка. Это сообщение он отправит другу в личку.',
+            'format': 'Используйте {link} — на это место бот подставит уникальную ссылку на активацию.',
+            'example': 'Бро, лови подарок! Активируй свой VPN тут: {link}',
+        },
+        'NALOGO_ENABLED': {
+            'description': 'Включает автоматизированную отчетность для самозанятых через NaloGO. Бот будет сам создавать записи о доходах в приложении «Мой Налог».',
+            'format': 'Включите для авто-выписки чеков.',
+            'warning': 'Требуется предварительная настройка ИНН и пароля.',
+        },
+        'NALOGO_QUEUE_CHECK_INTERVAL': {
+            'description': 'Как часто (в секундах) бот будет проверять «очередь» новых платежей для их фискализации. Оптимально — 60 секунд.',
+            'format': 'Число.',
+            'example': '60',
+        },
+        'NALOGO_QUEUE_RECEIPT_DELAY': {
+            'description': 'Небольшая пауза между отправкой чеков в налоговую. Это нужно, чтобы сервера налоговой не сочли активность бота за спам-атаку.',
+            'format': 'Число в секундах.',
+            'example': '5',
+        },
+        'WEBHOOK_NOTIFY_USER_ENABLED': {
+            'description': 'Глобальный переключатель уведомлений пользователям на основе событий из панели.',
+            'format': 'Булево значение.',
+        },
+        'SUPPORT_TICKET_SLA_CHECK_INTERVAL_SECONDS': {
+            'description': 'Как часто бот должен проверять все открытые тикеты на предмет нарушения времени ответа (SLA). Если модератор не ответил вовремя — придет уведомление.',
+            'format': 'Число в секундах.',
+            'example': '300 (каждые 5 минут)',
+        },
+        'SUPPORT_TICKET_SLA_REMINDER_COOLDOWN_MINUTES': {
+            'description': 'Минимальная пауза между повторными «пингами» администратора о просроченном тикете. Чтобы не заваливать админа уведомлениями ежесекундно.',
+            'format': 'Число в минутах.',
+            'example': '60',
+        },
+        'SUPPORT_AI_FORUM_ID': {
+            'description': 'ID основной темы (ветки) на вашем административном форуме, где ИИ-помощник будет анализировать вопросы пользователей. Это позволяет ИИ учиться на живых диалогах.',
+            'format': 'Числовой ID ветки.',
+        },
+        'CLOUDPAYMENTS_PUBLIC_ID': {
+            'description': 'Ваша публичная "Витрина" (Public ID) в системе CloudPayments. Необходима для инициализации виджета оплаты.',
+            'format': 'Строка из личного кабинета CloudPayments.',
+        },
+        'CLOUDPAYMENTS_API_SECRET': {
+            'description': 'Секретный ключ API для подтверждения платежей в CloudPayments. Позволяет боту безопасно проверять статус транзакций.',
+            'format': 'Секретная строка (API Secret).',
+        },
+        'HELEKET_MERCHANT_ID': {
+            'description': 'Ваш уникальный номер мерчанта в системе Heleket. Он используется для того, чтобы система знала, на чей счет зачислять криптовалюту.',
+            'format': 'Числовой ID из панели Heleket.',
+        },
+        'HELEKET_API_KEY': {
+            'description': 'Секретный ключ для управления платежами через Heleket. Позволяет боту безопасно проверять, действительно ли крипто-перевод был совершен.',
+            'format': 'API ключ (секретная строка).',
+        },
+        'OAUTH_GOOGLE_CLIENT_ID': {
+            'description': 'Уникальный идентификатор вашего проекта в Google Cloud. Бот использует его, чтобы "представиться" сервису Google при авторизации пользователей.',
+            'format': 'Строка, заканчивающаяся на .apps.googleusercontent.com',
+        },
+        'OAUTH_YANDEX_CLIENT_ID': {
+            'description': 'Идентификатор вашего приложения, полученный в Яндекс API. Необходим для корректной работы кнопки "Войти через Яндекс".',
+            'format': 'Цифро-буквенная строка (ID клиента).',
+        },
+        'NALOGO_INN': {
+            'description': 'Ваш ИНН самозанятого. Бот будет использовать его для автоматической регистрации доходов и выписки чеков пользователям через официальный сервис налоговой.',
+            'format': '12 цифр без пробелов.',
+            'example': '771234567890',
+        },
+        'NALOGO_PASSWORD': {
+            'description': 'Пароль, который вы используете для входа в личный кабинет налогоплательщика «Мой Налог». Это необходимо для автоматической авторизации бота.',
+            'format': 'Секретная строка.',
+            'warning': 'Указывайте пароль именно от кабинета lkfl.nalog.ru, а не от портала Госуслуг.',
+        },
+        'NALOGO_DEVICE_ID': {
+            'description': 'Имя устройства, которое увидит налоговая в логах авторизации. Вы можете написать здесь что угодно, например, "Main_VPN_Bot".',
+            'format': 'Любое название латиницей.',
+            'example': 'MyVpnServiceBot',
         },
     }
 
