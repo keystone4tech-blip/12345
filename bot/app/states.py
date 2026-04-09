@@ -238,6 +238,7 @@ class BotConfigStates(StatesGroup):
     waiting_for_search_query = State()
     waiting_for_import_file = State()
     waiting_for_premium_emoji = State()
+    waiting_for_new_standard_emoji = State()
 
 
 class PricingStates(StatesGroup):

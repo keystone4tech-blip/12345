@@ -39,14 +39,17 @@ BASE_EMOJIS = [
     "🤖", "🥶", "🧊", "🧹", "🚚", "🛟"
 ]
 
-# Удаляем возможные дубликаты, сохраняя порядок
-_unique_seen = set()
-BASE_EMOJIS = [x for x in BASE_EMOJIS if not (x in _unique_seen or _unique_seen.add(x))]
+
+# Кеширование регулярного выражения для оптимизации
+_cached_emoji_pattern = None
+_cached_map_hash = None
 
 def get_premium_emoji_map() -> Dict[str, Optional[str]]:
-    """Возвращает маппинг эмодзи из настроек."""
+    """Возвращает маппинг эмодзи из настроек, объединяя базовый список и пользовательские данные."""
     try:
-        data = json.loads(settings.PREMIUM_EMOJIS_DATA)
+        data_raw = settings.PREMIUM_EMOJIS_DATA
+        data = json.loads(data_raw) if data_raw else {}
+        
         # Объединяем базовый список и кастомные данные из БД
         full_map = {e: None for e in BASE_EMOJIS}
         if isinstance(data, dict):
@@ -55,8 +58,25 @@ def get_premium_emoji_map() -> Dict[str, Optional[str]]:
     except Exception:
         return {e: None for e in BASE_EMOJIS}
 
-# Регулярное выражение для поиска любого эмодзи из базового списка
-_EMOJI_PATTERN = re.compile("|".join(re.escape(e) for e in BASE_EMOJIS))
+def get_emoji_pattern():
+    """Возвращает скомпилированное регулярное выражение для поиска эмодзи, подлежащих замене.
+    
+    Паттерн кешируется и пересобирается только при изменении состава ключей в маппинге.
+    """
+    global _cached_emoji_pattern, _cached_map_hash
+    
+    emoji_map = get_premium_emoji_map()
+    # Создаем хеш состава ключей для проверки необходимости пересборки паттерна
+    current_hash = hash(frozenset(emoji_map.keys()))
+    
+    if _cached_emoji_pattern is None or current_hash != _cached_map_hash:
+        # Сортируем эмодзи по длине (дескрипторы из нескольких символов должны идти первыми)
+        all_emojis = sorted(emoji_map.keys(), key=len, reverse=True)
+        # Регулярка для поиска любого эмодзи из списка
+        _cached_emoji_pattern = re.compile("|".join(re.escape(e) for e in all_emojis))
+        _cached_map_hash = current_hash
+        
+    return _cached_emoji_pattern
 
 
 def get_premium_emoji_id(emoji: str) -> Optional[str]:
@@ -67,26 +87,29 @@ def get_premium_emoji_id(emoji: str) -> Optional[str]:
 
 def replace_with_premium_emojis(text: str) -> str:
     """Заменяет все стандартные эмодзи в тексте на теги <tg-emoji>."""
-    # print(f"DEBUG: replace_with_premium_emojis input: {text}")
+    if not text:
+        return text
+        
     emoji_map = get_premium_emoji_map()
+    pattern = get_emoji_pattern()
 
     def _replace(match):
         emoji = match.group(0)
         emoji_id = emoji_map.get(emoji)
         if emoji_id:
-            # print(f"DEBUG: Found binding for {emoji} -> {emoji_id}")
             return f'<tg-emoji emoji-id="{emoji_id}">{emoji}</tg-emoji>'
         return emoji
 
-    result = _EMOJI_PATTERN.sub(_replace, text)
-    # if result != text:
-    #     print(f"DEBUG: replace_with_premium_emojis output: {result}")
-    return result
+    return pattern.sub(_replace, text)
 
 
 def extract_first_emoji(text: str) -> Optional[str]:
     """Извлекает первый эмодзи из строки, если он есть в нашем маппинге."""
-    match = _EMOJI_PATTERN.search(text)
+    if not text:
+        return None
+        
+    pattern = get_emoji_pattern()
+    match = pattern.search(text)
     if match:
         return match.group(0)
     return None

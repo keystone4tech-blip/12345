@@ -2883,14 +2883,17 @@ async def show_premium_emojis_menu(
 async def _render_premium_emojis_grid(db_user: User, page: int) -> tuple[str, types.InlineKeyboardMarkup]:
     """Вспомогательная функция для рендеринга текста и клавиатуры сетки."""
     emoji_map = get_premium_emoji_map()
-    total_emojis = len(BASE_EMOJIS)
+    # Сортируем все доступные эмодзи для стабильного отображения
+    all_emojis = sorted(emoji_map.keys())
+    
+    total_emojis = len(all_emojis)
     page_size = 25  # 5x5
     total_pages = math.ceil(total_emojis / page_size)
     page = max(1, min(page, total_pages))
     
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
-    page_emojis = BASE_EMOJIS[start_idx:end_idx]
+    page_emojis = all_emojis[start_idx:end_idx]
     
     rows: list[list[types.InlineKeyboardButton]] = []
     
@@ -2941,6 +2944,13 @@ async def _render_premium_emojis_grid(db_user: User, page: int) -> tuple[str, ty
     if nav_row:
         rows.append(nav_row)
         
+    rows.append([
+        types.InlineKeyboardButton(
+            text="➕ Добавить новый эмодзи",
+            callback_data=f"botcfg_prem_add:{page}"
+        )
+    ])
+    
     rows.append([types.InlineKeyboardButton(text="📂 К списку разделов", callback_data="botcfg_group:interface:1")])
     
     text = "🎨 <b>Настройка Premium эмодзи</b>\n\n"
@@ -3151,6 +3161,107 @@ async def toggle_premium_emojis_status(
     await show_premium_emojis_menu(callback, db_user, db, state, page=int(page))
 
 
+@admin_required
+@error_handler
+async def start_add_premium_emoji(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Переход в режим ожидания нового стандартного эмодзи для добавления в сетку."""
+    parts = callback.data.split(':')
+    page = parts[1] if len(parts) > 1 else "1"
+    
+    await state.set_state(BotConfigStates.waiting_for_new_standard_emoji)
+    await state.update_data(target_page=page, last_msg_id=callback.message.message_id)
+    
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="⬅️ Отмена", callback_data=f"botcfg_premium_emojis:{page}")]
+    ])
+    
+    await callback.message.edit_text(
+        "Отправьте <b>стандартный (Unicode) эмодзи</b>, который вы хотите добавить в список для настройки.\n\n"
+        "После добавления он появится в сетке, и вы сможете привязать к нему Premium версию.",
+        parse_mode='HTML',
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@admin_required
+@error_handler
+async def handle_new_standard_emoji_input(
+    message: types.Message,
+    db_user: User,
+    db: AsyncSession,
+    state: FSMContext,
+):
+    """Обработка ввода нового стандартного эмодзи."""
+    if not message.text or len(message.text) > 10: # Эмодзи могут быть длинными в байтах, но обычно короткие в тексте
+        await message.answer("❌ Пожалуйста, отправьте один стандартный эмодзи.")
+        return
+
+    emoji = message.text.strip()
+    data = await state.get_data()
+    target_page = data.get('target_page', '1')
+    last_msg_id = data.get('last_msg_id')
+    
+    # Сохраняем в список
+    emoji_data = json.loads(settings.PREMIUM_EMOJIS_DATA or "{}")
+    if emoji in emoji_data:
+        await message.answer(f"⚠️ Эмодзи {emoji} уже есть в списке.")
+        await state.clear()
+        return
+
+    emoji_data[emoji] = None # Добавляем как пустую привязку
+    new_data = json.dumps(emoji_data, ensure_ascii=False)
+    
+    await bot_configuration_service.set_value(db, 'PREMIUM_EMOJIS_DATA', new_data)
+    settings.PREMIUM_EMOJIS_DATA = new_data
+    await db.commit()
+    
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+    # Сразу переходим к выбору премиум-версии для этого эмодзи
+    # Эмулируем структуру данных для handle_premium_emoji_selection
+    callback_data = f"botcfg_prem_sel:{emoji}:{target_page}"
+    
+    # Создаем фиктивный CallbackQuery или просто вызываем логику
+    # Проще всего очистить стейт и показать меню выбора Premium для этого эмодзи
+    await state.set_state(BotConfigStates.waiting_for_premium_emoji)
+    await state.update_data(target_emoji=emoji, target_page=target_page, last_msg_id=last_msg_id)
+    
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="⬅️ Отмена", callback_data=f"botcfg_premium_emojis:{target_page}")]
+    ])
+    
+    if last_msg_id:
+        try:
+            await message.bot.edit_message_text(
+                chat_id=message.chat.id,
+                message_id=last_msg_id,
+                text=(
+                    f"✅ Эмодзи {emoji} добавлен в сетку!\n\n"
+                    f"Теперь отправьте <b>Premium эмодзи</b> для замены стандартного {emoji}."
+                ),
+                parse_mode='HTML',
+                reply_markup=keyboard
+            )
+            return
+        except Exception:
+            pass
+            
+    await message.answer(
+        f"✅ Эмодзи {emoji} добавлен!\n\nОтправьте <b>Premium эмодзи</b> для замены.", 
+        parse_mode='HTML', 
+        reply_markup=keyboard
+    )
+
+
 def register_handlers(dp: Dispatcher) -> None:
     dp.callback_query.register(
         show_bot_config_menu,
@@ -3273,6 +3384,14 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.message.register(
         handle_premium_emoji_input,
         BotConfigStates.waiting_for_premium_emoji,
+    )
+    dp.callback_query.register(
+        start_add_premium_emoji,
+        F.data.startswith('botcfg_prem_add:'),
+    )
+    dp.message.register(
+        handle_new_standard_emoji_input,
+        BotConfigStates.waiting_for_new_standard_emoji,
     )
     # Remnawave app config selector
     dp.callback_query.register(
