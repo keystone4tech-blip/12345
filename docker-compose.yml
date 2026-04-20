@@ -128,9 +128,9 @@ services:
       context: ./cabinet
       dockerfile: Dockerfile
       args:
-        # API URL — указывает на бот API через docker-сеть
-        # В production кабинет проксирует /api/ запросы на бот
-        VITE_API_URL: ${VITE_API_URL:-http://bot:8080/cabinet}
+        # API URL — в production кабинет обращается к /api/
+        # Nginx на хосте проксирует /api/ → bot:8080/cabinet/
+        VITE_API_URL: ${VITE_API_URL:-/api}
         VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-Jarvis_VPN_Robot}
         VITE_APP_NAME: ${VITE_APP_NAME:-Jarvis VPN Cabinet}
         VITE_APP_LOGO: ${VITE_APP_LOGO:-MV}

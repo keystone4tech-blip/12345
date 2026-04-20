@@ -191,6 +191,49 @@ chmod +x "$PROJECT_DIR/scripts/server-setup.sh" 2>/dev/null || true
 log_info "Скрипты готовы к запуску"
 
 # ============================================
+# Шаг 9: Установка Nginx (reverse proxy)
+# ============================================
+log_step "Шаг 9: Установка Nginx"
+
+if command -v nginx &> /dev/null; then
+    log_warn "Nginx уже установлен: $(nginx -v 2>&1)"
+else
+    apt-get install -y nginx
+    systemctl enable nginx
+    systemctl start nginx
+    log_info "Nginx установлен"
+fi
+
+# Копируем конфиг reverse proxy
+if [ -f "$PROJECT_DIR/nginx/reverse-proxy.conf" ]; then
+    cp "$PROJECT_DIR/nginx/reverse-proxy.conf" /etc/nginx/sites-available/mozhnovpn
+    # Удаляем дефолтный сайт
+    rm -f /etc/nginx/sites-enabled/default
+    # Включаем наш конфиг
+    ln -sf /etc/nginx/sites-available/mozhnovpn /etc/nginx/sites-enabled/mozhnovpn
+    # Проверяем и перезагружаем
+    nginx -t && systemctl reload nginx
+    log_info "Nginx reverse proxy настроен для lk.mozhnovpn.tech"
+else
+    log_warn "nginx/reverse-proxy.conf не найден, настройте nginx вручную"
+fi
+
+# ============================================
+# Шаг 10: Установка Certbot (SSL)
+# ============================================
+log_step "Шаг 10: Установка Certbot (SSL)"
+
+if command -v certbot &> /dev/null; then
+    log_warn "Certbot уже установлен"
+else
+    apt-get install -y certbot python3-certbot-nginx
+    log_info "Certbot установлен"
+fi
+
+log_warn "Для получения SSL-сертификата выполните ПОСЛЕ запуска проекта:"
+log_warn "  sudo certbot --nginx -d lk.mozhnovpn.tech"
+
+# ============================================
 # Финальные инструкции
 # ============================================
 echo ""
@@ -209,14 +252,19 @@ echo "  2. Запустите проект:"
 echo "     cd $PROJECT_DIR"
 echo "     docker compose up -d --build"
 echo ""
-echo "  3. Проверьте статус:"
+echo "  3. Настройте SSL сертификат:"
+echo "     sudo certbot --nginx -d lk.mozhnovpn.tech"
+echo ""
+echo "  4. Проверьте статус:"
 echo "     docker compose ps"
 echo "     docker compose logs -f"
+echo "     curl https://lk.mozhnovpn.tech/"
 echo ""
-echo "  4. Настройте GitHub Secrets для автодеплоя:"
+echo "  5. Настройте GitHub Secrets для автодеплоя:"
 echo "     - SERVER_HOST: IP вашего сервера"
 echo "     - SERVER_USER: root"
 echo "     - SSH_PRIVATE_KEY: ваш приватный SSH ключ"
 echo "     - PROJECT_PATH: $PROJECT_DIR"
 echo ""
 echo "============================================================"
+
