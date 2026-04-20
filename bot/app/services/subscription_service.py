@@ -207,6 +207,15 @@ class SubscriptionService:
             async with self.get_api_client() as api:
                 hwid_limit = resolve_hwid_device_limit_for_payload(subscription)
 
+                # Предварительно вычисляем username для возможных фоллбеков
+                username = settings.format_remnawave_username(
+                    full_name=user.full_name,
+                    username=user.username,
+                    telegram_id=user.telegram_id,
+                    email=user.email,
+                    user_id=user.id,
+                )
+
                 # Ищем существующего пользователя в панели
                 existing_users = []
                 if user.remnawave_uuid:
@@ -224,6 +233,15 @@ class SubscriptionService:
                 if not existing_users and user.email:
                     try:
                         existing_users = await api.get_user_by_email(user.email)
+                    except Exception:
+                        pass
+
+                # Fallback: поиск по username (важно для ручных или старых пользователей)
+                if not existing_users and username:
+                    try:
+                        existing_user_by_name = await api.get_user_by_username(username)
+                        if existing_user_by_name:
+                            existing_users = [existing_user_by_name]
                     except Exception:
                         pass
 

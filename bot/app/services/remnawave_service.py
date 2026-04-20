@@ -1967,6 +1967,17 @@ class RemnaWaveService:
                                             panel_uuid=panel_uuid,
                                         )
 
+                                # Fallback: поиск по username (важно для ручных или старых пользователей)
+                                if not panel_uuid and username:
+                                    existing_user_by_name = await api.get_user_by_username(username)
+                                    if existing_user_by_name:
+                                        panel_uuid = existing_user_by_name.uuid
+                                        logger.debug(
+                                            'Найден пользователь в панели по username',
+                                            username=username,
+                                            panel_uuid=panel_uuid,
+                                        )
+
                                 if panel_uuid:
                                     update_kwargs = dict(
                                         uuid=panel_uuid,
