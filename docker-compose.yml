@@ -1,0 +1,177 @@
+# ==============================================================
+# ЕДИНЫЙ DOCKER COMPOSE ДЛЯ ВСЕГО ПРОЕКТА
+# ==============================================================
+# Запускает: бот + кабинет + PostgreSQL + Redis
+# Использование:
+#   docker compose up -d          — запуск всех сервисов
+#   docker compose up -d --build  — пересборка и запуск
+#   docker compose logs -f bot    — логи бота
+#   docker compose logs -f cabinet — логи кабинета
+# ==============================================================
+
+services:
+  # ============================================
+  # PostgreSQL — база данных бота
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: remnawave_bot_db
+    restart: unless-stopped
+    environment:
+      # Параметры БД берём из .env или используем значения по умолчанию
+      POSTGRES_DB: ${POSTGRES_DB:-jarvis_vpn}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-2046}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      # Персистентное хранилище данных БД
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-jarvis_vpn}',
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # Redis — кеш и очереди бота
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: remnawave_bot_redis
+    restart: unless-stopped
+    # Настройки Redis: AOF для персистентности, лимит 256mb
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # Bot — Telegram бот (Python)
+  # ============================================
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: remnawave_bot
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      # Загружаем переменные из .env файла бота
+      - ./bot/.env
+    environment:
+      # Переменные Docker-окружения (перезаписывают .env)
+      FORCE_COLOR: '1'
+      DOCKER_ENV: 'true'
+      DATABASE_MODE: 'auto'
+      # Хост PostgreSQL — имя сервиса в docker-compose
+      POSTGRES_HOST: 'postgres'
+      POSTGRES_PORT: '5432'
+      POSTGRES_DB: '${POSTGRES_DB:-jarvis_vpn}'
+      POSTGRES_USER: '${POSTGRES_USER:-postgres}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-2046}'
+      # Redis URL — подключение к сервису redis
+      REDIS_URL: 'redis://redis:6379/0'
+      # Таймзона
+      TZ: 'Europe/Moscow'
+      LOCALES_PATH: '${LOCALES_PATH:-/app/locales}'
+    dns:
+      # Внешние DNS для корректной работы API запросов
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      # Логи бота — сохраняются на хосте
+      - ./bot/logs:/app/logs:rw
+      # Данные приложения (бэкапы и т.д.)
+      - ./bot/data:/app/data:rw
+      # Локализация
+      - ./bot/locales:/app/locales:rw
+      # Логотип для сообщений
+      - ./bot/vpn_logo.png:/app/vpn_logo.png:ro
+    ports:
+      # Веб-API бота (для кабинета и healthcheck)
+      - '${BOT_API_PORT:-8080}:8080'
+    networks:
+      - app_network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1',
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # Cabinet — веб-кабинет (Vite + nginx)
+  # ============================================
+  cabinet:
+    build:
+      context: ./cabinet
+      dockerfile: Dockerfile
+      args:
+        # API URL — указывает на бот API через docker-сеть
+        # В production кабинет проксирует /api/ запросы на бот
+        VITE_API_URL: ${VITE_API_URL:-http://bot:8080/cabinet}
+        VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-Jarvis_VPN_Robot}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Jarvis VPN Cabinet}
+        VITE_APP_LOGO: ${VITE_APP_LOGO:-MV}
+    container_name: cabinet_frontend
+    restart: unless-stopped
+    depends_on:
+      bot:
+        condition: service_healthy
+    ports:
+      # Порт кабинета (для reverse proxy или прямого доступа)
+      - '${CABINET_PORT:-3020}:80'
+    networks:
+      - app_network
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80/']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+# ============================================
+# Тома (Persistent Volumes)
+# ============================================
+volumes:
+  # Данные PostgreSQL
+  postgres_data:
+    driver: local
+  # Данные Redis
+  redis_data:
+    driver: local
+
+# ============================================
+# Сети
+# ============================================
+networks:
+  # Единая сеть для всех сервисов проекта
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.driver.mtu: 1350

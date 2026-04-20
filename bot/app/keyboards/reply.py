@@ -4,28 +4,40 @@ from app.config import settings
 from app.localization.texts import get_texts
 
 
-def get_main_reply_keyboard(language: str = 'ru') -> ReplyKeyboardMarkup:
+def get_main_reply_keyboard(language: str = 'ru', is_admin: bool = False) -> ReplyKeyboardMarkup:
+    """
+    Создает основное Reply-меню пользователя.
+    """
     texts = get_texts(language)
 
-    sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or texts.MENU_SUBSCRIPTION
-    keyboard = [[KeyboardButton(text=texts.MENU_BALANCE), KeyboardButton(text=sub_text)]]
+    # Первый ряд: Статус и Подключиться
+    keyboard = [
+        [
+            KeyboardButton(text=texts.t('MENU_STATUS', '📊 Статус')),
+            KeyboardButton(text=texts.t('MENU_CONNECT_W_EMOJI', '⚡ Подключиться')),
+        ]
+    ]
 
-    # Добавляем кнопки промокода и рефералов, учитывая настройки
-    second_row = [KeyboardButton(text=texts.MENU_PROMOCODE)]
+    # Второй ряд: Оплатить и Помощь
+    keyboard.append(
+        [
+            KeyboardButton(text=texts.t('MENU_PAY', '💥 Оплатить')),
+            KeyboardButton(text=texts.t('MENU_HELP_RED', '❓ Помощь')),
+        ]
+    )
 
-    # Добавляем кнопку рефералов только если программа включена
-    if settings.is_referral_program_enabled():
-        ref_text = settings.REFERRAL_BUTTON_TEXT or texts.MENU_REFERRALS
-        second_row.append(KeyboardButton(text=ref_text))
-
-    keyboard.append(second_row)
-
-    keyboard.append([KeyboardButton(text=texts.MENU_SUPPORT), KeyboardButton(text=texts.MENU_RULES)])
+    # Третий ряд: Админ-панель (только для админов)
+    if is_admin:
+        admin_button_text = texts.t('ADMIN_PANEL_BUTTON', '🏠 Админ панель')
+        keyboard.append([KeyboardButton(text=admin_button_text)])
 
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=False)
 
 
 def get_admin_reply_keyboard(language: str = 'ru') -> ReplyKeyboardMarkup:
+    """
+    Возвращает Reply-клавиатуру для админ-панели.
+    """
     texts = get_texts(language)
 
     return ReplyKeyboardMarkup(

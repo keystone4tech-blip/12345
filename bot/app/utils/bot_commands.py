@@ -7,9 +7,10 @@ logger = logging.getLogger(__name__)
 async def set_bot_commands(bot: Bot):
     try:
         commands = [
-            BotCommand(command="start", description="🏠 Главное меню / Main menu"),
-            BotCommand(command="language", description="🌐 Сменить язык / Change language"),
-            BotCommand(command="support", description="🛠 Техподдержка / Support"),
+            BotCommand(command="start", description="🚀 Перезапустить бота"),
+            BotCommand(command="menu", description="🔄 Обновить кнопки"),
+            BotCommand(command="language", description="🌐 Выбрать язык"),
+            BotCommand(command="support", description="🛠 Техподдержка"),
         ]
         # Регистрация стандартных команд
         await bot.set_my_commands(commands, scope=BotCommandScopeDefault())

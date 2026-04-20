@@ -63,6 +63,9 @@ services:
 
       TZ: 'Europe/Moscow'
       LOCALES_PATH: '${LOCALES_PATH:-/app/locales}'
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       # Логи
       - ./logs:/app/logs:rw

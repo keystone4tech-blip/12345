@@ -30,15 +30,32 @@ async def handle_connect_subscription(callback: types.CallbackQuery, db_user: Us
     subscription = db_user.subscription
     subscription_link = get_display_subscription_link(subscription)
     hide_subscription_link = settings.should_hide_subscription_link()
+    connect_mode = settings.CONNECT_BUTTON_MODE
 
     if not subscription_link:
-        await callback.answer(
-            texts.t(
-                'SUBSCRIPTION_NO_ACTIVE_LINK',
-                '⚠ У вас нет активной подписки или ссылка еще генерируется',
-            ),
-            show_alert=True,
+        # Если подписки нет, предлагаем триал или покупку
+        trial_available = not db_user.has_had_paid_subscription and (not db_user.subscription or (db_user.subscription.is_trial and db_user.subscription.status == 'pending'))
+        
+        prompt_text = texts.t(
+            'SUBSCRIPTION_CONNECT_NO_ACTIVE_PROMPT',
+            '🚀 <b>Подключение подписки</b>\n\n'
+            'Для получения доступа к VPN вам необходим активный ключ.\n\n'
+            '🎯 Вы можете активировать **пробный период** или приобрести полноценную подписку для доступа ко всем серверам.'
         )
+        
+        onboarding_keyboard = []
+        if trial_available:
+            onboarding_keyboard.append([InlineKeyboardButton(text=texts.t('MENU_TRIAL', '🎁 Активировать триал'), callback_data='menu_trial')])
+        
+        onboarding_keyboard.append([InlineKeyboardButton(text=texts.t('MENU_BUY', '💎 Купить подписку'), callback_data='menu_buy')])
+        onboarding_keyboard.append([InlineKeyboardButton(text=texts.BACK, callback_data='back_to_menu')])
+        
+        await callback.message.edit_text(
+            prompt_text,
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=onboarding_keyboard),
+            parse_mode='HTML'
+        )
+        await callback.answer()
         return
 
     if connect_mode != 'guide':

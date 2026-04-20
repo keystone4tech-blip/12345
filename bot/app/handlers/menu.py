@@ -1,7 +1,10 @@
 import html
+import contextlib
+import asyncio
 from datetime import datetime, UTC
 from decimal import Decimal
 
+import re
 import structlog
 from aiogram import Dispatcher, F, types
 from aiogram.filters import Command, StateFilter
@@ -23,6 +26,7 @@ from app.keyboards.inline import (
     get_language_selection_keyboard,
     get_main_menu_keyboard_async,
 )
+from app.keyboards.reply import get_main_reply_keyboard
 from app.localization.texts import get_rules, get_texts
 from app.services.faq_service import FaqService
 from app.services.main_menu_button_service import MainMenuButtonService
@@ -41,6 +45,7 @@ from app.utils.promo_offer import (
     build_test_access_hint,
 )
 from app.utils.timezone import format_local_datetime
+from app.utils.premium_emojis import replace_with_premium_emojis
 from app.utils.validators import strip_html
 
 
@@ -1412,65 +1417,194 @@ async def handle_activate_button(callback: types.CallbackQuery, db_user: User, d
         )
 
 
+
+class DummyCallbackQuery(types.CallbackQuery):
+    """
+    Класс-заглушка для имитации CallbackQuery при нажатии на текстовые кнопки Reply-меню.
+    """
+    async def answer(self, *args, **kwargs):
+        pass
+
+
+async def _safe_delete(message: types.Message):
+    with contextlib.suppress(Exception):
+        await message.delete()
+
+
+async def delayed_delete(message: types.Message, delay: int = 5):
+    """Фоновое удаление сообщения через заданное время"""
+    await asyncio.sleep(delay)
+    await _safe_delete(message)
+
+
+async def _call_as_callback(message: types.Message, data: str, handler, **kwargs):
+    """
+    Вспомогательная функция для имитации нажатия инлайн-кнопки.
+    """
+    asyncio.create_task(delayed_delete(message))
+    tmp_msg = await message.answer("⏳ ...")
+    
+    pseudo_callback = DummyCallbackQuery(
+        id=str(tmp_msg.message_id),
+        from_user=message.from_user,
+        chat_instance="chat",
+        message=tmp_msg,
+        data=data
+    )
+    # Привязываем бота к фейковому колбэку
+    if hasattr(message, 'bot') and message.bot:
+        pseudo_callback = pseudo_callback.as_(message.bot)
+    
+    try:
+        await handler(pseudo_callback, **kwargs)
+    except Exception as e:
+        await _safe_delete(tmp_msg)
+        raise e
+
+
+async def _handle_menu_command(message: types.Message, state: FSMContext, **kwargs):
+    """Команда /menu - обновление кнопок и показ инструкции"""
+    db = kwargs.get('db')
+    user = kwargs.get('db_user')
+    asyncio.create_task(delayed_delete(message))
+    
+    texts = get_texts(user.language)
+    is_admin = settings.is_admin(user.telegram_id)
+    reply_markup = get_main_reply_keyboard(user.language, is_admin=is_admin)
+
+    await message.answer(
+        texts.t('ONBOARDING_MENU_INSTRUCTION'),
+        reply_markup=reply_markup,
+        parse_mode='HTML'
+    )
+    
+    # Также вызываем показ основного инлайн-меню через имитацию колбэка
+    await _call_as_callback(message, 'back_to_menu', show_main_menu, db_user=user, db=db)
+
+
+async def _handle_language_command(message: types.Message, state: FSMContext, **kwargs):
+    """Команда /language"""
+    user = kwargs.get('db_user')
+    db = kwargs.get('db')
+    await _call_as_callback(message, 'menu_language', show_language_menu, db_user=user, db=db)
+
+
+async def _handle_reply_status(message: types.Message, state: FSMContext, **kwargs):
+    """📊 Статус"""
+    user = kwargs.get('db_user')
+    db = kwargs.get('db')
+    await _call_as_callback(message, 'back_to_menu', handle_back_to_menu, state=state, db_user=user, db=db)
+
+
+async def _handle_reply_connect(message: types.Message, state: FSMContext, **kwargs):
+    """⚡ Подключиться"""
+    user = kwargs.get('db_user')
+    db = kwargs.get('db')
+    from app.handlers.subscription.purchase import handle_connect_subscription
+    await _call_as_callback(message, 'subscription_connect', handle_connect_subscription, db_user=user, db=db)
+
+
+async def _handle_reply_pay(message: types.Message, state: FSMContext, **kwargs):
+    """💥 Оплатить"""
+    user = kwargs.get('db_user')
+    db = kwargs.get('db')
+    from app.handlers.subscription.purchase import start_subscription_purchase
+    await _call_as_callback(message, 'menu_buy', start_subscription_purchase, state=state, db_user=user, db=db)
+
+
+async def _handle_reply_help(message: types.Message, state: FSMContext, **kwargs):
+    """❓ Помощь — теперь ведет напрямую в техподдержку"""
+    user = kwargs.get('db_user')
+    db = kwargs.get('db')
+    from app.handlers.support import show_support_info
+    await _call_as_callback(message, 'menu_support', show_support_info, db_user=user, db=db)
+
+
+async def _handle_reply_admin(message: types.Message, state: FSMContext, **kwargs):
+    """🏠 Админ панель"""
+    user = kwargs.get('db_user')
+    db = kwargs.get('db')
+    if settings.is_admin(user.telegram_id):
+        from app.handlers.admin.main import show_admin_panel
+        await _call_as_callback(message, 'admin_main', show_admin_panel, db_user=user, db=db)
+
+
 def register_handlers(dp: Dispatcher):
     dp.callback_query.register(handle_back_to_menu, F.data == 'back_to_menu')
-
-    dp.callback_query.register(
-        handle_profile_unavailable,
-        F.data == 'menu_profile_unavailable',
-    )
-
+    dp.callback_query.register(handle_profile_unavailable, F.data == 'menu_profile_unavailable')
     dp.callback_query.register(show_service_rules, F.data == 'menu_rules')
-
-    dp.callback_query.register(
-        show_info_menu,
-        F.data == 'menu_info',
-    )
-
-    dp.callback_query.register(
-        show_promo_groups_info,
-        F.data == 'menu_info_promo_groups',
-    )
-
-    dp.callback_query.register(
-        show_faq_pages,
-        F.data == 'menu_faq',
-    )
-
-    dp.callback_query.register(
-        show_faq_page,
-        F.data.startswith('menu_faq_page:'),
-    )
-
-    dp.callback_query.register(
-        show_privacy_policy,
-        F.data == 'menu_privacy_policy',
-    )
-
-    dp.callback_query.register(
-        show_privacy_policy,
-        F.data.startswith('menu_privacy_policy:'),
-    )
-
-    dp.callback_query.register(
-        show_public_offer,
-        F.data == 'menu_public_offer',
-    )
-
-    dp.callback_query.register(
-        show_public_offer,
-        F.data.startswith('menu_public_offer:'),
-    )
-
+    dp.callback_query.register(show_info_menu, F.data == 'menu_info')
+    dp.callback_query.register(show_promo_groups_info, F.data == 'menu_info_promo_groups')
+    dp.callback_query.register(show_faq_pages, F.data == 'menu_faq')
+    dp.callback_query.register(show_faq_page, F.data.startswith('menu_faq_page:'))
+    dp.callback_query.register(show_privacy_policy, F.data == 'menu_privacy_policy')
+    dp.callback_query.register(show_privacy_policy, F.data.startswith('menu_privacy_policy:'))
+    dp.callback_query.register(show_public_offer, F.data == 'menu_public_offer')
+    dp.callback_query.register(show_public_offer, F.data.startswith('menu_public_offer:'))
     dp.callback_query.register(show_language_menu, F.data == 'menu_language')
-
     dp.callback_query.register(process_language_change, F.data.startswith('language_select:'), StateFilter(None))
-
     dp.callback_query.register(handle_add_traffic, F.data == 'buy_traffic')
-
     dp.callback_query.register(add_traffic, F.data.startswith('add_traffic_'))
-
     dp.callback_query.register(handle_activate_button, F.data == 'activate_button')
 
-    # Command handlers
-    dp.message.register(cmd_language, Command('language'))
+    # === РЕГИСТРАЦИЯ REPLY-КНОПОК (ДИНАМИЧЕСКАЯ) ===
+    # Собираем все возможные варианты текстов для каждой кнопки со всех языков
+    # Это гарантирует работу кнопок независимо от языка пользователя и статуса Premium
+    status_texts = set()
+    connect_texts = set()
+    pay_texts = set()
+    help_texts = set()
+    admin_texts = set()
+
+    # Загружаем настройки языков
+    available_langs = settings.get_available_languages()
+    logger.info("🛠 Регистрация Reply-кнопок для языков", languages=available_langs)
+
+    for lang in available_langs:
+        t = get_texts(lang)
+        
+        def _add_variants(target_set, key, default):
+            # 1. Получаем чистый текст (как он в JSON)
+            raw = t.get_raw(key, default)
+            target_set.add(raw)
+            
+            # 2. Добавляем вариант с Premium-тегами
+            premium = replace_with_premium_emojis(raw)
+            if premium != raw:
+                target_set.add(premium)
+            
+            # 3. Добавляем вариант БЕЗ эмодзи вообще (на случай если Telegram их отрезал)
+            # Удаляем все Unicode эмодзи и лишние пробелы
+            clean = re.sub(r'[^\w\sа-яА-ЯёЁ]', '', raw).strip()
+            if clean and clean != raw:
+                target_set.add(clean)
+            
+            # Также добавляем вариант с обычными эмодзи, но без тегов (для совместимости)
+            target_set.add(raw.strip())
+
+        # Статус
+        _add_variants(status_texts, 'MENU_STATUS', '📊 Статус')
+        
+        # Подключиться
+        _add_variants(connect_texts, 'MENU_CONNECT_W_EMOJI', '⚡ Подключиться')
+        
+        # Оплатить
+        _add_variants(pay_texts, 'MENU_PAY', '💥 Оплатить')
+        
+        # Помощь
+        _add_variants(help_texts, 'MENU_HELP_RED', '❓ Помощь')
+        _add_variants(help_texts, 'MENU_INFO', 'ℹ️ Инфо') # Доп. вариант для инфо
+        
+        # Админ-панель (собираем все варианты именования)
+        _add_variants(admin_texts, 'ADMIN_PANEL_BUTTON', '🏠 Админ панель')
+        _add_variants(admin_texts, 'MENU_ADMIN', '⚙️ Админ-панель')
+        _add_variants(admin_texts, 'ADMIN_MAIN_MENU', '🏠 Главное меню')
+
+    dp.message.register(_handle_menu_command, Command("menu"))
+    dp.message.register(_handle_language_command, Command("language"))
+    
+    dp.message.register(_handle_reply_status, F.text.in_(status_texts), StateFilter(None))
+    dp.message.register(_handle_reply_connect, F.text.in_(connect_texts), StateFilter(None))
+    dp.message.register(_handle_reply_pay, F.text.in_(pay_texts), StateFilter(None))
+    dp.message.register(_handle_reply_help, F.text.in_(help_texts), StateFilter(None))
+    dp.message.register(_handle_reply_admin, F.text.in_(admin_texts), StateFilter(None))

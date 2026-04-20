@@ -1,4 +1,6 @@
 from datetime import datetime, UTC
+import contextlib
+import asyncio
 
 import structlog
 from aiogram import Bot, Dispatcher, F, types
@@ -28,6 +30,7 @@ from app.keyboards.inline import (
     get_privacy_policy_keyboard,
     get_rules_keyboard,
 )
+from app.keyboards.reply import get_main_reply_keyboard
 from app.localization.loader import DEFAULT_LANGUAGE
 from app.localization.texts import get_privacy_policy, get_rules, get_texts
 from app.middlewares.channel_checker import (
@@ -274,6 +277,7 @@ async def _prompt_language_selection(message: types.Message, state: FSMContext) 
         _get_language_prompt_text(),
         reply_markup=get_language_selection_keyboard(),
     )
+    asyncio.create_task(delayed_delete(message))
 
 
 async def _continue_registration_after_language(
@@ -320,6 +324,8 @@ async def _continue_registration_after_language(
                     reply_markup=get_referral_code_keyboard(language),
                     message_effect_id='5190950319208240502' # Эффект 👏
                 )
+                if message:
+                    asyncio.create_task(delayed_delete(message))
                 await state.set_state(RegistrationStates.waiting_for_referral_code)
                 logger.info('🔍 LANGUAGE: Ожидание ввода реферального кода')
             except Exception as error:
@@ -334,6 +340,8 @@ async def _continue_registration_after_language(
             reply_markup=get_rules_keyboard(language),
             message_effect_id='5046509860389126442' # Эффект 🎉
         )
+        if message:
+            asyncio.create_task(delayed_delete(message))
     except TelegramForbiddenError:
         logger.warning(
             '⚠️ Пользователь заблокировал бота, пропускаем отправку правил',
@@ -342,6 +350,13 @@ async def _continue_registration_after_language(
         return
     await state.set_state(RegistrationStates.waiting_for_rules_accept)
     logger.info('📋 LANGUAGE: Правила отправлены после выбора языка')
+
+
+async def delayed_delete(message: types.Message, delay: int = 5):
+    """Фоновое удаление сообщения через заданное время"""
+    await asyncio.sleep(delay)
+    with contextlib.suppress(Exception):
+        await message.delete()
 
 
 async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession, db_user=None):
@@ -494,6 +509,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                     'ℹ️ Вы уже зарегистрированы в системе. Реферальная ссылка не может быть применена.',
                 )
             )
+            asyncio.create_task(delayed_delete(message))
 
         if campaign:
             try:
@@ -503,6 +519,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                         'ℹ️ Эта рекламная ссылка доступна только новым пользователям.',
                     )
                 )
+                asyncio.create_task(delayed_delete(message))
             except Exception as e:
                 logger.error('Ошибка отправки уведомления о рекламной кампании', error=e)
 
@@ -541,6 +558,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
             custom_buttons=custom_buttons,
         )
         await message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+        asyncio.create_task(delayed_delete(message))
 
         if pinned_message and not pinned_message.send_before_menu:
             await _send_pinned_message(message.bot, db, user, pinned_message)
@@ -570,8 +588,10 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                     parse_mode='HTML',
                     message_effect_id='5159385139981059251' # Эффект "Сердце" ❤️ для подарка существующему пользователю
                 )
+                asyncio.create_task(delayed_delete(message))
             else:
                 await message.answer(texts.t('GIFT_INVALID_TOKEN', "😔 Ссылка на подарок недействительна или уже была использована."))
+                asyncio.create_task(delayed_delete(message))
             
         await state.clear()
         return
@@ -1213,6 +1233,16 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
                 custom_buttons=custom_buttons,
             )
             await callback.message.answer(menu_text, reply_markup=keyboard, parse_mode='HTML')
+
+            # [ADD] Установка Reply-меню для активного пользователя (через callback)
+            is_admin = settings.is_admin(existing_user.telegram_id)
+            reply_markup = get_main_reply_keyboard(existing_user.language, is_admin=is_admin)
+            await callback.message.answer(
+                texts.t('ONBOARDING_MENU_INSTRUCTION'),
+                reply_markup=reply_markup,
+                parse_mode='HTML'
+            )
+
             await _send_pinned_message(callback.bot, db, existing_user)
         except Exception as e:
             logger.error('Ошибка при показе главного меню существующему пользователю', error=e)
@@ -1416,12 +1446,27 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
                 is_moderator=is_moderator,
                 custom_buttons=custom_buttons,
             )
+            # 1. Установка Reply-меню и Onboarding-инструкция для нового пользователя (СНАЧАЛА)
+            is_admin = settings.is_admin(user.telegram_id)
+            reply_markup = get_main_reply_keyboard(user.language, is_admin=is_admin)
+            await callback.message.answer(
+                texts.t('ONBOARDING_MENU_INSTRUCTION'),
+                reply_markup=reply_markup,
+                parse_mode='HTML'
+            )
+
+            # 2. Небольшая задержка для плавного UX (2-3 сек)
+            logger.info('⏳ Ожидание перед показом основного меню (новый пользователь)...', telegram_id=user.telegram_id)
+            await asyncio.sleep(3)
+
+            # 3. Основное инлайн-меню (ПОТОМ)
             await callback.message.answer(
                 menu_text, 
                 reply_markup=keyboard, 
                 parse_mode='HTML',
                 message_effect_id='5104841245755180586' # Эффект 🔥
             )
+
             import contextlib
             with contextlib.suppress(Exception):
                 await callback.message.delete()
@@ -1489,6 +1534,19 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                 is_moderator=is_moderator,
                 custom_buttons=custom_buttons,
             )
+            # 1. Установка Reply-меню и Onboarding-инструкция (СНАЧАЛА)
+            reply_markup = get_main_reply_keyboard(existing_user.language, is_admin=is_admin)
+            await message.answer(
+                texts.t('ONBOARDING_MENU_INSTRUCTION'),
+                reply_markup=reply_markup,
+                parse_mode='HTML'
+            )
+
+            # 2. Небольшая задержка для плавного UX
+            logger.info('⏳ Ожидание перед показом основного меню (существующий пользователь)...', telegram_id=existing_user.telegram_id)
+            await asyncio.sleep(3)
+
+            # 3. Основное инлайн-меню (ПОТОМ)
             await message.answer(
                 menu_text, 
                 reply_markup=keyboard, 
@@ -1549,6 +1607,13 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
         referrer = await get_user_by_referral_code(db, data['referral_code'])
         if referrer:
             referrer_id = referrer.id
+
+    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к первому админу
+    if not referrer_id:
+        admins = settings.get_admin_ids()
+        if admins:
+            referrer_id = admins[0]
+            logger.info('👤 Автоматическая привязка к администратору (по умолчанию)', referrer_id=referrer_id)
 
     if existing_user and existing_user.status == UserStatus.DELETED.value:
         logger.info('🔄 Восстанавливаем удаленного пользователя', from_user_id=message.from_user.id)
@@ -1757,11 +1822,24 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                 is_moderator=is_moderator,
                 custom_buttons=custom_buttons,
             )
+            # 1. Установка Reply-меню и Onboarding-инструкция (СНАЧАЛА)
+            reply_markup = get_main_reply_keyboard(user.language, is_admin=is_admin)
+            await message.answer(
+                texts.t('ONBOARDING_MENU_INSTRUCTION'),
+                reply_markup=reply_markup,
+                parse_mode='HTML'
+            )
+
+            # 2. Небольшая задержка для плавного UX
+            logger.info('⏳ Ожидание перед показом основного меню (финал регистрации)...', telegram_id=user.telegram_id)
+            await asyncio.sleep(3)
+
+            # 3. Основное инлайн-меню (ПОТОМ)
             await message.answer(
                 menu_text, 
                 reply_markup=keyboard, 
                 parse_mode='HTML',
-                message_effect_id='5190950319208240502' # Эффект "Аплодисменты" 👏 при первом входе (после регистрации)
+                message_effect_id='5190950319208240502' # Эффект "Аплодисменты" 👏
             )
 
             # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
@@ -2175,6 +2253,13 @@ async def required_sub_channel_check(
                             if referrer:
                                 referrer_id = referrer.id
                                 logger.info('✅ CHANNEL CHECK: Реферер найден из ссылки', referrer_id=referrer.id)
+                    
+                    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к первому админу
+                    if not referrer_id:
+                        admins = settings.get_admin_ids()
+                        if admins:
+                            referrer_id = admins[0]
+                            logger.info('👤 CHANNEL CHECK: Автоматическая привязка к администратору', referrer_id=referrer_id)
 
                     referral_code = await generate_unique_referral_code(db, query.from_user.id)
 

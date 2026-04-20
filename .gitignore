@@ -1,0 +1,37 @@
+# ==============================================================
+# .gitignore — корневой файл (весь проект)
+# ==============================================================
+
+# Переменные окружения (содержат секреты!)
+.env
+!.env.example
+
+# Данные и логи
+data/
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+
+# Node.js
+node_modules/
+dist/
+.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini

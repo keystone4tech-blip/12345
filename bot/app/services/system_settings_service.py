@@ -2484,11 +2484,21 @@ class BotConfigurationService:
     @classmethod
     def _apply_to_settings(cls, key: str, value: Any) -> None:
         if cls._is_env_override(key):
-            # Allow DB overrides for critical AI ticket settings
-            if key not in {'SUPPORT_AI_ENABLED', 'SUPPORT_AI_FORUM_ID'}:
+            # Список настроек, для которых БД имеет приоритет над .env
+            db_priority_keys = {
+                'SUPPORT_AI_ENABLED',
+                'SUPPORT_AI_FORUM_ID',
+            }
+            
+            # Разрешаем переопределять настройки RemnaWave из БД для гибкости (баг-фикс приоритета)
+            is_remna_setting = key.startswith('REMNAWAVE_') or key == 'CABINET_REMNA_SUB_CONFIG'
+
+            if key not in db_priority_keys and not is_remna_setting:
                 logger.debug('Пропуск применения настройки: значение задано через окружение', key=key)
                 return
-            logger.info('Применяем настройку из БД поверх .env (приоритет для ИИ)', key=key)
+            
+            logger.info('Применяем настройку из БД поверх .env (приоритет для RemnaWave/AI)', key=key)
+
         try:
             setattr(settings, key, value)
             if key in {

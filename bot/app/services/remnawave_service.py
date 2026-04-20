@@ -557,6 +557,7 @@ class RemnaWaveService:
             async with self.get_api_client() as api:
                 logger.info('Получение системной статистики RemnaWave...')
 
+                # Основная системная статистика
                 try:
                     system_stats = await api.get_system_stats()
                     logger.info('Системная статистика получена')
@@ -564,6 +565,7 @@ class RemnaWaveService:
                     logger.error('Ошибка получения системной статистики', error=e)
                     system_stats = {}
 
+                # Статистика трафика
                 try:
                     bandwidth_stats = await api.get_bandwidth_stats()
                     logger.info('Статистика трафика получена')
@@ -571,6 +573,7 @@ class RemnaWaveService:
                     logger.error('Ошибка получения статистики трафика', error=e)
                     bandwidth_stats = {}
 
+                # Реалтайм использование нод
                 try:
                     realtime_usage = await api.get_nodes_realtime_usage()
                     logger.info('Реалтайм статистика получена')
@@ -578,29 +581,33 @@ class RemnaWaveService:
                     logger.error('Ошибка получения реалтайм статистики', error=e)
                     realtime_usage = []
 
+                # Статистика нод (история)
                 try:
                     nodes_stats = await api.get_nodes_statistics()
                 except Exception as e:
                     logger.error('Ошибка получения статистики нод', error=e)
                     nodes_stats = {}
 
-                total_download = sum(node.get('downloadBytes', 0) for node in realtime_usage)
-                total_upload = sum(node.get('uploadBytes', 0) for node in realtime_usage)
+                # Агрегация данных
+                total_download = sum(node.get('downloadBytes', 0) for node in realtime_usage if isinstance(node, dict))
+                total_upload = sum(node.get('uploadBytes', 0) for node in realtime_usage if isinstance(node, dict))
                 total_realtime_traffic = total_download + total_upload
 
-                total_user_traffic = int(system_stats.get('users', {}).get('totalTrafficBytes', '0'))
+                # Безопасно извлекаем трафик пользователей
+                user_data = system_stats.get('users', {})
+                total_user_traffic = int(user_data.get('totalTrafficBytes', 0)) if isinstance(user_data, dict) else 0
 
                 nodes_weekly_data = []
-                if nodes_stats.get('lastSevenDays'):
+                if nodes_stats and isinstance(nodes_stats, dict) and nodes_stats.get('lastSevenDays'):
                     nodes_by_name = {}
                     for day_data in nodes_stats['lastSevenDays']:
-                        node_name = day_data['nodeName']
+                        node_name = day_data.get('nodeName', 'Unknown')
                         if node_name not in nodes_by_name:
                             nodes_by_name[node_name] = {'name': node_name, 'total_bytes': 0, 'days_data': []}
 
-                        daily_bytes = int(day_data['totalBytes'])
+                        daily_bytes = int(day_data.get('totalBytes', 0))
                         nodes_by_name[node_name]['total_bytes'] += daily_bytes
-                        nodes_by_name[node_name]['days_data'].append({'date': day_data['date'], 'bytes': daily_bytes})
+                        nodes_by_name[node_name]['days_data'].append({'date': day_data.get('date'), 'bytes': daily_bytes})
 
                     nodes_weekly_data = list(nodes_by_name.values())
                     nodes_weekly_data.sort(key=lambda x: x['total_bytes'], reverse=True)
@@ -612,25 +619,26 @@ class RemnaWaveService:
                 except (TypeError, ValueError):
                     logger.warning('Не удалось преобразовать uptime в число, используем 0', uptime_value=uptime_value)
 
+                # Формируем итоговый объект
                 result = {
                     'system': {
-                        'users_online': system_stats.get('onlineStats', {}).get('onlineNow', 0),
-                        'total_users': system_stats.get('users', {}).get('totalUsers', 0),
-                        'active_connections': system_stats.get('onlineStats', {}).get('onlineNow', 0),
-                        'nodes_online': system_stats.get('nodes', {}).get('totalOnline', 0),
-                        'users_last_day': system_stats.get('onlineStats', {}).get('lastDay', 0),
-                        'users_last_week': system_stats.get('onlineStats', {}).get('lastWeek', 0),
-                        'users_never_online': system_stats.get('onlineStats', {}).get('neverOnline', 0),
+                        'users_online': system_stats.get('onlineStats', {}).get('onlineNow', 0) if isinstance(system_stats.get('onlineStats'), dict) else 0,
+                        'total_users': user_data.get('totalUsers', 0) if isinstance(user_data, dict) else 0,
+                        'active_connections': system_stats.get('onlineStats', {}).get('onlineNow', 0) if isinstance(system_stats.get('onlineStats'), dict) else 0,
+                        'nodes_online': system_stats.get('nodes', {}).get('totalOnline', 0) if isinstance(system_stats.get('nodes'), dict) else 0,
+                        'users_last_day': system_stats.get('onlineStats', {}).get('lastDay', 0) if isinstance(system_stats.get('onlineStats'), dict) else 0,
+                        'users_last_week': system_stats.get('onlineStats', {}).get('lastWeek', 0) if isinstance(system_stats.get('onlineStats'), dict) else 0,
+                        'users_never_online': system_stats.get('onlineStats', {}).get('neverOnline', 0) if isinstance(system_stats.get('onlineStats'), dict) else 0,
                         'total_user_traffic': total_user_traffic,
                     },
-                    'users_by_status': system_stats.get('users', {}).get('statusCounts', {}),
+                    'users_by_status': user_data.get('statusCounts', {}) if isinstance(user_data, dict) else {},
                     'server_info': {
-                        'cpu_cores': system_stats.get('cpu', {}).get('cores', 0),
-                        'cpu_physical_cores': system_stats.get('cpu', {}).get('physicalCores', 0),
-                        'memory_total': system_stats.get('memory', {}).get('total', 0),
-                        'memory_used': system_stats.get('memory', {}).get('used', 0),
-                        'memory_free': system_stats.get('memory', {}).get('free', 0),
-                        'memory_available': system_stats.get('memory', {}).get('available', 0),
+                        'cpu_cores': system_stats.get('cpu', {}).get('cores', 0) if isinstance(system_stats.get('cpu'), dict) else 0,
+                        'cpu_physical_cores': system_stats.get('cpu', {}).get('physicalCores', 0) if isinstance(system_stats.get('cpu'), dict) else 0,
+                        'memory_total': system_stats.get('memory', {}).get('total', 0) if isinstance(system_stats.get('memory'), dict) else 0,
+                        'memory_used': system_stats.get('memory', {}).get('used', 0) if isinstance(system_stats.get('memory'), dict) else 0,
+                        'memory_free': system_stats.get('memory', {}).get('free', 0) if isinstance(system_stats.get('memory'), dict) else 0,
+                        'memory_available': system_stats.get('memory', {}).get('available', 0) if isinstance(system_stats.get('memory'), dict) else 0,
                         'uptime_seconds': uptime_seconds,
                     },
                     'bandwidth': {
@@ -640,49 +648,19 @@ class RemnaWaveService:
                     },
                     'traffic_periods': {
                         'last_2_days': {
-                            'current': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthLastTwoDays', {}).get('current', '0 B')
-                            ),
-                            'previous': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthLastTwoDays', {}).get('previous', '0 B')
-                            ),
-                            'difference': bandwidth_stats.get('bandwidthLastTwoDays', {}).get('difference', '0 B'),
+                            'current': self._parse_bandwidth_string(bandwidth_stats.get('bandwidthLastTwoDays', {}).get('current', '0 B') if isinstance(bandwidth_stats.get('bandwidthLastTwoDays'), dict) else '0 B'),
+                            'previous': self._parse_bandwidth_string(bandwidth_stats.get('bandwidthLastTwoDays', {}).get('previous', '0 B') if isinstance(bandwidth_stats.get('bandwidthLastTwoDays'), dict) else '0 B'),
+                            'difference': bandwidth_stats.get('bandwidthLastTwoDays', {}).get('difference', '0 B') if isinstance(bandwidth_stats.get('bandwidthLastTwoDays'), dict) else '0 B',
                         },
                         'last_7_days': {
-                            'current': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthLastSevenDays', {}).get('current', '0 B')
-                            ),
-                            'previous': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthLastSevenDays', {}).get('previous', '0 B')
-                            ),
-                            'difference': bandwidth_stats.get('bandwidthLastSevenDays', {}).get('difference', '0 B'),
+                            'current': self._parse_bandwidth_string(bandwidth_stats.get('bandwidthLastSevenDays', {}).get('current', '0 B') if isinstance(bandwidth_stats.get('bandwidthLastSevenDays'), dict) else '0 B'),
+                            'previous': self._parse_bandwidth_string(bandwidth_stats.get('bandwidthLastSevenDays', {}).get('previous', '0 B') if isinstance(bandwidth_stats.get('bandwidthLastSevenDays'), dict) else '0 B'),
+                            'difference': bandwidth_stats.get('bandwidthLastSevenDays', {}).get('difference', '0 B') if isinstance(bandwidth_stats.get('bandwidthLastSevenDays'), dict) else '0 B',
                         },
                         'last_30_days': {
-                            'current': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthLast30Days', {}).get('current', '0 B')
-                            ),
-                            'previous': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthLast30Days', {}).get('previous', '0 B')
-                            ),
-                            'difference': bandwidth_stats.get('bandwidthLast30Days', {}).get('difference', '0 B'),
-                        },
-                        'current_month': {
-                            'current': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthCalendarMonth', {}).get('current', '0 B')
-                            ),
-                            'previous': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthCalendarMonth', {}).get('previous', '0 B')
-                            ),
-                            'difference': bandwidth_stats.get('bandwidthCalendarMonth', {}).get('difference', '0 B'),
-                        },
-                        'current_year': {
-                            'current': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthCurrentYear', {}).get('current', '0 B')
-                            ),
-                            'previous': self._parse_bandwidth_string(
-                                bandwidth_stats.get('bandwidthCurrentYear', {}).get('previous', '0 B')
-                            ),
-                            'difference': bandwidth_stats.get('bandwidthCurrentYear', {}).get('difference', '0 B'),
+                            'current': self._parse_bandwidth_string(bandwidth_stats.get('bandwidthLast30Days', {}).get('current', '0 B') if isinstance(bandwidth_stats.get('bandwidthLast30Days'), dict) else '0 B'),
+                            'previous': self._parse_bandwidth_string(bandwidth_stats.get('bandwidthLast30Days', {}).get('previous', '0 B') if isinstance(bandwidth_stats.get('bandwidthLast30Days'), dict) else '0 B'),
+                            'difference': bandwidth_stats.get('bandwidthLast30Days', {}).get('difference', '0 B') if isinstance(bandwidth_stats.get('bandwidthLast30Days'), dict) else '0 B',
                         },
                     },
                     'nodes_realtime': realtime_usage,
@@ -690,11 +668,6 @@ class RemnaWaveService:
                     'last_updated': datetime.now(UTC),
                 }
 
-                logger.info(
-                    'Статистика сформирована: пользователи=, общий трафик',
-                    result=result['system']['total_users'],
-                    total_user_traffic=total_user_traffic,
-                )
                 return result
 
         except RemnaWaveAPIError as e:

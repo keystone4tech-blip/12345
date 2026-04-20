@@ -292,6 +292,11 @@ class RemnaWaveAPI:
             encoded_credentials = base64.b64encode(credentials.encode()).decode()
             headers['X-Api-Key'] = f'Basic {encoded_credentials}'
             logger.debug('Используем Basic Auth в X-Api-Key заголовке')
+        elif self.auth_type == 'bearer' or (not self.auth_type and self.api_key):
+             # В новых версиях Remnawave JWT передается в Authorization: Bearer
+            headers['Authorization'] = f'Bearer {self.api_key}'
+            headers['X-Api-Key'] = self.api_key
+            logger.debug('Используем Bearer токен в Authorization заголовке')
         elif self.auth_type == 'caddy':
             # Для caddy auth_type основная авторизация уже в Authorization header
             # Но API ключ всё равно нужен для RemnaWave
@@ -299,11 +304,12 @@ class RemnaWaveAPI:
                 headers['X-Api-Key'] = self.api_key
                 logger.debug('Используем API ключ для RemnaWave + Caddy авторизацию')
         else:
-            # api_key или bearer — стандартный режим
+            # api_key или другой режим
             headers['X-Api-Key'] = self.api_key
             if not self.caddy_token:
+                # Пробуем добавить Bearer даже для api_key, так как многие панели теперь требуют его
                 headers['Authorization'] = f'Bearer {self.api_key}'
-            logger.debug('Используем API ключ в X-Api-Key заголовке')
+            logger.debug('Используем API ключ в X-Api-Key заголовке (auth_type: )', auth_type=self.auth_type)
 
         return headers
 
@@ -401,7 +407,16 @@ class RemnaWaveAPI:
                     if response.status >= 400:
                         error_message = response_data.get('message', f'HTTP {response.status}')
                         log = logger.warning if response.status in (502, 503, 504) else logger.error
-                        log('API Error %s: %s', response.status, error_message)
+                        log(
+                            'API Error %s: %s | URL: %s | Method: %s',
+                            response.status,
+                            error_message,
+                            url,
+                            method,
+                        )
+                        if response.status == 404:
+                            log('Подсказка: 404 может означать неверный префикс /api или старую версию панели')
+
                         log('Response: %s', response_text[:500])
                         raise RemnaWaveAPIError(error_message, response.status, response_data)
 
@@ -892,8 +907,22 @@ class RemnaWaveAPI:
             return await response.text()
 
     async def get_system_stats(self) -> dict[str, Any]:
-        response = await self._make_request('GET', '/api/system/stats')
-        return response['response']
+        """
+        Получает статистику системы.
+        В версии 2.7.4+ используем /api/system/stats или /api/system/metadata.
+        """
+        try:
+            # Пытаемся получить основную статистику (2.7.x)
+            response = await self._make_request('GET', '/api/system/stats')
+            return response.get('response', response)
+        except RemnaWaveAPIError as e:
+            if e.status_code == 404:
+                # Если статистика недоступна, пробуем метаданные для проверки связи
+                logger.info("Эндпоинт статистики вернул 404, проверяем связь через метаданные")
+                response = await self._make_request('GET', '/api/system/metadata')
+                return response.get('response', response)
+            raise
+
 
     async def get_system_metadata(self) -> dict[str, Any]:
         """
@@ -909,36 +938,77 @@ class RemnaWaveAPI:
         return response['response']
 
     async def get_bandwidth_stats(self) -> dict[str, Any]:
-        response = await self._make_request('GET', '/api/system/stats/bandwidth')
-        return response['response']
+        """Получает агрегированную статистику трафика"""
+        try:
+            # В 2.7.4+ данные о трафике обычно приходят вместе с системной статистикой
+            stats = await self.get_system_stats()
+            # Пытаемся найти данные о трафике внутри ответа
+            if 'bandwidth' in stats:
+                return stats['bandwidth']
+            return stats.get('bandwidthStats', {})
+        except Exception as e:
+            logger.warning('Не удалось получить bandwidth_stats, используем пустой словарь', error=e)
+            return {}
 
     async def get_nodes_statistics(self) -> dict[str, Any]:
-        response = await self._make_request('GET', '/api/system/stats/nodes')
-        return response['response']
+        """Получает статистику нод за последние 7 дней"""
+        try:
+            # В новых версиях данные могут быть в /api/system/stats
+            stats = await self.get_system_stats()
+            if 'nodes' in stats and 'lastSevenDays' in stats['nodes']:
+                 return stats['nodes']
+            
+            # Fallback на новый эндпоинт, если он есть
+            return (await self._make_request('GET', '/api/system/stats/nodes'))['response']
+        except Exception:
+            return {}
+
 
     async def get_nodes_realtime_usage(self) -> list[dict[str, Any]]:
-        return await self.get_bandwidth_stats_nodes_realtime()
-
-    async def get_user_stats_usage(self, user_uuid: str, start_date: str, end_date: str) -> dict[str, Any]:
-        return await self.get_bandwidth_stats_user_legacy(user_uuid, start_date, end_date)
-
-    # ============== Bandwidth Stats API ==============
-
-    async def get_bandwidth_stats_nodes(self, start_date: str, end_date: str) -> dict[str, Any]:
-        params = {'start': start_date, 'end': end_date}
-        response = await self._make_request('GET', '/api/bandwidth-stats/nodes', params=params)
-        return response['response']
+        """Получает текущую нагрузку на ноды (download/upload)"""
+        try:
+            # В 2.7.4 данные реалтайма обычно в /api/system/stats -> bandwidth -> realtime
+            stats = await self.get_system_stats()
+            bandwidth = stats.get('bandwidth', {})
+            if 'realtime' in bandwidth:
+                # В новых версиях это объект, преобразуем в список для совместимости если нужно,
+                # или сервис сам разберется. Но обычно сервис ждет список нод.
+                realtime = bandwidth['realtime']
+                if isinstance(realtime, list):
+                    return realtime
+                return [realtime]
+            
+            # Если в stats нет, проверяем /api/nodes — там есть текущий трафик нод
+            nodes = await self.get_all_nodes()
+            return [
+                {
+                    'nodeUuid': n.uuid,
+                    'nodeName': n.name,
+                    'downloadBytes': 0, # Новые версии могут не давать мгновенную скорость в байтах/сек здесь
+                    'uploadBytes': 0,
+                    'totalBytes': n.traffic_used_bytes or 0
+                } for n in nodes
+            ]
+        except Exception:
+            return []
 
     async def get_bandwidth_stats_nodes_realtime(self) -> list[dict[str, Any]]:
-        response = await self._make_request('GET', '/api/bandwidth-stats/nodes/realtime')
-        return response['response']
+        """Алиас для обратной совместимости, который раньше вызывал 404"""
+        return await self.get_nodes_realtime_usage()
 
-    async def get_bandwidth_stats_node_users(
-        self, node_uuid: str, start_date: str, end_date: str, top_users_limit: int = 10
-    ) -> dict[str, Any]:
-        params = {'start': start_date, 'end': end_date, 'topUsersLimit': top_users_limit}
-        response = await self._make_request('GET', f'/api/bandwidth-stats/nodes/{node_uuid}/users', params=params)
-        return response['response']
+    async def get_bandwidth_stats_user(self, user_uuid: str, start_date: str, end_date: str) -> dict[str, Any]:
+        """Получает статистику трафика пользователя. Эндпоинт /legacy часто возвращает 404 в 2.7.4"""
+        try:
+            # Сначала пробуем стандартный эндпоинт
+            response = await self._make_request('GET', f'/api/bandwidth-stats/users/{user_uuid}', params={'start': start_date, 'end': end_date})
+            return response.get('response', response)
+        except Exception as e:
+            logger.warning('Ошибка при получении детальной статистики пользователя (404/legacy), используем данные из профиля', user_uuid=user_uuid)
+            # Если детальная статистика недоступна, возвращаем текущий трафик пользователя
+            user = await self.get_user_by_uuid(user_uuid)
+            if user:
+                return {'total': user.used_traffic_bytes, 'usedTrafficBytes': user.used_traffic_bytes}
+            return {'total': 0}
 
     async def get_bandwidth_stats_node_users_legacy(
         self, node_uuid: str, start_date: str, end_date: str

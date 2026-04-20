@@ -1,39 +1,125 @@
-name: Deploy Bedolaga Bot
+# ==============================================================
+# CI/CD ПАЙПЛАЙН — автоматический деплой при push в main
+# ==============================================================
+# Триггеры:
+#   1. Push в ветку main (изменения в bot/, cabinet/ или docker-compose.yml)
+#   2. Ручной запуск через GitHub Actions UI (workflow_dispatch)
+#
+# Необходимые GitHub Secrets:
+#   - SERVER_HOST:    IP адрес сервера
+#   - SERVER_USER:    Пользователь SSH (обычно root)
+#   - SSH_PRIVATE_KEY: Приватный SSH ключ
+#   - PROJECT_PATH:   Путь к проекту на сервере (по умолчанию /opt/mozhnovpn)
+# ==============================================================
+
+name: Deploy MozhnoVPN
 
 on:
-  workflow_dispatch:  # Позволяет запускать деплой вручную из вкладки Actions
+  # Автодеплой при push в main
+  push:
+    branches:
+      - main
+    paths:
+      # Деплоим только если изменены эти файлы/папки
+      - 'bot/**'
+      - 'cabinet/**'
+      - 'docker-compose.yml'
+      - 'scripts/**'
+      - '.github/workflows/deploy.yml'
+
+  # Ручной запуск из вкладки Actions
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Пересобрать без кэша (--no-cache)'
+        required: false
+        default: 'false'
+        type: boolean
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Подавляет предупреждение об устаревании Node.js 20
+  # Подавляем предупреждение об устаревании Node.js
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   deploy:
+    name: 🚀 Деплой на сервер
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      # ============================================
+      # Шаг 1: Получаем код
+      # ============================================
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Server via SSH
+      # ============================================
+      # Шаг 2: Деплой через SSH
+      # ============================================
+      - name: 🔗 Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }}     # IP вашего сервера
-          username: ${{ secrets.SERVER_USER }} # Логин (например, root)
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Приватный SSH ключ
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Таймаут увеличен для пересборки Docker образов
+          command_timeout: 15m
           script: |
-            # Переходим в папку проекта. Если секрет PROJECT_PATH не задан, используем путь по умолчанию.
+            # === Настройка переменных ===
+            # Путь к проекту (из секретов или по умолчанию)
             TARGET_DIR="${{ secrets.PROJECT_PATH }}"
             if [ -z "$TARGET_DIR" ]; then
-              TARGET_DIR="/root/сервис рекламы с впн"
+              TARGET_DIR="/opt/mozhnovpn"
             fi
 
-            echo "Переход в директорию: $TARGET_DIR"
-            cd "$TARGET_DIR" || { echo "❌ Ошибка: Директория $TARGET_DIR не найдена на сервере."; exit 1; }
+            echo "🔧 Директория проекта: $TARGET_DIR"
 
-            echo "📥 Обновление кода из репозитория..."
-            git pull origin main
+            # Проверяем существование директории
+            if [ ! -d "$TARGET_DIR" ]; then
+              echo "❌ Директория $TARGET_DIR не найдена!"
+              echo "💡 Сначала запустите: bash scripts/server-setup.sh"
+              exit 1
+            fi
 
-            echo "🚀 Перезапуск Docker-контейнеров..."
-            cd bot
-            docker compose up -d --build
+            # Переходим в директорию проекта
+            cd "$TARGET_DIR" || exit 1
 
-            echo "✅ Деплой успешно завершен!"
+            # === Выполняем скрипт деплоя ===
+            if [ -f "scripts/deploy.sh" ]; then
+              echo "📦 Запускаем скрипт деплоя..."
+              bash scripts/deploy.sh
+            else
+              # Фоллбэк если скрипт не найден
+              echo "⚠️ scripts/deploy.sh не найден, выполняем деплой вручную..."
+
+              echo "📥 Обновление кода..."
+              git fetch origin main
+              git reset --hard origin/main
+
+              echo "🔨 Пересборка контейнеров..."
+              docker compose build --pull
+
+              echo "🚀 Запуск контейнеров..."
+              docker compose up -d --remove-orphans
+
+              echo "🧹 Очистка..."
+              docker image prune -f
+
+              echo "📊 Статус:"
+              docker compose ps
+            fi
+
+            echo ""
+            echo "✅ Деплой завершён: $(date '+%Y-%m-%d %H:%M:%S')"
+
+      # ============================================
+      # Шаг 3: Уведомление о результате
+      # ============================================
+      - name: 📊 Результат деплоя
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Деплой успешен!"
+          else
+            echo "❌ Деплой завершился с ошибкой"
+            echo "Проверьте логи на сервере: docker compose logs -f"
+          fi
