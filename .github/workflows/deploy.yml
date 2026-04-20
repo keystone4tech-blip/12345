@@ -95,13 +95,16 @@ jobs:
               git fetch origin main
               git reset --hard origin/main
 
-              echo "🔨 Пересборка контейнеров..."
-              docker compose build --pull
+              echo "🧹 Очистка старых контейнеров и кэша..."
+              docker compose stop bot cabinet || true
+              docker compose rm -f bot cabinet || true
+              docker builder prune -a -f || true
 
-              echo "🚀 Запуск контейнеров..."
+              echo "🔨 Пересборка контейнеров (--no-cache)..."
+              docker compose build --no-cache --pull bot cabinet
+              
+              echo "🚀 Запуск сервисов..."
               docker compose up -d --remove-orphans
-
-              echo "🧹 Очистка..."
               docker image prune -f
 
               echo "📊 Статус:"
