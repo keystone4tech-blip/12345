@@ -275,9 +275,6 @@ class RemnaWaveAPI:
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-Forwarded-Proto': 'https',
-            'X-Forwarded-For': '127.0.0.1',
-            'X-Real-IP': '127.0.0.1',
         }
 
         # Caddy авторизация — добавляется поверх основной
@@ -295,7 +292,6 @@ class RemnaWaveAPI:
         elif self.auth_type == 'bearer' or (not self.auth_type and self.api_key):
              # В новых версиях Remnawave JWT передается в Authorization: Bearer
             headers['Authorization'] = f'Bearer {self.api_key}'
-            headers['X-Api-Key'] = self.api_key
             logger.debug('Используем Bearer токен в Authorization заголовке')
         elif self.auth_type == 'caddy':
             # Для caddy auth_type основная авторизация уже в Authorization header

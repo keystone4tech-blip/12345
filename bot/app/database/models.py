@@ -893,6 +893,8 @@ class Tariff(Base):
 
     # Подписки на этом тарифе
     subscriptions = relationship('Subscription', back_populates='tariff')
+    # Подарки, привязанные к этому тарифу
+    gifts = relationship('Gift', back_populates='tariff', cascade='all, delete-orphan', passive_deletes=True)
 
     @property
     def is_unlimited_traffic(self) -> bool:
@@ -3000,7 +3002,7 @@ class Gift(Base):
     activated_at = Column(AwareDateTime(), nullable=True)
 
     # Relationships
-    tariff = relationship('Tariff', backref='gifts')
+    tariff = relationship('Tariff', back_populates='gifts')
     gifter = relationship('User', foreign_keys=[gifter_id], backref='sent_gifts')
     recipient = relationship('User', foreign_keys=[recipient_id], backref='received_gifts')
 

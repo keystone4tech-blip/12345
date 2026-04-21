@@ -35,3 +35,24 @@ dist/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Локальные отчеты и логи диагностики
+all_install_scripts.txt
+bot_startup_logs.txt
+diagnostic_results.txt
+remnanode_logs.txt
+server_env.txt
+server_env_current.txt
+bot2_crash.log
+diagnostic_results.txt
+
+# Локальные конфигурации
+panel_nginx.conf
+
+# Временные папки
+mozhnovpn-deploy/
+data/
+logs/
+
+# Скрипты (игнорируем новые локальные скрипты, оставляем системные)
+scripts/
