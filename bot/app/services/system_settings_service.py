@@ -2337,7 +2337,8 @@ class BotConfigurationService:
                 db_priority_keys = {'SUPPORT_AI_ENABLED', 'SUPPORT_AI_FORUM_ID', 'AVAILABLE_SUBSCRIPTION_PERIODS', 'AVAILABLE_RENEWAL_PERIODS'}
                 is_remna_setting = key.startswith('REMNAWAVE_') or key == 'CABINET_REMNA_SUB_CONFIG'
                 is_pricing_setting = key.startswith('PRICE_') or key.startswith('TRAFFIC_') or key.startswith('TRIAL_')
-                if key not in db_priority_keys and not is_remna_setting and not is_pricing_setting:
+                is_webhook_setting = key.startswith('WEBHOOK_')
+                if key not in db_priority_keys and not is_remna_setting and not is_pricing_setting and not is_webhook_setting:
                     logger.debug('Пропускаем настройку из БД: используется значение из окружения', key=key)
                     continue
             try:
@@ -2500,12 +2501,14 @@ class BotConfigurationService:
             is_remna_setting = key.startswith('REMNAWAVE_') or key == 'CABINET_REMNA_SUB_CONFIG'
             # Также разрешаем настройки цен
             is_pricing_setting = key.startswith('PRICE_') or key.startswith('TRAFFIC_') or key.startswith('TRIAL_')
+            # Также разрешаем вебхуки
+            is_webhook_setting = key.startswith('WEBHOOK_')
 
-            if key not in db_priority_keys and not is_remna_setting and not is_pricing_setting:
+            if key not in db_priority_keys and not is_remna_setting and not is_pricing_setting and not is_webhook_setting:
                 logger.debug('Пропуск применения настройки: значение задано через окружение', key=key)
                 return
             
-            logger.info('Применяем настройку из БД поверх .env (приоритет для RemnaWave/AI/Цен)', key=key)
+            logger.info('Применяем настройку из БД поверх .env (приоритет для RemnaWave/AI/Цен/Вебхуков)', key=key)
 
         try:
             setattr(settings, key, value)
