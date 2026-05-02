@@ -1334,7 +1334,7 @@
   "REFERRAL_PROGRAM_TITLE": "👥 <b>Реферальная программа</b>",
   "REFERRAL_RECENT_EARNINGS_HEADER": "💰 <b>Последние начисления:</b>",
   "REFERRAL_RECENT_EARNINGS_ITEM": "• {reason}: <b>{amount}</b> от {referral_name}",
-  "REFERRAL_REWARDS_HEADER": "🎁 <b>Как работают награды:</b>",
+  "REFERRAL_REWARDS_HEADER": "🎁 <b>Ваши бонусы от сервиса:</b>",
   "REFERRAL_REWARD_COMMISSION": "• Комиссия с каждого пополнения реферала: <b>{percent}%</b>",
   "REFERRAL_REWARD_INVITER": "• Вы получаете при первом пополнении реферала: <b>{bonus}</b>",
   "REFERRAL_REWARD_NEW_USER": "• Новый пользователь получает: <b>{bonus}</b> при первом пополнении от <b>{minimum}</b>",

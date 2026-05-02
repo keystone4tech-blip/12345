@@ -87,35 +87,46 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
             + '\n'
         )
 
-    referral_text += '\n' + texts.t('REFERRAL_REWARDS_HEADER', '🎁 <b>Как работают награды:</b>') + '\n'
+    # Проверяем наличие бонусов
+    first_topup_bonus = settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS
+    inviter_bonus = settings.REFERRAL_INVITER_BONUS_KOPEKS
+    commission_percent = get_effective_referral_commission_percent(db_user)
 
-    if settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS > 0:
-        referral_text += (
-            texts.t(
-                'REFERRAL_REWARD_NEW_USER',
-                '• Новый пользователь получает: <b>{bonus}</b> при первом пополнении от <b>{minimum}</b>',
-            ).format(
-                bonus=texts.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS),
-                minimum=texts.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS),
+    if first_topup_bonus > 0 or inviter_bonus > 0 or commission_percent > 0:
+        referral_text += '\n' + texts.t('REFERRAL_REWARDS_HEADER', '🎁 <b>Ваши бонусы от сервиса:</b>') + '\n'
+
+        if first_topup_bonus > 0:
+            referral_text += (
+                texts.t(
+                    'REFERRAL_REWARD_NEW_USER',
+                    '• Новый пользователь получает: <b>{bonus}</b> при первом пополнении от <b>{minimum}</b>',
+                ).format(
+                    bonus=texts.format_price(first_topup_bonus),
+                    minimum=texts.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS),
+                )
+                + '\n'
             )
-            + '\n'
-        )
 
-    if settings.REFERRAL_INVITER_BONUS_KOPEKS > 0:
-        referral_text += (
-            texts.t(
-                'REFERRAL_REWARD_INVITER',
-                '• Вы получаете при первом пополнении реферала: <b>{bonus}</b>',
-            ).format(bonus=texts.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS))
-            + '\n'
-        )
+        if inviter_bonus > 0:
+            referral_text += (
+                texts.t(
+                    'REFERRAL_REWARD_INVITER',
+                    '• Вы получаете при первом пополнении реферала: <b>{bonus}</b>',
+                ).format(bonus=texts.format_price(inviter_bonus))
+                + '\n'
+            )
+
+        if commission_percent > 0:
+            referral_text += (
+                texts.t(
+                    'REFERRAL_REWARD_COMMISSION',
+                    '• Комиссия с каждого пополнения реферала: <b>{percent}%</b>',
+                ).format(percent=commission_percent)
+                + '\n'
+            )
 
     referral_text += (
-        texts.t(
-            'REFERRAL_REWARD_COMMISSION',
-            '• Комиссия с каждого пополнения реферала: <b>{percent}%</b>',
-        ).format(percent=get_effective_referral_commission_percent(db_user))
-        + '\n\n'
+        '\n'
         + texts.t('REFERRAL_LINK_TITLE', '🔗 <b>Ваша реферальная ссылка:</b>')
         + f'\n<code>{referral_link}</code>\n\n'
         + texts.t('REFERRAL_CODE_TITLE', '🆔 <b>Ваш код:</b> <code>{code}</code>').format(code=db_user.referral_code)
