@@ -191,6 +191,7 @@ CATEGORY_GROUP_ORDER: tuple[str, ...] = (
     'referral',
     'notifications',
     'interface',
+    'reply_buttons',
     'server',
     'maintenance',
     'advanced',
