@@ -37,6 +37,6 @@
 ### Изменения:
 - Обновлен `bot/app/handlers/admin/pricing.py` для синхронизации цен с дефолтным тарифом в режиме `tariffs`. Теперь при изменении цены периода через админку Telegram она будет обновляться и у пользователей.
 - Внесены правки в `bot/app/services/system_settings_service.py` для того, чтобы настройки цен (`PRICE_*`, `TRAFFIC_*`, `TRIAL_*`), периодов и вебхуков (`WEBHOOK_*`) имели приоритет из базы данных над значениями в `.env` файле (до этого изменения из админки игнорировались).
-- Обновлен `bot/app/webapi/routes/health.py`: маршрут `/health` сделан публичным (убрана проверка `require_api_token`), чтобы Docker healthcheck (`wget`) мог успешно проверять статус контейнера без получения ошибки `401 Unauthorized`.
+- Обновлен `bot/app/webapi/routes/health.py`: маршрут `/health` сделан публичным (убрана проверка `require_api_token`), и добавлена поддержка метода `HEAD` (так как Docker healthcheck с `wget --spider` отправляет именно `HEAD` запрос), чтобы Docker мог успешно проверять статус контейнера без получения ошибки `401 Unauthorized` или `405 Method Not Allowed`.
 ### Заметки:
 - Для добавления новых периодов или корректировки логики обновления тарифов из Telegram смотреть `bot/app/handlers/admin/pricing.py` и метод `load_period_prices_from_db`.

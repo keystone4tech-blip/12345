@@ -13,7 +13,7 @@ from ..schemas.health import HealthCheckResponse, HealthFeatureFlags
 router = APIRouter()
 
 
-@router.get('/health', tags=['health'], response_model=HealthCheckResponse)
+@router.api_route('/health', methods=['GET', 'HEAD'], tags=['health'], response_model=HealthCheckResponse)
 async def health_check() -> HealthCheckResponse:
     return HealthCheckResponse(
         status='ok',
