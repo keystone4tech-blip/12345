@@ -4,6 +4,7 @@ import asyncio
 
 import structlog
 from aiogram import Bot, Dispatcher, F, types
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
