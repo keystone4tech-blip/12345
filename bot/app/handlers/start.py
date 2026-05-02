@@ -429,6 +429,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                 )
         elif start_parameter.startswith('gift_'):
             gift_token = start_parameter.replace('gift_', '', 1)
+            data['gift_token'] = gift_token
             await state.update_data(gift_token=gift_token)
             logger.info('🎁 Найден токен подарка в ссылке', gift_token=gift_token)
             
@@ -438,6 +439,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
             if gift_info and gift_info.get('gifter_id'):
                 # Сохраняем ID дарителя как реферера, чтобы при завершении регистрации
                 # пользователь был привязан к нему.
+                data['referrer_id'] = gift_info['gifter_id']
                 await state.update_data(referrer_id=gift_info['gifter_id'])
                 logger.info('👤 Установлен реферер из данных подарка', referrer_id=gift_info['gifter_id'])
             
