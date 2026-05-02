@@ -64,7 +64,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
         + '\n'
     )
 
-    if summary['total_earned_kopeks'] > 0:
+    if summary.get('total_earned_kopeks', 0) > 0:
         referral_text += (
             texts.t(
                 'REFERRAL_STATS_TOTAL_EARNED',
@@ -73,7 +73,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
             + '\n'
         )
 
-    if summary['month_earned_kopeks'] > 0:
+    if summary.get('month_earned_kopeks', 0) > 0:
         referral_text += (
             texts.t(
                 'REFERRAL_STATS_MONTH_EARNED',
@@ -82,44 +82,61 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
             + '\n'
         )
 
-    # Проверяем наличие бонусов
-    first_topup_bonus = settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS
-    inviter_bonus = settings.REFERRAL_INVITER_BONUS_KOPEKS
+    # Проверяем наличие бонусов с принудительным приведением к int
+    try:
+        first_topup_bonus = int(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS or 0)
+    except (ValueError, TypeError):
+        first_topup_bonus = 0
+
+    try:
+        inviter_bonus = int(settings.REFERRAL_INVITER_BONUS_KOPEKS or 0)
+    except (ValueError, TypeError):
+        inviter_bonus = 0
+
     commission_percent = get_effective_referral_commission_percent(db_user)
+    if commission_percent is None:
+        commission_percent = 0
+    else:
+        try:
+            commission_percent = int(commission_percent)
+        except (ValueError, TypeError):
+            commission_percent = 0
 
-    if first_topup_bonus > 0 or inviter_bonus > 0 or commission_percent > 0:
+    # Собираем строки бонусов
+    reward_lines = []
+    
+    if first_topup_bonus > 0:
+        reward_lines.append(
+            texts.t(
+                'REFERRAL_REWARD_NEW_USER',
+                '• Новый пользователь получает: <b>{bonus}</b> при первом пополнении от <b>{minimum}</b>',
+            ).format(
+                bonus=texts.format_price(first_topup_bonus),
+                minimum=texts.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS),
+            )
+        )
+
+    if inviter_bonus > 0:
+        reward_lines.append(
+            texts.t(
+                'REFERRAL_REWARD_INVITER',
+                '• Вы получаете при первом пополнении реферала: <b>{bonus}</b>',
+            ).format(bonus=texts.format_price(inviter_bonus))
+        )
+
+    if commission_percent > 0:
+        reward_lines.append(
+            texts.t(
+                'REFERRAL_REWARD_COMMISSION',
+                '• Комиссия с каждого пополнения реферала: <b>{percent}%</b>',
+            ).format(percent=commission_percent)
+        )
+
+    # Если есть хотя бы одна строка бонуса, добавляем заголовок и сами строки
+    if reward_lines:
         referral_text += '\n' + texts.t('REFERRAL_REWARDS_HEADER', '🎁 <b>Ваши бонусы от сервиса:</b>') + '\n'
-
-        # Строгий контроль: показываем только если значение действительно больше 0
-        if first_topup_bonus and int(first_topup_bonus) > 0:
-            referral_text += (
-                texts.t(
-                    'REFERRAL_REWARD_NEW_USER',
-                    '• Новый пользователь получает: <b>{bonus}</b> при первом пополнении от <b>{minimum}</b>',
-                ).format(
-                    bonus=texts.format_price(first_topup_bonus),
-                    minimum=texts.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS),
-                )
-                + '\n'
-            )
-
-        if inviter_bonus and int(inviter_bonus) > 0:
-            referral_text += (
-                texts.t(
-                    'REFERRAL_REWARD_INVITER',
-                    '• Вы получаете при первом пополнении реферала: <b>{bonus}</b>',
-                ).format(bonus=texts.format_price(inviter_bonus))
-                + '\n'
-            )
-
-        if commission_percent > 0:
-            referral_text += (
-                texts.t(
-                    'REFERRAL_REWARD_COMMISSION',
-                    '• Комиссия с каждого пополнения реферала: <b>{percent}%</b>',
-                ).format(percent=commission_percent)
-                + '\n'
-            )
+        for line in reward_lines:
+            referral_text += line + '\n'
 
     referral_text += (
         '\n'
