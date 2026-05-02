@@ -201,8 +201,9 @@ class StartupNotificationService:
         Returns:
             bool: True если сообщение отправлено успешно
         """
-        if not self.enabled or not self.chat_id:
-            logger.debug('Стартовое уведомление отключено или chat_id не задан')
+        admin_ids = settings.get_admin_ids()
+        if not self.enabled and not self.chat_id and not admin_ids:
+            logger.debug('Стартовое уведомление отключено, chat_id и admin_ids не заданы')
             return False
 
         try:
@@ -261,20 +262,44 @@ class StartupNotificationService:
                 ]
             )
 
-            message_kwargs: dict = {
-                'chat_id': self.chat_id,
-                'text': message,
-                'parse_mode': ParseMode.HTML,
-                'reply_markup': keyboard,
-                'disable_web_page_preview': True,
-            }
+            any_success = False
 
-            if self.topic_id:
-                message_kwargs['message_thread_id'] = self.topic_id
+            if self.enabled and self.chat_id:
+                message_kwargs: dict = {
+                    'chat_id': self.chat_id,
+                    'text': message,
+                    'parse_mode': ParseMode.HTML,
+                    'reply_markup': keyboard,
+                    'disable_web_page_preview': True,
+                }
 
-            await self.bot.send_message(**message_kwargs)
-            logger.info('Стартовое уведомление отправлено в чат', chat_id=self.chat_id)
-            return True
+                if self.topic_id:
+                    message_kwargs['message_thread_id'] = self.topic_id
+
+                try:
+                    await self.bot.send_message(**message_kwargs)
+                    logger.info('Стартовое уведомление отправлено в чат', chat_id=self.chat_id)
+                    any_success = True
+                except Exception as send_err:
+                    logger.error('Ошибка отправки уведомления в общий чат', error=send_err)
+
+            for admin_id in admin_ids:
+                if admin_id == self.chat_id:
+                    continue
+                try:
+                    await self.bot.send_message(
+                        chat_id=admin_id,
+                        text=message,
+                        parse_mode=ParseMode.HTML,
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True,
+                    )
+                    logger.info('Стартовое уведомление отправлено админу', admin_id=admin_id)
+                    any_success = True
+                except Exception as admin_err:
+                    logger.error('Ошибка отправки уведомления админу', admin_id=admin_id, error=admin_err)
+
+            return any_success
 
         except Exception as e:
             logger.error('Ошибка отправки стартового уведомления', e=e)
@@ -383,9 +408,10 @@ async def send_crash_notification(bot: Bot, error: Exception, traceback_str: str
     chat_id = getattr(settings, 'ADMIN_NOTIFICATIONS_CHAT_ID', None)
     topic_id = getattr(settings, 'ADMIN_NOTIFICATIONS_TOPIC_ID', None)
     enabled = getattr(settings, 'ADMIN_NOTIFICATIONS_ENABLED', False)
+    admin_ids = settings.get_admin_ids()
 
-    if not enabled or not chat_id:
-        logger.debug('Уведомление о падении отключено или chat_id не задан')
+    if (not enabled or not chat_id) and not admin_ids:
+        logger.debug('Уведомление о падении отключено, chat_id и admin_ids не заданы')
         return False
 
     try:
@@ -441,20 +467,50 @@ async def send_crash_notification(bot: Bot, error: Exception, traceback_str: str
             ]
         )
 
-        message_kwargs: dict = {
-            'chat_id': chat_id,
-            'document': file,
-            'caption': message_text,
-            'parse_mode': ParseMode.HTML,
-            'reply_markup': keyboard,
-        }
+        any_success = False
 
-        if topic_id:
-            message_kwargs['message_thread_id'] = topic_id
+        if enabled and chat_id:
+            message_kwargs: dict = {
+                'chat_id': chat_id,
+                'document': file,
+                'caption': message_text,
+                'parse_mode': ParseMode.HTML,
+                'reply_markup': keyboard,
+            }
 
-        await bot.send_document(**message_kwargs)
-        logger.info('Уведомление о падении отправлено в чат', chat_id=chat_id)
-        return True
+            if topic_id:
+                message_kwargs['message_thread_id'] = topic_id
+            
+            try:
+                await bot.send_document(**message_kwargs)
+                logger.info('Уведомление о падении отправлено в чат', chat_id=chat_id)
+                any_success = True
+            except Exception as send_err:
+                logger.error('Ошибка отправки уведомления о падении в общий чат', error=send_err)
+
+        for admin_id in admin_ids:
+            if admin_id == chat_id:
+                continue
+            
+            try:
+                # Нужно пересоздать файл, так как BufferedInputFile нельзя отправить дважды
+                admin_file = BufferedInputFile(
+                    file=log_content.encode('utf-8'),
+                    filename=file_name,
+                )
+                await bot.send_document(
+                    chat_id=admin_id,
+                    document=admin_file,
+                    caption=message_text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=keyboard,
+                )
+                logger.info('Уведомление о падении отправлено админу', admin_id=admin_id)
+                any_success = True
+            except Exception as admin_err:
+                logger.error('Ошибка отправки уведомления о падении админу', admin_id=admin_id, error=admin_err)
+
+        return any_success
 
     except Exception as e:
         logger.error('Ошибка отправки уведомления о падении', e=e)
