@@ -53,11 +53,6 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
         ).format(count=summary['invited_count'])
         + '\n'
         + texts.t(
-            'REFERRAL_STATS_FIRST_TOPUPS',
-            '• Сделали первое пополнение: <b>{count}</b>',
-        ).format(count=summary['paid_referrals_count'])
-        + '\n'
-        + texts.t(
             'REFERRAL_STATS_ACTIVE',
             '• Активных рефералов: <b>{count}</b>',
         ).format(count=summary['active_referrals_count'])
@@ -95,7 +90,8 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
     if first_topup_bonus > 0 or inviter_bonus > 0 or commission_percent > 0:
         referral_text += '\n' + texts.t('REFERRAL_REWARDS_HEADER', '🎁 <b>Ваши бонусы от сервиса:</b>') + '\n'
 
-        if first_topup_bonus > 0:
+        # Строгий контроль: показываем только если значение действительно больше 0
+        if first_topup_bonus and int(first_topup_bonus) > 0:
             referral_text += (
                 texts.t(
                     'REFERRAL_REWARD_NEW_USER',
@@ -107,7 +103,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
                 + '\n'
             )
 
-        if inviter_bonus > 0:
+        if inviter_bonus and int(inviter_bonus) > 0:
             referral_text += (
                 texts.t(
                     'REFERRAL_REWARD_INVITER',
@@ -228,7 +224,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
 
     referral_text += texts.t(
         'REFERRAL_INVITE_FOOTER',
-        '📢 Приглашайте друзей и зарабатывайте!',
+        '📢 Приглашайте друзей и получай бонусы!',
     )
 
     await edit_or_answer_photo(
