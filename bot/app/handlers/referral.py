@@ -1,5 +1,5 @@
-import json
 from pathlib import Path
+from urllib.parse import quote
 
 import qrcode
 import structlog
@@ -458,28 +458,30 @@ async def create_invite_message(callback: types.CallbackQuery, db_user: User):
     referral_link = f'https://t.me/{bot_username}?start={db_user.referral_code}'
 
     invite_text = (
-        texts.t('REFERRAL_INVITE_TITLE', '🌍 <b>Открой интернет без границ!</b>')
+        texts.t_raw('REFERRAL_INVITE_TITLE', '🌍 Открой интернет без границ!')
         + '\n\n'
-        + texts.t(
+        + texts.t_raw(
             'REFERRAL_INVITE_DESCRIPTION',
             'Устал от того, что любимые сайты и соцсети недоступны или долго грузятся? Я нашел отличный сервис, который решает эту проблему в один клик.',
         )
         + '\n\n'
-        + texts.t('REFERRAL_INVITE_FEATURE_FAST', '🚀 Максимальная скорость соединения')
+        + texts.t_raw('REFERRAL_INVITE_FEATURE_FAST', '🚀 Максимальная скорость соединения')
         + '\n'
-        + texts.t('REFERRAL_INVITE_FEATURE_SECURE', '🛡️ Полная безопасность твоих данных')
+        + texts.t_raw('REFERRAL_INVITE_FEATURE_SECURE', '🛡️ Полная безопасность твоих данных')
         + '\n'
-        + texts.t('REFERRAL_INVITE_FEATURE_EASY', '📱 Настраивается за 1 минуту на любом устройстве')
+        + texts.t_raw('REFERRAL_INVITE_FEATURE_EASY', '📱 Настраивается за 1 минуту на любом устройстве')
         + '\n\n'
-        + texts.t('REFERRAL_INVITE_LINK_PROMPT', '👇 Забирай доступ здесь:')
+        + texts.t_raw('REFERRAL_INVITE_LINK_PROMPT', '👇 Забирай доступ здесь:')
         + f'\n{referral_link}'
     )
+
+    share_url = f"https://t.me/share/url?text={quote(invite_text)}"
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 types.InlineKeyboardButton(
-                    text=texts.t('REFERRAL_SHARE_BUTTON', '📤 Поделиться'), switch_inline_query=invite_text
+                    text=texts.t('REFERRAL_SHARE_BUTTON', '📤 Поделиться'), url=share_url
                 )
             ],
             [types.InlineKeyboardButton(text=texts.BACK, callback_data='menu_referrals')],

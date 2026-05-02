@@ -182,6 +182,14 @@ class Texts:
                 return default
             raise
 
+    def t_raw(self, key: str, default: Any = None) -> Any:
+        try:
+            return self._get_raw_value(key)
+        except KeyError:
+            if default is not None:
+                return default
+            raise
+
     def get_raw(self, item: str, default: Any = None) -> Any:
         try:
             return self._get_raw_value(item)
