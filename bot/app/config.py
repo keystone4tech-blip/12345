@@ -275,6 +275,27 @@ class Settings(BaseSettings):
     GIFTS_BUTTON_EMOJI: str | None = None  # Кастомный эмодзи для кнопки (ID)
     GIFTS_SHARE_MESSAGE_TEMPLATE: str = '🎁 Прими подарок!\n\nПереходи по ссылке для активации: {link}'
 
+    # Настройки Реплай-кнопок (Bot API 9.4+)
+    # Статус
+    MENU_STATUS_TEXT: str = '📊 Статус'
+    MENU_STATUS_STYLE: str = 'default'
+    MENU_STATUS_EMOJI: str | None = None
+
+    # Подключиться
+    MENU_CONNECT_TEXT: str = '⚡ Подключиться'
+    MENU_CONNECT_STYLE: str = 'success'
+    MENU_CONNECT_EMOJI: str | None = None
+
+    # Оплатить
+    MENU_PAY_TEXT: str = '💥 Оплатить'
+    MENU_PAY_STYLE: str = 'primary'
+    MENU_PAY_EMOJI: str | None = None
+
+    # Помощь
+    MENU_HELP_TEXT: str = '❓ Помощь'
+    MENU_HELP_STYLE: str = 'default'
+    MENU_HELP_EMOJI: str | None = None
+
 
     BLACKLIST_CHECK_ENABLED: bool = False
     BLACKLIST_GITHUB_URL: str | None = None

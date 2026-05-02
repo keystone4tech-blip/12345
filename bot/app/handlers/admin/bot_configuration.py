@@ -61,6 +61,17 @@ CATEGORY_GROUP_METADATA: dict[str, dict[str, object]] = {
             'REMNAWAVE',
         ),
     },
+    'reply_buttons': {
+        'title': '⌨️ Реплай-кнопки',
+        'description': 'Настройка текста, цвета и эмодзи основных кнопок меню.',
+        'icon': '⌨️',
+        'categories': (
+            'REPLY_BUTTON_STATUS',
+            'REPLY_BUTTON_CONNECT',
+            'REPLY_BUTTON_PAY',
+            'REPLY_BUTTON_HELP',
+        ),
+    },
     'support': {
         'title': '💬 Поддержка',
         'description': 'Контакты, режимы тикетов, SLA и уведомления модераторов.',

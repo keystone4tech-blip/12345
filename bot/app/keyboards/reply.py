@@ -10,19 +10,34 @@ def get_main_reply_keyboard(language: str = 'ru', is_admin: bool = False) -> Rep
     """
     texts = get_texts(language)
 
+    def _make_btn(text_key, default_text, settings_text_attr, settings_style_attr, settings_emoji_attr):
+        """Хелпер для создания кнопки с учетом новых полей Bot API 9.4+"""
+        text = getattr(settings, settings_text_attr) or texts.t(text_key, default_text)
+        style = getattr(settings, settings_style_attr) or 'default'
+        emoji_id = getattr(settings, settings_emoji_attr)
+
+        kwargs = {'text': text}
+        # style и icon_custom_emoji_id доступны в aiogram 3.22+ (Bot API 9.4+)
+        if style and style != 'default':
+            kwargs['style'] = style
+        if emoji_id:
+            kwargs['icon_custom_emoji_id'] = str(emoji_id)
+
+        return KeyboardButton(**kwargs)
+
     # Первый ряд: Статус и Подключиться
     keyboard = [
         [
-            KeyboardButton(text=texts.t('MENU_STATUS', '📊 Статус')),
-            KeyboardButton(text=texts.t('MENU_CONNECT_W_EMOJI', '⚡ Подключиться')),
+            _make_btn('MENU_STATUS', '📊 Статус', 'MENU_STATUS_TEXT', 'MENU_STATUS_STYLE', 'MENU_STATUS_EMOJI'),
+            _make_btn('MENU_CONNECT_W_EMOJI', '⚡ Подключиться', 'MENU_CONNECT_TEXT', 'MENU_CONNECT_STYLE', 'MENU_CONNECT_EMOJI'),
         ]
     ]
 
     # Второй ряд: Оплатить и Помощь
     keyboard.append(
         [
-            KeyboardButton(text=texts.t('MENU_PAY', '💥 Оплатить')),
-            KeyboardButton(text=texts.t('MENU_HELP_RED', '❓ Помощь')),
+            _make_btn('MENU_PAY', '💥 Оплатить', 'MENU_PAY_TEXT', 'MENU_PAY_STYLE', 'MENU_PAY_EMOJI'),
+            _make_btn('MENU_HELP_RED', '❓ Помощь', 'MENU_HELP_TEXT', 'MENU_HELP_STYLE', 'MENU_HELP_EMOJI'),
         ]
     )
 

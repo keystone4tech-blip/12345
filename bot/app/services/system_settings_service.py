@@ -137,6 +137,10 @@ class BotConfigurationService:
         'SUPPORT_AI': '🤖 DonMatteo-AI-Tiket',
         'GIFTS': '🎁 Система подарков',
         'NALOGO': '🧾 NaloGO (Самозанятые)',
+        'REPLY_BUTTON_STATUS': '📊 Кнопка «Статус»',
+        'REPLY_BUTTON_CONNECT': '⚡ Кнопка «Подключиться»',
+        'REPLY_BUTTON_PAY': '💥 Кнопка «Оплата»',
+        'REPLY_BUTTON_HELP': '❓ Кнопка «Помощь»',
     }
 
     SETTING_LABELS: dict[str, str] = {
@@ -524,6 +528,20 @@ class BotConfigurationService:
         'NALOGO_QUEUE_CHECK_INTERVAL': 'Интервал обработки очереди (сек)',
         'NALOGO_QUEUE_RECEIPT_DELAY': 'Задержка отправки чеков (сек)',
         'NALOGO_QUEUE_MAX_ATTEMPTS': 'Макс. попыток отправки чека',
+
+        # REPLY BUTTONS
+        'MENU_STATUS_TEXT': 'Текст кнопки «Статус»',
+        'MENU_STATUS_STYLE': 'Цвет кнопки «Статус»',
+        'MENU_STATUS_EMOJI': 'Премиум-эмодзи «Статус»',
+        'MENU_CONNECT_TEXT': 'Текст кнопки «Подключиться»',
+        'MENU_CONNECT_STYLE': 'Цвет кнопки «Подключиться»',
+        'MENU_CONNECT_EMOJI': 'Премиум-эмодзи «Подключиться»',
+        'MENU_PAY_TEXT': 'Текст кнопки «Оплата»',
+        'MENU_PAY_STYLE': 'Цвет кнопки «Оплата»',
+        'MENU_PAY_EMOJI': 'Премиум-эмодзи «Оплата»',
+        'MENU_HELP_TEXT': 'Текст кнопки «Помощь»',
+        'MENU_HELP_STYLE': 'Цвет кнопки «Помощь»',
+        'MENU_HELP_EMOJI': 'Премиум-эмодзи «Помощь»',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -589,6 +607,10 @@ class BotConfigurationService:
         'NALOGO': 'Интеграция с сервисом NaloGO для автоматического формирования чеков самозанятых при оплате.',
         'CABINET': 'Настройки Личного Кабинета: URL, авторизация через OAuth, сессии (JWT) и подтверждение почты.',
         'OAUTH': 'Настройки интеграции с внешними провайдерами авторизации (Google, Yandex, Discord, VK).',
+        'REPLY_BUTTON_STATUS': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Статус».',
+        'REPLY_BUTTON_CONNECT': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Подключиться».',
+        'REPLY_BUTTON_PAY': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Оплата».',
+        'REPLY_BUTTON_HELP': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Помощь».',
     }
 
     @staticmethod
@@ -739,6 +761,20 @@ class BotConfigurationService:
         'GIFTS_BUTTON_STYLE': 'GIFTS',
         'GIFTS_BUTTON_EMOJI': 'GIFTS',
         'GIFTS_SHARE_MESSAGE_TEMPLATE': 'GIFTS',
+
+        # REPLY BUTTONS
+        'MENU_STATUS_TEXT': 'REPLY_BUTTON_STATUS',
+        'MENU_STATUS_STYLE': 'REPLY_BUTTON_STATUS',
+        'MENU_STATUS_EMOJI': 'REPLY_BUTTON_STATUS',
+        'MENU_CONNECT_TEXT': 'REPLY_BUTTON_CONNECT',
+        'MENU_CONNECT_STYLE': 'REPLY_BUTTON_CONNECT',
+        'MENU_CONNECT_EMOJI': 'REPLY_BUTTON_CONNECT',
+        'MENU_PAY_TEXT': 'REPLY_BUTTON_PAY',
+        'MENU_PAY_STYLE': 'REPLY_BUTTON_PAY',
+        'MENU_PAY_EMOJI': 'REPLY_BUTTON_PAY',
+        'MENU_HELP_TEXT': 'REPLY_BUTTON_HELP',
+        'MENU_HELP_STYLE': 'REPLY_BUTTON_HELP',
+        'MENU_HELP_EMOJI': 'REPLY_BUTTON_HELP',
     }
 
     CATEGORY_PREFIX_OVERRIDES: dict[str, str] = {
