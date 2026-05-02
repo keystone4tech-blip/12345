@@ -576,6 +576,7 @@ class Settings(BaseSettings):
     LOGO_FILE: str = 'vpn_logo.png'
     SKIP_RULES_ACCEPT: bool = False
     SKIP_REFERRAL_CODE: bool = False
+    SKIP_LANGUAGE_SELECTION_AT_START: bool = True
 
     DEFAULT_LANGUAGE: str = 'ru'
     AVAILABLE_LANGUAGES: str = 'ru,en,ua,zh,fa'

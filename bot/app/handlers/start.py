@@ -708,7 +708,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
         data['language'] = detected_lang
         await state.set_data(data)
 
-        if settings.is_language_selection_enabled():
+        if settings.is_language_selection_enabled() and not getattr(settings, 'SKIP_LANGUAGE_SELECTION_AT_START', False):
             await _prompt_language_selection(message, state)
             return
 
