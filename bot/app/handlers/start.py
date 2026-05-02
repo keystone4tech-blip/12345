@@ -399,35 +399,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
         await state.set_data(data)
 
     if start_parameter:
-        campaign = await get_campaign_by_start_parameter(
-            db,
-            start_parameter,
-            only_active=True,
-        )
-
-        if campaign:
-            logger.info(
-                '📣 Найдена рекламная кампания (start=)',
-                campaign_id=campaign.id,
-                start_parameter=campaign.start_parameter,
-            )
-            await state.update_data(campaign_id=campaign.id)
-            if campaign.partner_user_id:
-                await state.update_data(referrer_id=campaign.partner_user_id)
-                logger.info(
-                    '👤 Кампания привязана к партнёру, реферер будет установлен',
-                    campaign_id=campaign.id,
-                    campaign_name=campaign.name,
-                    partner_user_id=campaign.partner_user_id,
-                )
-            else:
-                logger.debug(
-                    'Кампания без партнёра, реферер не устанавливается',
-                    campaign_id=campaign.id,
-                    campaign_name=campaign.name,
-                    partner_user_id=campaign.partner_user_id,
-                )
-        elif start_parameter.startswith('gift_'):
+        if start_parameter.startswith('gift_'):
             gift_token = start_parameter.replace('gift_', '', 1)
             data['gift_token'] = gift_token
             await state.update_data(gift_token=gift_token)
@@ -445,8 +417,37 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
             
             referral_code = None
         else:
-            referral_code = start_parameter
-            logger.info('🔎 Найден реферальный код', referral_code=referral_code)
+            campaign = await get_campaign_by_start_parameter(
+                db,
+                start_parameter,
+                only_active=True,
+            )
+
+            if campaign:
+                logger.info(
+                    '📣 Найдена рекламная кампания (start=)',
+                    campaign_id=campaign.id,
+                    start_parameter=campaign.start_parameter,
+                )
+                await state.update_data(campaign_id=campaign.id)
+                if campaign.partner_user_id:
+                    await state.update_data(referrer_id=campaign.partner_user_id)
+                    logger.info(
+                        '👤 Кампания привязана к партнёру, реферер будет установлен',
+                        campaign_id=campaign.id,
+                        campaign_name=campaign.name,
+                        partner_user_id=campaign.partner_user_id,
+                    )
+                else:
+                    logger.debug(
+                        'Кампания без партнёра, реферер не устанавливается',
+                        campaign_id=campaign.id,
+                        campaign_name=campaign.name,
+                        partner_user_id=campaign.partner_user_id,
+                    )
+            else:
+                referral_code = start_parameter
+                logger.info('🔎 Найден реферальный код', referral_code=referral_code)
 
     if referral_code:
         await state.update_data(referral_code=referral_code)
