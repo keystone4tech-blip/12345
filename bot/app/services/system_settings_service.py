@@ -978,6 +978,30 @@ class BotConfigurationService:
             ChoiceOption('danger', '🔴 Красный'),
             ChoiceOption('default', '⚪ Серый'),
         ],
+        'MENU_STATUS_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
+        'MENU_CONNECT_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
+        'MENU_PAY_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
+        'MENU_HELP_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
     }
 
     SETTING_HINTS: dict[str, dict[str, str]] = {
@@ -1823,7 +1847,22 @@ class BotConfigurationService:
             'format': 'Число в секундах.',
             'example': '5',
         },
-
+        'MENU_STATUS_STYLE': {
+            'description': 'Цвет кнопки «Статус» в реплай-меню. Позволяет визуально выделить кнопку.',
+            'format': 'Выберите один из четырех доступных цветов.',
+        },
+        'MENU_CONNECT_STYLE': {
+            'description': 'Цвет кнопки «Подключиться». Рекомендуется использовать «Зеленый» для лучшей конверсии.',
+            'format': 'Выберите один из четырех доступных цветов.',
+        },
+        'MENU_PAY_STYLE': {
+            'description': 'Цвет кнопки «Оплатить». Обычно используется «Синий» или «Красный».',
+            'format': 'Выберите один из четырех доступных цветов.',
+        },
+        'MENU_HELP_STYLE': {
+            'description': 'Цвет кнопки «Помощь». Обычно оставляют «Серым» (по умолчанию).',
+            'format': 'Выберите один из четырех доступных цветов.',
+        },
     }
 
     @classmethod
