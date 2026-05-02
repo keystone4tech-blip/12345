@@ -608,6 +608,7 @@ def get_main_menu_keyboard(
 
     keyboard: list[list[InlineKeyboardButton]] = []
     paired_buttons: list[InlineKeyboardButton] = []
+    active_sub_btn: InlineKeyboardButton | None = None
 
     if has_active_subscription and subscription_is_active:
         subscription_link = get_display_subscription_link(subscription)
@@ -635,7 +636,8 @@ def get_main_menu_keyboard(
             except Exception:
                 pass
                 
-        paired_buttons.append(InlineKeyboardButton(**btn_kwargs))
+        active_sub_btn = InlineKeyboardButton(**btn_kwargs)
+        # Не добавляем в paired_buttons здесь, а выведем в специальном ряду ниже
 
         # Добавляем кнопку докупки трафика для лимитированных подписок
         # В режиме тарифов проверяем tariff_id (детальная проверка в хендлере)
@@ -732,11 +734,18 @@ def get_main_menu_keyboard(
     
     # 1. Ряд: Подписка и Промокод
     sub_promo_row = []
-    if subscription_buttons:
-        # Берем основную кнопку подписки (Купить/Триальная/Управление)
-        sub_promo_row.append(subscription_buttons[0])
     
-    # Кнопка Промокод всегда рядом
+    # Определяем основную кнопку подписки (Управление активной или Купить/Триальная)
+    main_btn = active_sub_btn
+    if not main_btn and subscription_buttons:
+        main_btn = subscription_buttons[0]
+        # Если мы взяли кнопку отсюда, удаляем её из списка "остатков"
+        subscription_buttons.pop(0)
+        
+    if main_btn:
+        sub_promo_row.append(main_btn)
+    
+    # Кнопка Промокод всегда рядом в первом ряду
     sub_promo_row.append(InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode'))
     keyboard.append(sub_promo_row)
 
