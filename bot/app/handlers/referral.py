@@ -83,6 +83,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
         )
 
     # Проверяем наличие бонусов с принудительным приведением к int
+    # и дополнительной проверкой форматированного значения (защита от округления копеек)
     try:
         first_topup_bonus = int(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS or 0)
     except (ValueError, TypeError):
@@ -102,10 +103,21 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
         except (ValueError, TypeError):
             commission_percent = 0
 
+    # Логирование для отладки (можно убрать после подтверждения работы)
+    logger.debug(
+        'referral_bonus_values',
+        first_topup_bonus=first_topup_bonus,
+        inviter_bonus=inviter_bonus,
+        commission_percent=commission_percent,
+        user_id=db_user.id,
+    )
+
     # Собираем строки бонусов
+    # Проверяем и числовое значение > 0, и что оно >= 100 копеек (1 рубль),
+    # чтобы гарантированно не показывать «0 ₽» из-за округления format_price
     reward_lines = []
     
-    if first_topup_bonus > 0:
+    if first_topup_bonus >= 100:
         reward_lines.append(
             texts.t(
                 'REFERRAL_REWARD_NEW_USER',
@@ -116,7 +128,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
             )
         )
 
-    if inviter_bonus > 0:
+    if inviter_bonus >= 100:
         reward_lines.append(
             texts.t(
                 'REFERRAL_REWARD_INVITER',
@@ -137,6 +149,7 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
         referral_text += '\n' + texts.t('REFERRAL_REWARDS_HEADER', '🎁 <b>Ваши бонусы от сервиса:</b>') + '\n'
         for line in reward_lines:
             referral_text += line + '\n'
+
 
     referral_text += (
         '\n'
