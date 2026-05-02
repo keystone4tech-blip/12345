@@ -445,14 +445,15 @@ def _build_cabinet_main_menu_keyboard(
     else:
         keyboard_rows: list[list[InlineKeyboardButton]] = []
 
-    # -- Section buttons as paired rows --
-    paired: list[InlineKeyboardButton] = []
-
-    # Subscription (green — main action)
+    # -- Сборка клавиатуры по запросу пользователя (Cabinet mode) --
+    
+    # 1. Ряд: Подписка и Баланс
+    sub_bal_row = []
+    
+    # Кнопка подписки (зеленая - основное действие)
     sub_cfg = cached_styles.get('subscription', {})
     if sub_cfg.get('enabled', True):
         sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or sub_cfg.get('labels', {}).get(language, '') or texts.MENU_SUBSCRIPTION
-        
         btn_kwargs = {
             'text': sub_text,
             'path': '/subscription',
@@ -460,20 +461,17 @@ def _build_cabinet_main_menu_keyboard(
             'style': settings.SUBSCRIPTION_BUTTON_STYLE or sub_cfg.get('style') or None,
             'icon_custom_emoji_id': settings.SUBSCRIPTION_BUTTON_EMOJI or sub_cfg.get('icon_custom_emoji_id') or None,
         }
-        
         if btn_kwargs['icon_custom_emoji_id']:
             from app.utils.premium_emojis import extract_first_emoji
             standard_emoji = extract_first_emoji(sub_text)
             if standard_emoji:
                 btn_kwargs['text'] = sub_text.replace(standard_emoji, "", 1).strip()
-                
-        paired.append(_cabinet_button(**btn_kwargs))
+        sub_bal_row.append(_cabinet_button(**btn_kwargs))
 
-    # Balance
+    # Кнопка Баланса
     bal_cfg = cached_styles.get('balance', {})
     if bal_cfg.get('enabled', True):
         safe_balance = balance_kopeks or 0
-        # Custom label overrides the whole text including balance amount
         custom_bal = bal_cfg.get('labels', {}).get(language, '')
         if custom_bal:
             balance_text = custom_bal
@@ -483,13 +481,15 @@ def _build_cabinet_main_menu_keyboard(
             balance_text = texts.t('BALANCE_BUTTON_DEFAULT', '💰 Баланс: {balance}').format(
                 balance=texts.format_price(safe_balance),
             )
-        paired.append(_cabinet_button(balance_text, '/balance', 'menu_balance'))
+        sub_bal_row.append(_cabinet_button(balance_text, '/balance', 'menu_balance'))
+    
+    if sub_bal_row:
+        keyboard_rows.append(sub_bal_row)
 
-    # Referrals (if enabled)
+    # 2. Ряд: Поделиться с другом (Рефералы)
     ref_cfg = cached_styles.get('referral', {})
     if settings.is_referral_program_enabled() and ref_cfg.get('enabled', True):
         ref_text = settings.REFERRAL_BUTTON_TEXT or ref_cfg.get('labels', {}).get(language, '') or texts.MENU_REFERRALS
-        
         btn_kwargs = {
             'text': ref_text,
             'path': '/referral',
@@ -497,20 +497,44 @@ def _build_cabinet_main_menu_keyboard(
             'style': settings.REFERRAL_BUTTON_STYLE or None,
             'icon_custom_emoji_id': settings.REFERRAL_BUTTON_EMOJI or None,
         }
-        
         if btn_kwargs['icon_custom_emoji_id']:
             from app.utils.premium_emojis import extract_first_emoji
             standard_emoji = extract_first_emoji(ref_text)
             if standard_emoji:
                 btn_kwargs['text'] = ref_text.replace(standard_emoji, "", 1).strip()
-                
-        paired.append(_cabinet_button(**btn_kwargs))
+        keyboard_rows.append([_cabinet_button(**btn_kwargs)])
+
+    # 3. Ряд: Сделать подарок
+    if settings.GIFTS_ENABLED and settings.GIFTS_BUTTON_VISIBLE:
+        gift_text = settings.GIFTS_BUTTON_TEXT or texts.t('MENU_GIFTS', '🎁 Сделать подарок')
+        btn_kwargs = {
+            'text': gift_text,
+            'callback_data': 'gifts_start',
+            'style': settings.GIFTS_BUTTON_STYLE or 'success',
+        }
+        if settings.GIFTS_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.GIFTS_BUTTON_EMOJI)
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(gift_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = gift_text.replace(standard_emoji, "", 1).strip()
+            except Exception: pass
+        keyboard_rows.append([InlineKeyboardButton(**btn_kwargs)])
+
+    # 4. Ряд: Инфо и Техподдержка
+    info_support_row = []
+    
+    # Info
+    info_cfg = cached_styles.get('info', {})
+    if info_cfg.get('enabled', True):
+        info_text = info_cfg.get('labels', {}).get(language, '') or texts.t('MENU_INFO', 'ℹ️ Инфо')
+        info_support_row.append(_cabinet_button(info_text, '/info', 'menu_info'))
 
     # Support
     support_enabled = False
     try:
         from app.services.support_settings_service import SupportSettingsService
-
         support_enabled = SupportSettingsService.is_support_menu_enabled()
     except Exception:
         support_enabled = settings.SUPPORT_MENU_ENABLED
@@ -518,42 +542,10 @@ def _build_cabinet_main_menu_keyboard(
     sup_cfg = cached_styles.get('support', {})
     if support_enabled and sup_cfg.get('enabled', True):
         sup_text = sup_cfg.get('labels', {}).get(language, '') or texts.MENU_SUPPORT
-        paired.append(_cabinet_button(sup_text, '/support', 'menu_support'))
+        info_support_row.append(_cabinet_button(sup_text, '/support', 'menu_support'))
 
-    # Info
-    info_cfg = cached_styles.get('info', {})
-    if info_cfg.get('enabled', True):
-        info_text = info_cfg.get('labels', {}).get(language, '') or texts.t('MENU_INFO', 'ℹ️ Инфо')
-        paired.append(_cabinet_button(info_text, '/info', 'menu_info'))
-
-    # Gift system button (instead of language selection)
-    if settings.GIFTS_ENABLED and settings.GIFTS_BUTTON_VISIBLE:
-        gift_text = settings.GIFTS_BUTTON_TEXT or texts.t('MENU_GIFTS', '🎁 Сделать подарок')
-        
-        btn_kwargs = {
-            'text': gift_text,
-            'callback_data': 'gifts_start',
-            'style': settings.GIFTS_BUTTON_STYLE or 'success',
-        }
-        
-        if settings.GIFTS_BUTTON_EMOJI:
-            try:
-                # В aiogram 3.x для InlineKeyboardButton атрибут can_be_set динамически
-                btn_kwargs['icon_custom_emoji_id'] = str(settings.GIFTS_BUTTON_EMOJI)
-                
-                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
-                from app.utils.premium_emojis import extract_first_emoji
-                standard_emoji = extract_first_emoji(gift_text)
-                if standard_emoji:
-                    btn_kwargs['text'] = gift_text.replace(standard_emoji, "", 1).strip()
-            except (ValueError, TypeError):
-                pass
-                
-        paired.append(InlineKeyboardButton(**btn_kwargs))
-
-    # Lay out in pairs
-    for i in range(0, len(paired), 2):
-        keyboard_rows.append(paired[i : i + 2])
+    if info_support_row:
+        keyboard_rows.append(info_support_row)
 
     # Admin / Moderator
     admin_cfg = cached_styles.get('admin', {})
@@ -729,39 +721,6 @@ def get_main_menu_keyboard(
             if isinstance(button, InlineKeyboardButton):
                 paired_buttons.append(button)
 
-    # Добавляем кнопки промокода и рефералов, учитывая настройки
-    paired_buttons.append(InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode'))
-
-    # Добавляем кнопку рефералов, только если программа включена
-    if settings.is_referral_program_enabled():
-        ref_text = settings.REFERRAL_BUTTON_TEXT or texts.MENU_REFERRALS
-        
-        btn_kwargs = {
-            'text': ref_text,
-            'callback_data': 'menu_referrals',
-            'style': settings.REFERRAL_BUTTON_STYLE or 'primary',
-        }
-        
-        if settings.REFERRAL_BUTTON_EMOJI:
-            try:
-                btn_kwargs['icon_custom_emoji_id'] = str(settings.REFERRAL_BUTTON_EMOJI)
-                
-                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
-                from app.utils.premium_emojis import extract_first_emoji
-                standard_emoji = extract_first_emoji(ref_text)
-                if standard_emoji:
-                    btn_kwargs['text'] = ref_text.replace(standard_emoji, "", 1).strip()
-            except (ValueError, TypeError):
-                pass
-                
-        paired_buttons.append(InlineKeyboardButton(**btn_kwargs))
-
-    # Добавляем кнопку конкурсов
-    if settings.CONTESTS_ENABLED and settings.CONTESTS_BUTTON_VISIBLE:
-        paired_buttons.append(
-            InlineKeyboardButton(text=texts.t('CONTESTS_BUTTON', '🎲 Конкурсы'), callback_data='contests_menu')
-        )
-
     try:
         from app.services.support_settings_service import SupportSettingsService
 
@@ -769,47 +728,89 @@ def get_main_menu_keyboard(
     except Exception:
         support_enabled = settings.SUPPORT_MENU_ENABLED
 
-    if support_enabled:
-        paired_buttons.append(InlineKeyboardButton(text=texts.MENU_SUPPORT, callback_data='menu_support'))
+    # -- Сборка клавиатуры по запросу пользователя --
+    
+    # 1. Ряд: Подписка и Промокод
+    sub_promo_row = []
+    if subscription_buttons:
+        # Берем основную кнопку подписки (Купить/Триальная/Управление)
+        sub_promo_row.append(subscription_buttons[0])
+    
+    # Кнопка Промокод всегда рядом
+    sub_promo_row.append(InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode'))
+    keyboard.append(sub_promo_row)
 
-    # Добавляем кнопку активации
-    if settings.ACTIVATE_BUTTON_VISIBLE:
-        paired_buttons.append(InlineKeyboardButton(text=settings.ACTIVATE_BUTTON_TEXT, callback_data='activate_button'))
+    # 2. Ряд: Поделиться с другом (Рефералы)
+    if settings.is_referral_program_enabled():
+        ref_text = settings.REFERRAL_BUTTON_TEXT or texts.MENU_REFERRALS
+        btn_kwargs = {
+            'text': ref_text,
+            'callback_data': 'menu_referrals',
+            'style': settings.REFERRAL_BUTTON_STYLE or 'primary',
+        }
+        if settings.REFERRAL_BUTTON_EMOJI:
+            try:
+                btn_kwargs['icon_custom_emoji_id'] = str(settings.REFERRAL_BUTTON_EMOJI)
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(ref_text)
+                if standard_emoji:
+                    btn_kwargs['text'] = ref_text.replace(standard_emoji, "", 1).strip()
+            except Exception: pass
+        keyboard.append([InlineKeyboardButton(**btn_kwargs)])
 
-    paired_buttons.append(
-        InlineKeyboardButton(
-            text=texts.t('MENU_INFO', 'ℹ️ Инфо'),
-            callback_data='menu_info',
-        )
-    )
-
-    # Gift system button (instead of language selection)
+    # 3. Ряд: Сделать подарок
     if settings.GIFTS_ENABLED and settings.GIFTS_BUTTON_VISIBLE:
-        gift_text = settings.GIFTS_BUTTON_TEXT or texts.t('MENU_GIFTS', '🎁 Подарить VPN')
-        
+        gift_text = settings.GIFTS_BUTTON_TEXT or texts.t('MENU_GIFTS', '🎁 Сделать подарок')
         btn_kwargs = {
             'text': gift_text,
             'callback_data': 'gifts_start',
             'style': settings.GIFTS_BUTTON_STYLE or 'success',
         }
-        
         if settings.GIFTS_BUTTON_EMOJI:
             try:
                 btn_kwargs['icon_custom_emoji_id'] = str(settings.GIFTS_BUTTON_EMOJI)
-                
-                # Если установлен кастомный эмодзи, удаляем стандартный из текста, чтобы не дублировать
                 from app.utils.premium_emojis import extract_first_emoji
                 standard_emoji = extract_first_emoji(gift_text)
                 if standard_emoji:
                     btn_kwargs['text'] = gift_text.replace(standard_emoji, "", 1).strip()
-            except (ValueError, TypeError):
-                pass
-                
-        paired_buttons.append(InlineKeyboardButton(**btn_kwargs))
+            except Exception: pass
+        keyboard.append([InlineKeyboardButton(**btn_kwargs)])
 
-    for i in range(0, len(paired_buttons), 2):
-        row = paired_buttons[i : i + 2]
-        keyboard.append(row)
+    # 4. Ряд: Инфо и Техподдержка
+    info_support_row = []
+    info_support_row.append(InlineKeyboardButton(text=texts.t('MENU_INFO', 'ℹ️ Инфо'), callback_data='menu_info'))
+    
+    if support_enabled:
+        info_support_row.append(InlineKeyboardButton(text=texts.MENU_SUPPORT, callback_data='menu_support'))
+    
+    keyboard.append(info_support_row)
+
+    # Добавляем остальные кнопки (продление, докупка трафика, конкурсы, активация), если они есть
+    remaining_extras = []
+    
+    # Если было больше одной кнопки подписки (например, Купить + Триальная - редкий случай)
+    if len(subscription_buttons) > 1:
+        remaining_extras.extend(subscription_buttons[1:])
+        
+    if simple_purchase_button:
+        remaining_extras.append(simple_purchase_button)
+        
+    if show_resume_checkout or has_saved_cart:
+        resume_callback = 'return_to_saved_cart' if has_saved_cart else 'subscription_resume_checkout'
+        remaining_extras.append(InlineKeyboardButton(text=texts.RETURN_TO_SUBSCRIPTION_CHECKOUT, callback_data=resume_callback))
+
+    if settings.CONTESTS_ENABLED and settings.CONTESTS_BUTTON_VISIBLE:
+        remaining_extras.append(InlineKeyboardButton(text=texts.t('CONTESTS_BUTTON', '🎲 Конкурсы'), callback_data='contests_menu'))
+
+    if settings.ACTIVATE_BUTTON_VISIBLE:
+        remaining_extras.append(InlineKeyboardButton(text=settings.ACTIVATE_BUTTON_TEXT, callback_data='activate_button'))
+
+    if custom_buttons:
+        remaining_extras.extend([b for b in custom_buttons if isinstance(b, InlineKeyboardButton)])
+
+    # Распределяем остатки по 2 в ряд
+    for i in range(0, len(remaining_extras), 2):
+        keyboard.append(remaining_extras[i : i + 2])
 
     if settings.DEBUG:
         logger.debug('DEBUG KEYBOARD: админ кнопка', is_admin=is_admin)
