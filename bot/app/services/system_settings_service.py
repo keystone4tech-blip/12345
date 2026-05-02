@@ -2333,9 +2333,13 @@ class BotConfigurationService:
                 overrides[row.key] = row.value
 
         for key, raw_value in overrides.items():
-            if cls._is_env_override(key) and key not in {'SUPPORT_AI_ENABLED', 'SUPPORT_AI_FORUM_ID'}:
-                logger.debug('Пропускаем настройку из БД: используется значение из окружения', key=key)
-                continue
+            if cls._is_env_override(key):
+                db_priority_keys = {'SUPPORT_AI_ENABLED', 'SUPPORT_AI_FORUM_ID', 'AVAILABLE_SUBSCRIPTION_PERIODS', 'AVAILABLE_RENEWAL_PERIODS'}
+                is_remna_setting = key.startswith('REMNAWAVE_') or key == 'CABINET_REMNA_SUB_CONFIG'
+                is_pricing_setting = key.startswith('PRICE_') or key.startswith('TRAFFIC_') or key.startswith('TRIAL_')
+                if key not in db_priority_keys and not is_remna_setting and not is_pricing_setting:
+                    logger.debug('Пропускаем настройку из БД: используется значение из окружения', key=key)
+                    continue
             try:
                 parsed_value = cls.deserialize_value(key, raw_value)
             except Exception as error:
@@ -2472,11 +2476,11 @@ class BotConfigurationService:
 
         await delete_system_setting(db, key)
         cls._overrides_raw.pop(key, None)
+        
+        original = cls.get_original_value(key)
         if cls._is_env_override(key):
             logger.info('Настройка сброшена в БД, используется значение из окружения', key=key)
-        else:
-            original = cls.get_original_value(key)
-            cls._apply_to_settings(key, original)
+        cls._apply_to_settings(key, original)
 
         if key in {'WEB_API_DEFAULT_TOKEN', 'WEB_API_DEFAULT_TOKEN_NAME'}:
             await cls._sync_default_web_api_token()
@@ -2488,16 +2492,20 @@ class BotConfigurationService:
             db_priority_keys = {
                 'SUPPORT_AI_ENABLED',
                 'SUPPORT_AI_FORUM_ID',
+                'AVAILABLE_SUBSCRIPTION_PERIODS',
+                'AVAILABLE_RENEWAL_PERIODS',
             }
             
             # Разрешаем переопределять настройки RemnaWave из БД для гибкости (баг-фикс приоритета)
             is_remna_setting = key.startswith('REMNAWAVE_') or key == 'CABINET_REMNA_SUB_CONFIG'
+            # Также разрешаем настройки цен
+            is_pricing_setting = key.startswith('PRICE_') or key.startswith('TRAFFIC_') or key.startswith('TRIAL_')
 
-            if key not in db_priority_keys and not is_remna_setting:
+            if key not in db_priority_keys and not is_remna_setting and not is_pricing_setting:
                 logger.debug('Пропуск применения настройки: значение задано через окружение', key=key)
                 return
             
-            logger.info('Применяем настройку из БД поверх .env (приоритет для RemnaWave/AI)', key=key)
+            logger.info('Применяем настройку из БД поверх .env (приоритет для RemnaWave/AI/Цен)', key=key)
 
         try:
             setattr(settings, key, value)

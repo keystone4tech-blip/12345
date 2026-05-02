@@ -1123,6 +1123,25 @@ async def process_pricing_input(
             return
 
     await bot_configuration_service.set_value(db, key, new_value)
+    
+    # If not in classic mode, we must also update the default tariff's prices
+    # so that the updated price actually applies to users and doesn't get overridden
+    from app.config import settings as app_settings
+    if app_settings.SALES_MODE != 'classic' and key.startswith('PRICE_') and key.endswith('_DAYS'):
+        try:
+            from app.database.crud.tariff import get_all_tariffs, update_tariff, load_period_prices_from_db
+            tariffs = await get_all_tariffs(db, include_inactive=True)
+            if tariffs:
+                default_tariff = tariffs[0]
+                days_str = key.replace('PRICE_', '').replace('_DAYS', '')
+                current_prices = default_tariff.period_prices.copy() if default_tariff.period_prices else {}
+                current_prices[days_str] = new_value
+                await update_tariff(db, default_tariff, period_prices=current_prices)
+                await load_period_prices_from_db(db)
+        except Exception as error:
+            import structlog
+            structlog.get_logger(__name__).error('Failed to update tariff prices from admin panel', error=error)
+            
     await db.commit()
 
     if key.startswith('PRICE_TRAFFIC_'):
