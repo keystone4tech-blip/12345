@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get('/health', tags=['health'], response_model=HealthCheckResponse)
-async def health_check(_: object = Security(require_api_token)) -> HealthCheckResponse:
+async def health_check() -> HealthCheckResponse:
     return HealthCheckResponse(
         status='ok',
         api_version=settings.WEB_API_VERSION,
