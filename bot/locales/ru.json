@@ -1340,7 +1340,7 @@
   "REFERRAL_STATS_HEADER": "📊 <b>Ваша статистика:</b>",
   "REFERRAL_STATS_INVITED": "• Приглашено пользователей: <b>{count}</b>",
   "REFERRAL_STATS_MONTH_EARNED": "• За последний месяц: <b>{amount}</b>",
-  "REFERRAL_STATS_TOTAL_EARNED": "• Заработано всего: <b>{amount}</b>",
+  "REFERRAL_STATS_TOTAL_EARNED": "• Вам начислено на баланс: <b>{amount}</b>",
   "REGISTRATION_COMPLETING": "✅ Завершаем регистрацию...",
   "REPLY_TO_TICKET": "💬 Ответить",
   "REPORT_CLOSE": "❌ Закрыть",
