@@ -458,23 +458,20 @@ async def create_invite_message(callback: types.CallbackQuery, db_user: User):
     referral_link = f'https://t.me/{bot_username}?start={db_user.referral_code}'
 
     invite_text = (
-        texts.t('REFERRAL_INVITE_TITLE', '🎉 Присоединяйся к VPN сервису!')
+        texts.t('REFERRAL_INVITE_TITLE', '🌍 <b>Открой интернет без границ!</b>')
         + '\n\n'
         + texts.t(
-            'REFERRAL_INVITE_BONUS',
-            '💎 При первом пополнении от {minimum} ты получишь {bonus} бонусом на баланс!',
-        ).format(
-            minimum=texts.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS),
-            bonus=texts.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS),
+            'REFERRAL_INVITE_DESCRIPTION',
+            'Устал от того, что любимые сайты и соцсети недоступны или долго грузятся? Я нашел отличный сервис, который решает эту проблему в один клик.',
         )
         + '\n\n'
-        + texts.t('REFERRAL_INVITE_FEATURE_FAST', '🚀 Быстрое подключение')
+        + texts.t('REFERRAL_INVITE_FEATURE_FAST', '🚀 Максимальная скорость соединения')
         + '\n'
-        + texts.t('REFERRAL_INVITE_FEATURE_SERVERS', '🌍 Серверы по всему миру')
+        + texts.t('REFERRAL_INVITE_FEATURE_SECURE', '🛡️ Полная безопасность твоих данных')
         + '\n'
-        + texts.t('REFERRAL_INVITE_FEATURE_SECURE', '🔒 Надежная защита')
+        + texts.t('REFERRAL_INVITE_FEATURE_EASY', '📱 Настраивается за 1 минуту на любом устройстве')
         + '\n\n'
-        + texts.t('REFERRAL_INVITE_LINK_PROMPT', '👇 Переходи по ссылке:')
+        + texts.t('REFERRAL_INVITE_LINK_PROMPT', '👇 Забирай доступ здесь:')
         + f'\n{referral_link}'
     )
 
