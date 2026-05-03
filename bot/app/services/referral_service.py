@@ -65,7 +65,7 @@ async def send_referral_notification(
         logger.error('❌ Ошибка отправки уведомления пользователю', telegram_id=telegram_id, error=e)
 
 
-async def process_referral_registration(db: AsyncSession, new_user_id: int, referrer_id: int, bot: Bot = None):
+async def process_referral_registration(db: AsyncSession, new_user_id: int, referrer_id: int, bot: Bot = None, is_organic: bool = False):
     try:
         if new_user_id == referrer_id:
             logger.warning('Self-referral blocked in process_referral_registration', user_id=new_user_id)
@@ -103,24 +103,39 @@ async def process_referral_registration(db: AsyncSession, new_user_id: int, refe
 
         if bot:
             commission_percent = get_effective_referral_commission_percent(referrer)
-            referral_notification = (
-                f'🎉 <b>Добро пожаловать!</b>\n\n'
-                f'Вы перешли по реферальной ссылке пользователя <b>{referrer.full_name}</b>!'
-            )
-            await send_referral_notification(bot, new_user.telegram_id, referral_notification, user=new_user)
-
-            inviter_notification = (
-                f'👥 <b>Новый реферал!</b>\n\n'
-                f'По вашей ссылке зарегистрировался пользователь <b>{new_user.full_name}</b>!'
-            )
-            await send_referral_notification(
-                bot,
-                referrer.telegram_id,
-                inviter_notification,
-                user=referrer,
-                referral_name=new_user.full_name,
-                message_effect_id='5190950319208240502',  # 👏 Эффект аплодисментов
-            )
+            
+            if is_organic:
+                inviter_notification = (
+                    f'👤 <b>Органическая регистрация!</b>\n\n'
+                    f'Пользователь <b>{new_user.full_name}</b> зашел в бота сам (без реф. ссылки) и был автоматически привязан к вам.'
+                )
+                await send_referral_notification(
+                    bot,
+                    referrer.telegram_id,
+                    inviter_notification,
+                    user=referrer,
+                    referral_name=new_user.full_name,
+                    message_effect_id='5104841245755180586',  # 🎉 Эффект праздника
+                )
+            else:
+                referral_notification = (
+                    f'🎉 <b>Добро пожаловать!</b>\n\n'
+                    f'Вы перешли по реферальной ссылке пользователя <b>{referrer.full_name}</b>!'
+                )
+                await send_referral_notification(bot, new_user.telegram_id, referral_notification, user=new_user)
+    
+                inviter_notification = (
+                    f'👥 <b>Новый реферал!</b>\n\n'
+                    f'По вашей ссылке зарегистрировался пользователь <b>{new_user.full_name}</b>!'
+                )
+                await send_referral_notification(
+                    bot,
+                    referrer.telegram_id,
+                    inviter_notification,
+                    user=referrer,
+                    referral_name=new_user.full_name,
+                    message_effect_id='5190950319208240502',  # 👏 Эффект аплодисментов
+                )
 
         logger.info(
             '✅ Зарегистрирован реферал для . Бонусы будут выданы после пополнения.',
