@@ -20,6 +20,7 @@ from app.utils.decorators import admin_required, error_handler
 from app.utils.validators import (
     get_html_help_text,
     sanitize_html,
+    strip_html,
     validate_html_tags,
 )
 

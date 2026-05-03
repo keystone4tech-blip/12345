@@ -28,7 +28,7 @@ from app.keyboards.admin import get_admin_communications_submenu_keyboard
 from app.localization.texts import get_texts
 from app.services.poll_service import send_poll_to_users
 from app.utils.decorators import admin_required, error_handler
-from app.utils.validators import get_html_help_text, validate_html_tags
+from app.utils.validators import get_html_help_text, validate_html_tags, strip_html
 
 
 logger = structlog.get_logger(__name__)
