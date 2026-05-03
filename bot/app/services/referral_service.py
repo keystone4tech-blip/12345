@@ -115,7 +115,6 @@ async def process_referral_registration(db: AsyncSession, new_user_id: int, refe
                     inviter_notification,
                     user=referrer,
                     referral_name=new_user.full_name,
-                    message_effect_id='5104841245755180586',  # 🎉 Эффект праздника
                 )
             else:
                 referral_notification = (
@@ -134,7 +133,6 @@ async def process_referral_registration(db: AsyncSession, new_user_id: int, refe
                     inviter_notification,
                     user=referrer,
                     referral_name=new_user.full_name,
-                    message_effect_id='5190950319208240502',  # 👏 Эффект аплодисментов
                 )
 
         logger.info(

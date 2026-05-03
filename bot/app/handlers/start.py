@@ -322,8 +322,7 @@ async def _continue_registration_after_language(
                         'REFERRAL_CODE_QUESTION',
                         "У вас есть реферальный код? Введите его или нажмите 'Пропустить'",
                     ),
-                    reply_markup=get_referral_code_keyboard(language),
-                    message_effect_id='5190950319208240502' # Эффект 👏
+                    reply_markup=get_referral_code_keyboard(language)
                 )
                 if message:
                     asyncio.create_task(delayed_delete(message))
@@ -338,8 +337,7 @@ async def _continue_registration_after_language(
     try:
         await target_message.answer(
             rules_text, 
-            reply_markup=get_rules_keyboard(language),
-            message_effect_id='5046509860389126442' # Эффект 🎉
+            reply_markup=get_rules_keyboard(language)
         )
         if message:
             asyncio.create_task(delayed_delete(message))
@@ -589,8 +587,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                 await message.answer(
                     offer_text, 
                     reply_markup=accept_kb, 
-                    parse_mode='HTML',
-                    message_effect_id='5159385139981059251' # Эффект "Сердце" ❤️ для подарка существующему пользователю
+                    parse_mode='HTML'
                 )
                 asyncio.create_task(delayed_delete(message))
             else:
@@ -952,8 +949,7 @@ async def process_rules_accept(callback: types.CallbackQuery, state: FSMContext,
                 # Используем answer вместо edit_text для работы эффектов
                 await callback.message.answer(
                     rules_required_text, 
-                    reply_markup=get_rules_keyboard(language),
-                    message_effect_id='5159385139981059251' # Эффект ❤️
+                    reply_markup=get_rules_keyboard(language)
                 )
                 # Удаляем старое сообщение
                 import contextlib
@@ -1388,8 +1384,7 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
         try:
             await callback.message.answer(
                 offer_text,
-                reply_markup=get_post_registration_keyboard(user.language),
-                message_effect_id='5046509860389126442' # Эффект 🎉
+                reply_markup=get_post_registration_keyboard(user.language)
             )
             import contextlib
             with contextlib.suppress(Exception):
@@ -1467,8 +1462,7 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
             await callback.message.answer(
                 menu_text, 
                 reply_markup=keyboard, 
-                parse_mode='HTML',
-                message_effect_id='5104841245755180586' # Эффект 🔥
+                parse_mode='HTML'
             )
 
             import contextlib
@@ -1554,8 +1548,7 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
             await message.answer(
                 menu_text, 
                 reply_markup=keyboard, 
-                parse_mode='HTML',
-                message_effect_id='5104841245755180586' # Эффект 🔥
+                parse_mode='HTML'
             )
 
             # ПРОВЕРКА ПОДАРКА ПРИ ЗАВЕРШЕНИИ РЕГИСТРАЦИИ (существующий)
@@ -1580,8 +1573,7 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
                     await message.answer(
                         offer_text, 
                         reply_markup=accept_kb, 
-                        parse_mode='HTML',
-                        message_effect_id='5159385139981059251' # Эффект "Сердце" ❤️ для подарка
+                        parse_mode='HTML'
                     )
 
             await _send_pinned_message(message.bot, db, existing_user)
@@ -1844,8 +1836,7 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
             await message.answer(
                 menu_text, 
                 reply_markup=keyboard, 
-                parse_mode='HTML',
-                message_effect_id='5190950319208240502' # Эффект "Аплодисменты" 👏
+                parse_mode='HTML'
             )
 
             # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
@@ -2342,6 +2333,34 @@ async def required_sub_channel_check(
                             parse_mode='HTML',
                         )
                     await _send_pinned_message(bot, db, user)
+
+                    # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
+                    gift_token = state_data.get('gift_token')
+                    if gift_token:
+                        from app.services.gift_service import GiftService
+                        gift_info = await GiftService.get_gift_by_token(db, gift_token)
+                        if gift_info:
+                            offer_text = texts.t('GIFT_OFFER_TEXT', 
+                                "🎁 <b>Вам прислали подарок!</b>\n\n"
+                                "Пользователь {gifter_name} хочет подарить вам подписку на тариф <b>{tariff_name}</b> сроком на {period_days} дн.\n\n"
+                                "Нажмите кнопку ниже, чтобы принять подарок!"
+                            ).format(
+                                gifter_name=gift_info['gifter_name'],
+                                tariff_name=gift_info['tariff_name'],
+                                period_days=gift_info['period_days']
+                            )
+                            
+                            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+                            accept_kb = InlineKeyboardMarkup(inline_keyboard=[
+                                [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
+                                                      callback_data=f"gift_accept:{gift_token}")]
+                            ])
+                            await bot.send_message(
+                                chat_id=query.from_user.id,
+                                text=offer_text, 
+                                reply_markup=accept_kb, 
+                                parse_mode='HTML'
+                            )
                 else:
                     await bot.send_message(
                         chat_id=query.from_user.id,
@@ -2367,8 +2386,7 @@ async def required_sub_channel_check(
                     await bot.send_message(
                         chat_id=query.from_user.id,
                         text=rules_text,
-                        reply_markup=get_rules_keyboard(language),
-                        message_effect_id='5046509860389126442' # Эффект "Праздник" 🎉
+                        reply_markup=get_rules_keyboard(language)
                     )
                 await state.set_state(RegistrationStates.waiting_for_rules_accept)
 
