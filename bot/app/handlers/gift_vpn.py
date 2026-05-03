@@ -1,6 +1,7 @@
 """Обработчики функционала «Подарить VPN»."""
 
 import urllib.parse
+import re
 import structlog
 from datetime import datetime, UTC
 from aiogram import Dispatcher, F, types
@@ -341,10 +342,10 @@ async def gift_confirm_purchase(
     gift_link = f"https://t.me/{bot_me.username}?start=gift_{token}"
     
     share_text = (
-        "🎁 Привет! Я приготовил для тебя подарок!\n\n"
-        "Премиум-доступ к VPN сервису без ограничений. С любовью! ❤️\n\n"
-        f"Тариф: {tariff.name} ({_format_period(period)})\n\n"
-        f"⏳ Активируй по ссылке ниже:\n"
+        "🎁 Привет! У меня для тебя отличный подарок!\n\n"
+        "Безлимитный и безопасный доступ в интернет без ограничений. ❤️\n\n"
+        "Хватит ждать загрузки и сидеть без связи с родными и близкими!\n"
+        "⏳ Жми и активируй свой доступ по ссылке:\n"
         f"{gift_link}"
     )
     encoded_text = urllib.parse.quote(share_text)
