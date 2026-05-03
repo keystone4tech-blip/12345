@@ -549,8 +549,13 @@ class UserService:
 
             # Отправляем уведомление пользователю, если операция прошла успешно
             if success and bot:
-                # Обновляем пользователя для получения нового баланса
-                await db.refresh(user)
+                # Обновляем пользователя для получения нового баланса и связанных данных (подписки)
+                # После commit в add/subtract_user_balance объект user устаревает,
+                # а простой refresh не подгружает отношения, что вызывает ошибку при отправке уведомления.
+                user = await get_user_by_id(db, user_id)
+                if not user:
+                    logger.error('Пользователь не найден после обновления баланса', user_id=user_id)
+                    return False
 
                 # Получаем имя администратора
                 if not admin_name:
