@@ -1271,6 +1271,15 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
         if referrer:
             referrer_id = referrer.id
 
+    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к первому админу
+    is_organic = False
+    if not referrer_id:
+        admins = settings.get_admin_ids()
+        if admins:
+            referrer_id = admins[0]
+            is_organic = True
+            logger.info('👤 Автоматическая привязка к администратору (по умолчанию)', referrer_id=referrer_id)
+
     if existing_user and existing_user.status == UserStatus.DELETED.value:
         logger.info('🔄 Восстанавливаем удаленного пользователя', from_user_id=callback.from_user.id)
 
@@ -1327,7 +1336,7 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
 
     if referrer_id and referrer_id != user.id:
         try:
-            await process_referral_registration(db, user.id, referrer_id, callback.bot)
+            await process_referral_registration(db, user.id, referrer_id, callback.bot, is_organic=is_organic)
             logger.info('✅ Реферальная регистрация обработана для', user_id=user.id)
         except Exception as e:
             logger.error('Ошибка при обработке реферальной регистрации', error=e)
