@@ -189,6 +189,8 @@ class BotConfigurationService:
         'REFERRAL_FIRST_TOPUP_BONUS_KOPEKS': 'Бонус рефералу за 1-е пополнение',
         'REFERRAL_MINIMUM_TOPUP_KOPEKS': 'Мин. пополнение для бонуса',
         'REFERRAL_NOTIFICATIONS_ENABLED': 'Уведомления о новых рефералах',
+        'REFERRAL_REGISTRATION_BONUS_ENABLED': '🎁 Дни пригласившему за регистрацию реферала',
+        'REFERRAL_REGISTRATION_BONUS_DAYS': '⏳ Кол-во бонусных дней',
         'REFERRAL_BUTTON_TEXT': 'Текст кнопки партнерки',
         'REFERRAL_BUTTON_STYLE': 'Цвет кнопки партнерки',
         'REFERRAL_BUTTON_EMOJI': 'Премиум-эмодзи кнопки',
@@ -790,6 +792,8 @@ class BotConfigurationService:
         'TRAFFIC_PACKAGES': 'TRAFFIC_PACKAGES',
         'PRICE_TRAFFIC': 'TRAFFIC_PACKAGES',
         'TRAFFIC_': 'TRAFFIC',
+        'REFERRAL_REGISTRATION_BONUS_ENABLED': 'REFERRAL',
+        'REFERRAL_REGISTRATION_BONUS_DAYS': 'REFERRAL',
         'REFERRAL_': 'REFERRAL',
         'AUTOPAY_': 'AUTOPAY',
         'TELEGRAM_STARS': 'TELEGRAM',
@@ -1227,6 +1231,16 @@ class BotConfigurationService:
             'description': 'Минимальная сумма первого пополнения рефералом, необходимая для активации бонусов пригласившего.',
             'format': 'Число в копейках.',
             'example': '10000',
+        },
+        'REFERRAL_REGISTRATION_BONUS_ENABLED': {
+            'description': 'Если включено, пригласивший (реферер) будет моментально получать бонусные дни к своей подписке сразу после регистрации нового реферала по его ссылке.',
+            'format': 'Вкл/Выкл',
+            'example': 'Включено',
+        },
+        'REFERRAL_REGISTRATION_BONUS_DAYS': {
+            'description': 'Количество подарочных дней, которое получит пригласивший за каждого нового зарегистрированного реферала.',
+            'format': 'Целое число дней (например, 3).',
+            'example': '3',
         },
 
         'AUTO_PURCHASE_AFTER_TOPUP_ENABLED': {

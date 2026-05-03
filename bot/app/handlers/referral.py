@@ -144,6 +144,14 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
             ).format(percent=commission_percent)
         )
 
+    if settings.REFERRAL_REGISTRATION_BONUS_ENABLED and settings.REFERRAL_REGISTRATION_BONUS_DAYS > 0:
+        reward_lines.append(
+            texts.t(
+                'REFERRAL_REWARD_REGISTRATION',
+                '• Вы получаете за регистрацию каждого реферала: <b>{days} дн.</b> к подписке',
+            ).format(days=settings.REFERRAL_REGISTRATION_BONUS_DAYS)
+        )
+
     # Если есть хотя бы одна строка бонуса, добавляем заголовок и сами строки
     if reward_lines:
         referral_text += '\n' + texts.t('REFERRAL_REWARDS_HEADER', '🎁 <b>Ваши бонусы от сервиса:</b>') + '\n'

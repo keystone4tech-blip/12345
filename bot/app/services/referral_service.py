@@ -5,6 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database.crud.referral import create_referral_earning, get_user_campaign_id
+from app.database.crud.subscription import (
+    create_trial_subscription,
+    extend_subscription,
+    get_subscription_by_user_id,
+)
 from app.database.crud.user import add_user_balance, get_user_by_id
 from app.database.models import ReferralEarning, User
 from app.services.notification_delivery_service import (
@@ -127,12 +132,58 @@ async def process_referral_registration(db: AsyncSession, new_user_id: int, refe
                     f'👥 <b>Новый реферал!</b>\n\n'
                     f'По вашей ссылке зарегистрировался пользователь <b>{new_user.full_name}</b>!'
                 )
+                
+                # Логика начисления подарочных дней за регистрацию
+                if settings.REFERRAL_REGISTRATION_BONUS_ENABLED and settings.REFERRAL_REGISTRATION_BONUS_DAYS > 0:
+                    bonus_days = settings.REFERRAL_REGISTRATION_BONUS_DAYS
+                    
+                    try:
+                        # Начисляем дни к подписке
+                        sub = await get_subscription_by_user_id(db, referrer.id)
+                        if sub:
+                            await extend_subscription(db, sub, bonus_days)
+                            logger.info('✅ Продлена подписка реферера на бонусные дни', user_id=referrer.id, days=bonus_days)
+                        else:
+                            await create_trial_subscription(db, referrer.id, duration_days=bonus_days)
+                            logger.info('✅ Создана триал-подписка рефереру на бонусные дни', user_id=referrer.id, days=bonus_days)
+                        
+                        # Создаем запись в истории начислений (0 копеек, так как это дни)
+                        await create_referral_earning(
+                            db=db,
+                            user_id=referrer_id,
+                            referral_id=new_user_id,
+                            amount_kopeks=0,
+                            reason='referral_registration_bonus',
+                            campaign_id=campaign_id,
+                        )
+
+                        # Обновляем текст уведомления
+                        from app.localization.texts import get_texts
+                        texts = get_texts(referrer.language)
+                        inviter_notification = texts.t(
+                            'REFERRAL_REGISTRATION_BONUS_DAYS_ADDED',
+                            '🎁 <b>Новый реферал!</b>\n\nПо вашей ссылке зарегистрировался пользователь <b>{name}</b>!\nВам начислено <b>+{days} дн.</b> к подписке за его регистрацию!'
+                        ).format(name=new_user.full_name, days=bonus_days)
+
+                        # Синхронизация с RemnaWave
+                        try:
+                            from app.services.subscription_service import SubscriptionService
+                            subscription_service = SubscriptionService()
+                            await subscription_service.update_remnawave_user(db, referrer)
+                            logger.info('✅ Синхронизация с RemnaWave после начисления бонуса выполнена', user_id=referrer.id)
+                        except Exception as sync_err:
+                            logger.error('❌ Ошибка синхронизации с RemnaWave после бонуса', user_id=referrer.id, error=sync_err)
+                            
+                    except Exception as bonus_err:
+                        logger.error('❌ Ошибка начисления бонусных дней за регистрацию', user_id=referrer.id, error=bonus_err)
+
                 await send_referral_notification(
                     bot,
                     referrer.telegram_id,
                     inviter_notification,
                     user=referrer,
                     referral_name=new_user.full_name,
+                    message_effect_id='5046509860389126442' if settings.REFERRAL_REGISTRATION_BONUS_ENABLED else None,
                 )
 
         logger.info(
