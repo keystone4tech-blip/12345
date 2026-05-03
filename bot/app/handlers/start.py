@@ -1361,6 +1361,13 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
             refresh_subscription_error=refresh_subscription_error,
         )
 
+    # Извлекаем данные для уведомления и подарка ДО очистки состояния
+    data = await state.get_data() or {}
+    gift_token = data.get('gift_token')
+    campaign_id = data.get('campaign_id')
+    referral_code = data.get('referral_code')
+    referrer_id = data.get('referrer_id')
+
     # ИСПРАВЛЕНИЕ БАГА: Очищаем Redis payload после успешной регистрации
     await delete_pending_payload_from_redis(callback.from_user.id)
     logger.info(
@@ -1480,7 +1487,7 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
             await _send_pinned_message(callback.bot, db, user)
             
             # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
-            gift_token = data.get('gift_token')
+            # gift_token уже извлечен в начале функции
             if gift_token:
                 from app.services.gift_service import GiftService
                 gift_info = await GiftService.get_gift_by_token(db, gift_token)
@@ -1517,6 +1524,10 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
 
 async def complete_registration(message: types.Message, state: FSMContext, db: AsyncSession):
     logger.info('🎯 COMPLETE: Завершение регистрации для пользователя', from_user_id=message.from_user.id)
+    
+    # Извлекаем данные ДО очистки состояния
+    data = await state.get_data() or {}
+    gift_token = data.get('gift_token')
 
     existing_user = await get_user_by_telegram_id(db, message.from_user.id)
 
@@ -1873,8 +1884,7 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
             )
 
             # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
-            data = await state.get_data() or {}
-            gift_token = data.get('gift_token')
+            # gift_token извлечен в начале функции
             if gift_token:
                 gift_info = await GiftService.get_gift_by_token(db, gift_token)
                 if gift_info:
