@@ -1469,6 +1469,30 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
             with contextlib.suppress(Exception):
                 await callback.message.delete()
             await _send_pinned_message(callback.bot, db, user)
+            
+            # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
+            gift_token = data.get('gift_token')
+            if gift_token:
+                from app.services.gift_service import GiftService
+                gift_info = await GiftService.get_gift_by_token(db, gift_token)
+                if gift_info:
+                    offer_text = texts.t('GIFT_OFFER_TEXT', 
+                        "🎁 <b>Вам прислали подарок!</b>\n\n"
+                        "Пользователь {gifter_name} хочет подарить вам подписку на тариф <b>{tariff_name}</b> сроком на {period_days} дн.\n\n"
+                        "Нажмите кнопку ниже, чтобы принять подарок!"
+                    ).format(
+                        gifter_name=gift_info['gifter_name'],
+                        tariff_name=gift_info['tariff_name'],
+                        period_days=gift_info['period_days']
+                    )
+                    
+                    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+                    accept_kb = InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
+                                              callback_data=f"gift_accept:{gift_token}")]
+                    ])
+                    await callback.message.answer(offer_text, reply_markup=accept_kb, parse_mode='HTML')
+
             logger.info('✅ Главное меню показано пользователю', telegram_id=user.telegram_id)
         except Exception as e:
             logger.error('Ошибка при показе главного меню', error=e)
@@ -2333,34 +2357,6 @@ async def required_sub_channel_check(
                             parse_mode='HTML',
                         )
                     await _send_pinned_message(bot, db, user)
-
-                    # ПРОВЕРКА ПОДАРКА ДЛЯ НОВОГО ПОЛЬЗОВАТЕЛЯ (после регистрации)
-                    gift_token = state_data.get('gift_token')
-                    if gift_token:
-                        from app.services.gift_service import GiftService
-                        gift_info = await GiftService.get_gift_by_token(db, gift_token)
-                        if gift_info:
-                            offer_text = texts.t('GIFT_OFFER_TEXT', 
-                                "🎁 <b>Вам прислали подарок!</b>\n\n"
-                                "Пользователь {gifter_name} хочет подарить вам подписку на тариф <b>{tariff_name}</b> сроком на {period_days} дн.\n\n"
-                                "Нажмите кнопку ниже, чтобы принять подарок!"
-                            ).format(
-                                gifter_name=gift_info['gifter_name'],
-                                tariff_name=gift_info['tariff_name'],
-                                period_days=gift_info['period_days']
-                            )
-                            
-                            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-                            accept_kb = InlineKeyboardMarkup(inline_keyboard=[
-                                [InlineKeyboardButton(text=texts.t('GIFT_ACCEPT_BUTTON', "🎁 Принять подарок"), 
-                                                      callback_data=f"gift_accept:{gift_token}")]
-                            ])
-                            await bot.send_message(
-                                chat_id=query.from_user.id,
-                                text=offer_text, 
-                                reply_markup=accept_kb, 
-                                parse_mode='HTML'
-                            )
                 else:
                     await bot.send_message(
                         chat_id=query.from_user.id,
