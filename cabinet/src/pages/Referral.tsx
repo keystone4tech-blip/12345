@@ -112,7 +112,7 @@ export default function Referral() {
   const referralLink = info?.referral_code
     ? `${window.location.origin}/login?ref=${info.referral_code}`
     : '';
-  const botReferralLink = info?.bot_referral_link || '';
+  const botReferralLink = info?.referral_link || '';
 
   const { data: terms } = useQuery({
     queryKey: ['referral-terms'],

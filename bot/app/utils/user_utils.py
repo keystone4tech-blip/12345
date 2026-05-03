@@ -45,8 +45,21 @@ def format_referrer_info(user: User) -> str:
 
 
 async def generate_unique_referral_code(db: AsyncSession, telegram_id: int) -> str:
-    max_attempts = 10
+    """
+    Генерирует уникальный реферальный код.
+    В качестве основного варианта используется Telegram ID пользователя.
+    """
+    
+    # 1. Пробуем использовать Telegram ID напрямую (самый понятный вариант)
+    code = str(telegram_id)
+    
+    # Проверяем, не занят ли уже такой код
+    result = await db.execute(select(User).where(User.referral_code == code))
+    if not result.scalar_one_or_none():
+        return code
 
+    # 2. Если вдруг занят, генерируем случайный refXXXXXX
+    max_attempts = 10
     for _ in range(max_attempts):
         code = f'ref{"".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8))}'
 
@@ -54,6 +67,7 @@ async def generate_unique_referral_code(db: AsyncSession, telegram_id: int) -> s
         if not result.scalar_one_or_none():
             return code
 
+    # 3. Крайний случай - таймстемп
     timestamp = str(int(datetime.now(UTC).timestamp()))[-6:]
     return f'ref{timestamp}'
 
