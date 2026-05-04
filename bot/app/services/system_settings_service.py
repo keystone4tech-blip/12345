@@ -2536,12 +2536,8 @@ class BotConfigurationService:
 
         raw_value = cls.serialize_value(key, value)
         await upsert_system_setting(db, key, raw_value)
-        if cls._is_env_override(key):
-            logger.info('Настройка сохранена в БД, но не применена: значение задаётся через окружение', key=key)
-            cls._overrides_raw.pop(key, None)
-        else:
-            cls._overrides_raw[key] = raw_value
-            cls._apply_to_settings(key, value)
+        cls._overrides_raw[key] = raw_value
+        cls._apply_to_settings(key, value)
 
         if key in {'WEB_API_DEFAULT_TOKEN', 'WEB_API_DEFAULT_TOKEN_NAME'}:
             await cls._sync_default_web_api_token()

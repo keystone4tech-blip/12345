@@ -65,6 +65,8 @@ services:
     build:
       context: ./bot
       dockerfile: Dockerfile
+      args:
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
     container_name: remnawave_bot
     restart: unless-stopped
     depends_on:
@@ -134,6 +136,7 @@ services:
         VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-Jarvis_VPN_Robot}
         VITE_APP_NAME: ${VITE_APP_NAME:-Jarvis VPN Cabinet}
         VITE_APP_LOGO: ${VITE_APP_LOGO:-MV}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
     container_name: cabinet_frontend
     restart: unless-stopped
     depends_on:
