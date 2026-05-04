@@ -60,10 +60,6 @@ git reset --hard "origin/$BRANCH"
 NEW_COMMIT=$(git rev-parse HEAD)
 log_info "Новый коммит: $NEW_COMMIT"
 
-# Показываем, что изменилось
-log_info "Измененные файлы в этом деплое:"
-git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT" | sed 's/^/  - /' || true
-
 # Если коммиты совпадают — нет изменений
 if [ "$PREV_COMMIT" = "$NEW_COMMIT" ]; then
     log_warn "Нет новых изменений, пересобираем на всякий случай"
@@ -90,10 +86,7 @@ docker image prune -a -f --filter "until=24h" || true
 # ============================================
 log_step "Чистая пересборка (--no-cache) и запуск"
 
-# Собираем заново полностью на чистую. Используем BUILD_TIMESTAMP для пробития кэша.
-BUILD_TIMESTAMP="${BUILD_TIMESTAMP:-$(date +%s)}"
-log_info "Метка сборки: $BUILD_TIMESTAMP"
-
+# Собираем заново полностью на чистую
 docker compose build --no-cache --pull bot cabinet 2>&1 || {
     log_error "Ошибка сборки! Откатываем..."
     git reset --hard "$PREV_COMMIT"

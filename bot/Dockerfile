@@ -17,7 +17,6 @@ FROM python:3.13-slim
 ARG VERSION="v3.20.1" # x-release-please-version
 ARG BUILD_DATE
 ARG VCS_REF
-ARG BUILD_TIMESTAMP=unknown
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
