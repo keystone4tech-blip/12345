@@ -110,9 +110,9 @@ export default function Referral() {
 
   // Build referral link for cabinet registration
   const referralLink = info?.referral_code
-    ? `${window.location.origin}/login?ref=${info.referral_code}`
+    ? `${window.location.origin}/login?${info.referral_code}`
     : '';
-  const botReferralLink = info?.referral_link || '';
+  const botReferralLink = info?.bot_referral_link || '';
 
   const { data: terms } = useQuery({
     queryKey: ['referral-terms'],
@@ -240,7 +240,7 @@ export default function Referral() {
           text: shareText,
           url: referralLink,
         })
-        .catch(() => {});
+        .catch(() => { });
       return;
     }
 
@@ -338,9 +338,8 @@ export default function Referral() {
                 />
                 <button
                   onClick={() => copyLink(botReferralLink, 'bot')}
-                  className={`btn-primary shrink-0 px-4 ${
-                    copiedLink === 'bot' ? 'bg-success-500 hover:bg-success-500' : ''
-                  }`}
+                  className={`btn-primary shrink-0 px-4 ${copiedLink === 'bot' ? 'bg-success-500 hover:bg-success-500' : ''
+                    }`}
                 >
                   {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
                   <span className="ml-2">
@@ -374,9 +373,8 @@ export default function Referral() {
                 <button
                   onClick={() => copyLink(referralLink, 'cabinet')}
                   disabled={!referralLink}
-                  className={`btn-primary shrink-0 px-4 ${
-                    copiedLink === 'cabinet' ? 'bg-success-500 hover:bg-success-500' : ''
-                  } ${!referralLink ? 'cursor-not-allowed opacity-50' : ''}`}
+                  className={`btn-primary shrink-0 px-4 ${copiedLink === 'cabinet' ? 'bg-success-500 hover:bg-success-500' : ''
+                    } ${!referralLink ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                   {copiedLink === 'cabinet' ? <CheckIcon /> : <CopyIcon />}
                   <span className="ml-2">
@@ -386,9 +384,8 @@ export default function Referral() {
                 <button
                   onClick={shareLink}
                   disabled={!referralLink}
-                  className={`btn-secondary flex shrink-0 items-center px-4 ${
-                    !referralLink ? 'cursor-not-allowed opacity-50' : ''
-                  }`}
+                  className={`btn-secondary flex shrink-0 items-center px-4 ${!referralLink ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
                 >
                   <ShareIcon />
                   <span className="ml-2">{t('referral.shareButton')}</span>
@@ -681,9 +678,8 @@ export default function Referral() {
                 <button
                   onClick={() => navigate('/referral/withdrawal/request')}
                   disabled={!withdrawalBalance.can_request}
-                  className={`btn-primary w-full px-6 sm:w-auto ${
-                    !withdrawalBalance.can_request ? 'cursor-not-allowed opacity-50' : ''
-                  }`}
+                  className={`btn-primary w-full px-6 sm:w-auto ${!withdrawalBalance.can_request ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
                 >
                   {t('referral.withdrawal.requestButton')}
                 </button>

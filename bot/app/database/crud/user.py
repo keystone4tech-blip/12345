@@ -186,20 +186,9 @@ async def get_user_by_remnawave_uuid(db: AsyncSession, remnawave_uuid: str) -> U
     return user
 
 
-async def create_unique_referral_code(db: AsyncSession, telegram_id: int | None = None) -> str:
-    """
-    Создает уникальный реферальный код на основе Telegram ID.
-    Если код на основе ID уже занят, генерирует случайный.
-    """
-    # Пробуем Telegram ID
-    if telegram_id:
-        code = str(telegram_id)
-        existing_user = await get_user_by_referral_code(db, code)
-        if not existing_user:
-            return code
-
-    # Если занят, генерируем случайный
+async def create_unique_referral_code(db: AsyncSession) -> str:
     max_attempts = 10
+
     for _ in range(max_attempts):
         code = generate_referral_code()
         existing_user = await get_user_by_referral_code(db, code)
@@ -249,7 +238,7 @@ async def create_user_no_commit(
     """
 
     if not referral_code:
-        referral_code = await create_unique_referral_code(db, telegram_id)
+        referral_code = await create_unique_referral_code(db)
     normalized_language = _normalize_language_code(language)
 
     default_group = await _get_or_create_default_promo_group(db)
@@ -299,7 +288,7 @@ async def create_user(
     referral_code: str = None,
 ) -> User:
     if not referral_code:
-        referral_code = await create_unique_referral_code(db, telegram_id)
+        referral_code = await create_unique_referral_code(db)
     normalized_language = _normalize_language_code(language)
 
     attempts = 3

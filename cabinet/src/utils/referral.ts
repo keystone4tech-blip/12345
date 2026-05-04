@@ -32,25 +32,42 @@ function clearCode(): void {
 }
 
 /**
- * Capture referral code from URL query param (?ref=), store in localStorage with TTL,
+ * Capture referral code from URL query param (?ref= or just ?reff...), store in localStorage with TTL,
  * and clean the URL.
  */
 export function captureReferralFromUrl(): void {
   try {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('ref');
+    let code = params.get('ref');
+    let capturedKey = 'ref';
+
+    // Если в параметре 'ref' кода нет, ищем его среди ключей (новый формат ?reff...)
+    if (!code || !CODE_PATTERN.test(code)) {
+      for (const key of Array.from(params.keys())) {
+        // Проверяем, что ключ похож на реферальный код и начинается с 'ref'
+        if (CODE_PATTERN.test(key) && key.startsWith('ref')) {
+          code = key;
+          capturedKey = key;
+          break;
+        }
+      }
+    }
+
     if (!code || !CODE_PATTERN.test(code)) return;
 
+    console.log(`[Referral] Captured code: ${code} from key: ${capturedKey}`);
     localStorage.setItem(REFERRAL_KEY, code);
     localStorage.setItem(REFERRAL_TTL_KEY, String(Date.now() + TTL_MS));
 
-    // Clean URL
-    params.delete('ref');
+    // Очищаем URL от использованного параметра
+    params.delete(capturedKey);
     const newSearch = params.toString();
     const newUrl =
       window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
     window.history.replaceState(null, '', newUrl);
-  } catch {}
+  } catch (err) {
+    console.error('[Referral] Error capturing code from URL:', err);
+  }
 }
 
 /**
