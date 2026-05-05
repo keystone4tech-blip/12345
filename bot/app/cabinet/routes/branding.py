@@ -39,6 +39,7 @@ GOOGLE_ADS_ID_KEY = 'CABINET_GOOGLE_ADS_ID'  # Stores conversion ID (e.g. "AW-12
 GOOGLE_ADS_LABEL_KEY = 'CABINET_GOOGLE_ADS_LABEL'  # Stores conversion label (alphanumeric)
 LITE_MODE_ENABLED_KEY = 'CABINET_LITE_MODE_ENABLED'  # Stores "true" or "false"
 ANIMATION_CONFIG_KEY = 'CABINET_ANIMATION_CONFIG'  # Stores JSON with animation config
+GIFT_ENABLED_KEY = 'CABINET_GIFT_ENABLED'  # Stores "true" or "false"
 
 # Default animation config
 DEFAULT_ANIMATION_CONFIG = {
@@ -65,6 +66,7 @@ class BrandingResponse(BaseModel):
     logo_url: str | None = None
     logo_letter: str
     has_custom_logo: bool
+    gift_enabled: bool = False
 
 
 class BrandingNameUpdate(BaseModel):
@@ -129,6 +131,18 @@ class AnimationEnabledResponse(BaseModel):
 
 class AnimationEnabledUpdate(BaseModel):
     """Request to update animation setting."""
+
+    enabled: bool
+
+
+class GiftEnabledResponse(BaseModel):
+    """Gift enabled setting."""
+
+    enabled: bool = False
+
+
+class GiftEnabledUpdate(BaseModel):
+    """Request to update gift setting."""
 
     enabled: bool
 
@@ -355,6 +369,14 @@ async def get_branding(
     # Check for custom logo
     custom_logo = has_custom_logo()
 
+    # Get gift enabled setting
+    gift_enabled_value = await get_setting_value(db, GIFT_ENABLED_KEY)
+    if gift_enabled_value is not None:
+        gift_enabled = gift_enabled_value.lower() == 'true'
+    else:
+        # Default to settings
+        gift_enabled = getattr(settings, 'GIFTS_ENABLED', False)
+
     # Get first letter for logo fallback (use "V" if name is empty)
     logo_letter = name[0].upper() if name else 'V'
 
@@ -363,6 +385,7 @@ async def get_branding(
         logo_url='/cabinet/branding/logo' if custom_logo else None,
         logo_letter=logo_letter,
         has_custom_logo=custom_logo,
+        gift_enabled=gift_enabled,
     )
 
 
@@ -928,3 +951,38 @@ async def update_lite_mode_enabled(
     logger.info('Admin set lite mode enabled', telegram_id=admin.telegram_id, enabled=payload.enabled)
 
     return LiteModeEnabledResponse(enabled=payload.enabled)
+
+
+# ============ Gift System Toggle Routes ============
+
+
+@router.get('/gift-enabled', response_model=GiftEnabledResponse)
+async def get_gift_enabled(
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Get gift system enabled setting.
+    This is a public endpoint - no authentication required.
+    """
+    gift_enabled_value = await get_setting_value(db, GIFT_ENABLED_KEY)
+
+    if gift_enabled_value is not None:
+        enabled = gift_enabled_value.lower() == 'true'
+        return GiftEnabledResponse(enabled=enabled)
+
+    # Default: check config setting
+    return GiftEnabledResponse(enabled=getattr(settings, 'GIFTS_ENABLED', False))
+
+
+@router.patch('/gift-enabled', response_model=GiftEnabledResponse)
+async def update_gift_enabled(
+    payload: GiftEnabledUpdate,
+    admin: User = Depends(require_permission('settings:edit')),
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """Update gift system enabled setting. Admin only."""
+    await set_setting_value(db, GIFT_ENABLED_KEY, str(payload.enabled).lower())
+
+    logger.info('Admin set gift system enabled', telegram_id=admin.telegram_id, enabled=payload.enabled)
+
+    return GiftEnabledResponse(enabled=payload.enabled)

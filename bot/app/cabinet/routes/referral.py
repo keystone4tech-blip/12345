@@ -78,14 +78,21 @@ async def get_referral_info(
 
     available_balance = max(0, total_earnings - withdrawn - pending)
 
-    # Build referral link
+    # Build referral links
     bot_username = settings.get_bot_username() or 'bot'
-    referral_link = f'https://t.me/{bot_username}?start={user.referral_code}'
+    bot_referral_link = f'https://t.me/{bot_username}?start={user.referral_code}'
+    
+    # Cabinet referral link
+    cabinet_url = settings.CABINET_URL or ''
+    if cabinet_url:
+        cabinet_url = cabinet_url.rstrip('/')
+    cabinet_referral_link = f'{cabinet_url}/?ref={user.referral_code}' if cabinet_url else None
 
     return ReferralInfoResponse(
         referral_code=user.referral_code or '',
-        referral_link=referral_link,
-        bot_referral_link=referral_link,
+        referral_link=bot_referral_link,  # Default to bot link for backward compatibility
+        bot_referral_link=bot_referral_link,
+        cabinet_referral_link=cabinet_referral_link,
         total_referrals=total_referrals,
         active_referrals=active_referrals,
         total_earnings_kopeks=total_earnings,

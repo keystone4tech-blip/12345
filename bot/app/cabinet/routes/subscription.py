@@ -51,6 +51,7 @@ from ..schemas.subscription import (
     SubscriptionData,
     SubscriptionResponse,
     SubscriptionStatusResponse,
+    SubscriptionsListResponse,
     TariffPurchaseRequest,
     TrafficPackageResponse,
     TrafficPurchaseRequest,
@@ -61,6 +62,7 @@ from ..schemas.subscription import (
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix='/subscription', tags=['Cabinet Subscription'])
+plural_router = APIRouter(prefix='/subscriptions', tags=['Cabinet Subscriptions'])
 
 
 def _get_addon_discount_percent(
@@ -320,6 +322,26 @@ async def get_subscription(
 
     subscription_data = _subscription_to_response(fresh_user.subscription, servers, tariff_name, traffic_purchases_data)
     return SubscriptionStatusResponse(has_subscription=True, subscription=subscription_data)
+
+
+@plural_router.get('', response_model=SubscriptionsListResponse)
+async def get_subscriptions(
+    user: User = Depends(get_current_cabinet_user),
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """Get current user's subscriptions list (for modern UI)."""
+    # Use the existing get_subscription logic to get the single subscription
+    # and wrap it in a list as expected by the frontend.
+    res = await get_subscription(user, db)
+
+    subscriptions = []
+    if res.has_subscription and res.subscription:
+        subscriptions.append(res.subscription)
+
+    return SubscriptionsListResponse(
+        subscriptions=subscriptions,
+        multi_tariff_enabled=False,
+    )
 
 
 @router.get('/renewal-options', response_model=list[RenewalOptionResponse])

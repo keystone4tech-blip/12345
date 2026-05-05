@@ -73,6 +73,13 @@ class SubscriptionStatusResponse(BaseModel):
     subscription: SubscriptionData | None = None
 
 
+class SubscriptionsListResponse(BaseModel):
+    """Response for plural subscriptions list - used by modern cabinet UI."""
+
+    subscriptions: list[SubscriptionData]
+    multi_tariff_enabled: bool = False
+
+
 class RenewalOptionResponse(BaseModel):
     """Available subscription renewal option."""
 

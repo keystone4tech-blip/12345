@@ -35,6 +35,7 @@ from .auth import router as auth_router
 from .balance import router as balance_router
 from .branding import router as branding_router
 from .contests import router as contests_router
+from .gift import router as gift_router
 from .info import router as info_router
 from .media import router as media_router
 from .notifications import router as notifications_router
@@ -44,7 +45,7 @@ from .polls import router as polls_router
 from .promo import router as promo_router
 from .promocode import router as promocode_router
 from .referral import router as referral_router
-from .subscription import router as subscription_router
+from .subscription import plural_router as subscriptions_router, router as subscription_router
 from .ticket_notifications import (
     admin_router as admin_ticket_notifications_router,
     router as ticket_notifications_router,
@@ -62,6 +63,7 @@ router = APIRouter(prefix='/cabinet', tags=['Cabinet'])
 router.include_router(auth_router)
 router.include_router(oauth_router)
 router.include_router(subscription_router)
+router.include_router(subscriptions_router)
 router.include_router(balance_router)
 router.include_router(referral_router)
 router.include_router(partner_application_router)
@@ -76,6 +78,7 @@ router.include_router(promo_router)
 router.include_router(notifications_router)
 router.include_router(info_router)
 router.include_router(branding_router)
+router.include_router(gift_router)
 router.include_router(media_router)
 
 # Wheel routes
