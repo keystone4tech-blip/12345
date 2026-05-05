@@ -72,7 +72,7 @@ async def get_gift_config(
         gift_tariffs.append(GiftTariff(
             id=t.id,
             name=strip_telegram_tags(t.name),
-            description=t.description,
+            description=strip_telegram_tags(t.description) if t.description else None,
             traffic_limit_gb=t.traffic_limit_gb,
             device_limit=t.device_limit,
             periods=sorted(periods, key=lambda x: x.days)

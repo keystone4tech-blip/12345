@@ -18,6 +18,7 @@ from app.database.crud.tariff import (
     update_tariff,
 )
 from app.database.models import PromoGroup, Subscription, Tariff, Transaction, TransactionType, User
+from app.utils.formatters import strip_telegram_tags
 
 from ..dependencies import get_cabinet_db, require_permission
 from ..schemas.tariffs import (
@@ -119,8 +120,8 @@ async def list_tariffs(
         items.append(
             TariffListItem(
                 id=tariff.id,
-                name=tariff.name,
-                description=tariff.description,
+                name=strip_telegram_tags(tariff.name) if tariff.name else None,
+                description=strip_telegram_tags(tariff.description) if tariff.description else None,
                 is_active=tariff.is_active,
                 is_trial_available=tariff.is_trial_available,
                 is_daily=tariff.is_daily,
@@ -203,8 +204,8 @@ async def get_tariff(
 
     return TariffDetailResponse(
         id=tariff.id,
-        name=tariff.name,
-        description=tariff.description,
+        name=strip_telegram_tags(tariff.name) if tariff.name else None,
+        description=strip_telegram_tags(tariff.description) if tariff.description else None,
         is_active=tariff.is_active,
         is_trial_available=tariff.is_trial_available,
         allow_traffic_topup=tariff.allow_traffic_topup,
