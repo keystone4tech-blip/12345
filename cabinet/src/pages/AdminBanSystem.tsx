@@ -687,7 +687,7 @@ export default function AdminBanSystem() {
               </div>
 
               {/* Users Table */}
-              <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+              <div className="overflow-x-auto rounded-xl border border-dark-700 bg-dark-800/50">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-dark-700">
@@ -760,7 +760,7 @@ export default function AdminBanSystem() {
 
           {/* Punishments Tab */}
           {activeTab === 'punishments' && (
-            <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+            <div className="overflow-x-auto rounded-xl border border-dark-700 bg-dark-800/50">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-dark-700">

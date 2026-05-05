@@ -270,7 +270,7 @@ export function ThemeTab() {
         </button>
 
         {expandedSections.has('presets') && (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-4">
             {THEME_PRESETS.map((preset) => (
               <button
                 key={preset.id}
@@ -306,6 +306,7 @@ export function ThemeTab() {
           </div>
         )}
       </div>
+
 
       {/* Custom Colors */}
       <div className="rounded-2xl border border-dark-700/50 bg-dark-800/50 p-6">
@@ -424,11 +425,11 @@ export function ThemeTab() {
 
       {/* Save / Cancel — always visible when there are unsaved changes */}
       {hasUnsavedChanges && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             onClick={() => updateColorsMutation.mutate(draftColors)}
             disabled={updateColorsMutation.isPending}
-            className="rounded-xl bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+            className="w-full rounded-xl bg-accent-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-accent-600 active:scale-95 disabled:opacity-50 sm:w-auto sm:py-2"
           >
             {updateColorsMutation.isPending
               ? t('common.saving', t('common.save'))
@@ -437,7 +438,7 @@ export function ThemeTab() {
           <button
             onClick={handleCancel}
             disabled={updateColorsMutation.isPending}
-            className="rounded-xl bg-dark-700 px-4 py-2 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
+            className="w-full rounded-xl bg-dark-700 px-6 py-3 text-sm font-semibold text-dark-300 transition-all hover:bg-dark-600 active:scale-95 disabled:opacity-50 sm:w-auto sm:py-2"
           >
             {t('common.cancel')}
           </button>

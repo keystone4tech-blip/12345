@@ -103,11 +103,11 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
           {t('admin.settings.logoAndName')}
         </h3>
 
-        <div className="flex items-start gap-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex flex-col items-center sm:flex-shrink-0 sm:items-start">
             <div
-              className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl text-3xl font-bold text-white"
+              className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl text-4xl font-bold text-white sm:h-20 sm:w-20 sm:text-3xl"
               style={{
                 background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`,
               }}
@@ -123,7 +123,7 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
               )}
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex w-full gap-2 sm:w-auto">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -134,15 +134,16 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadLogoMutation.isPending}
-                className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-dark-700 px-3 py-2 text-sm text-dark-200 transition-colors hover:bg-dark-600 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-dark-700 px-4 py-2 text-sm text-dark-200 transition-colors hover:bg-dark-600 disabled:opacity-50 sm:px-3 sm:py-2"
               >
                 <UploadIcon />
+                <span className="sm:hidden">{t('common.upload')}</span>
               </button>
               {branding?.has_custom_logo && (
                 <button
                   onClick={() => deleteLogoMutation.mutate()}
                   disabled={deleteLogoMutation.isPending}
-                  className="rounded-xl bg-dark-700 px-3 py-2 text-dark-400 transition-colors hover:bg-error-500/20 hover:text-error-400 disabled:opacity-50"
+                  className="rounded-xl bg-dark-700 px-4 py-2 text-dark-400 transition-colors hover:bg-error-500/20 hover:text-error-400 disabled:opacity-50 sm:px-3 sm:py-2"
                 >
                   <TrashIcon />
                 </button>
@@ -156,31 +157,33 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
               {t('admin.settings.projectName')}
             </label>
             {editingName ? (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="flex-1 rounded-xl border border-dark-600 bg-dark-700 px-4 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                  className="min-w-0 flex-1 rounded-xl border border-dark-600 bg-dark-700 px-4 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
                   maxLength={50}
                 />
-                <button
-                  onClick={() => updateBrandingMutation.mutate(newName)}
-                  disabled={updateBrandingMutation.isPending}
-                  className="rounded-xl bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
-                >
-                  <CheckIcon />
-                </button>
-                <button
-                  onClick={() => setEditingName(false)}
-                  className="rounded-xl bg-dark-700 px-4 py-2 text-dark-300 transition-colors hover:bg-dark-600"
-                >
-                  <CloseIcon />
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateBrandingMutation.mutate(newName)}
+                    disabled={updateBrandingMutation.isPending}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-500 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                  >
+                    <CheckIcon />
+                  </button>
+                  <button
+                    onClick={() => setEditingName(false)}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600"
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-lg text-dark-100">
+                <span className="text-xl font-medium text-dark-100 sm:text-lg">
                   {branding?.name || t('admin.settings.notSpecified')}
                 </span>
                 <button
@@ -188,7 +191,7 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
                     setNewName(branding?.name ?? '');
                     setEditingName(true);
                   }}
-                  className="rounded-lg p-1.5 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200"
+                  className="rounded-lg p-2 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200"
                 >
                   <PencilIcon />
                 </button>

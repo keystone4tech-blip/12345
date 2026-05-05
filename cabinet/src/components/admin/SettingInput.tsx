@@ -137,7 +137,7 @@ export function SettingInput({ setting, onUpdate, disabled }: SettingInputProps)
           }}
           autoFocus
           placeholder={t('admin.settings.inputPlaceholder')}
-          className="w-48 rounded-lg border border-accent-500 bg-dark-700 px-3 py-2 text-sm text-dark-100 focus:outline-none focus:ring-2 focus:ring-accent-500/30 sm:w-56"
+          className="w-full max-w-[12rem] rounded-lg border border-accent-500 bg-dark-700 px-3 py-2 text-sm text-dark-100 focus:outline-none focus:ring-2 focus:ring-accent-500/30 sm:w-56"
         />
         <button
           onClick={handleSave}
