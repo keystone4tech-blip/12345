@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM node:20.18.0-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -28,7 +28,10 @@ ENV VITE_APP_LOGO=$VITE_APP_LOGO
 RUN npm run build
 
 # Stage 2: Serve with Nginx
-FROM nginx:alpine
+FROM nginx:stable
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
