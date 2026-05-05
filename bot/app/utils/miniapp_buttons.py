@@ -3,6 +3,7 @@ from aiogram.types import InlineKeyboardButton
 
 from app.config import settings
 from app.utils.button_styles_cache import CALLBACK_TO_SECTION, get_cached_button_styles
+from app.cabinet.auth.jwt_handler import create_autologin_token
 
 
 # Mapping from callback_data to cabinet frontend paths.
@@ -74,12 +75,14 @@ def _resolve_style(style: str | None) -> str | None:
     return None
 
 
-def build_cabinet_url(path: str = '') -> str:
+def build_cabinet_url(path: str = '', user_id: int | None = None) -> str:
     """Join ``MINIAPP_CUSTOM_URL`` with an optional *path* segment.
 
     Handles trailing-slash normalization so that both
     ``https://example.com`` and ``https://example.com/`` produce
     correct URLs like ``https://example.com/balance``.
+
+    If *user_id* is provided, an autologin token is generated and added to the URL.
 
     Returns an empty string when the base URL is not configured
     or when *path* is empty (no known section).
@@ -89,6 +92,14 @@ def build_cabinet_url(path: str = '') -> str:
         return ''
     if not path:
         return ''
+
+    # If user_id is provided, we route through /auto-login
+    if user_id:
+        token = create_autologin_token(user_id)
+        # The path should be properly encoded if it contains special characters
+        # but here we assume simple paths like /subscription or /balance
+        return f'{base}/auto-login?token={token}&path={path}'
+
     if path == '/':
         return base
     if not path.startswith('/'):

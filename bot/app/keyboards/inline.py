@@ -198,9 +198,8 @@ async def get_main_menu_keyboard_async(
         balance_kopeks=balance_kopeks,
         subscription=subscription,
         show_resume_checkout=show_resume_checkout,
-        has_saved_cart=has_saved_cart,
-        is_moderator=is_moderator,
         custom_buttons=custom_buttons,
+        user_id=user.id if user and hasattr(user, 'id') else None,
     )
 
 
@@ -389,6 +388,7 @@ def _build_cabinet_main_menu_keyboard(
     is_admin: bool,
     is_moderator: bool,
     balance_kopeks: int = 0,
+    user_id: int | None = None,
 ) -> InlineKeyboardMarkup:
     """Build the main-menu keyboard for Cabinet mode.
 
@@ -413,7 +413,7 @@ def _build_cabinet_main_menu_keyboard(
         style: str | None = None,
         icon_custom_emoji_id: str | None = None,
     ) -> InlineKeyboardButton:
-        url = build_cabinet_url(path)
+        url = build_cabinet_url(path, user_id=user_id)
         if url:
             section = CALLBACK_TO_SECTION.get(callback_fallback)
             section_cfg = cached_styles.get(section or '', {}) if section else {}
@@ -574,6 +574,7 @@ def get_main_menu_keyboard(
     *,
     is_moderator: bool = False,
     custom_buttons: list[InlineKeyboardButton] | None = None,
+    user_id: int | None = None,
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
 
@@ -584,6 +585,7 @@ def get_main_menu_keyboard(
             is_admin=is_admin,
             is_moderator=is_moderator,
             balance_kopeks=balance_kopeks,
+            user_id=user_id,
         )
 
     if settings.DEBUG:

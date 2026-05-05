@@ -82,6 +82,29 @@ def create_refresh_token(user_id: int) -> str:
     return jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
 
 
+def create_autologin_token(user_id: int) -> str:
+    """
+    Create a very short-lived token for automatic login from bot links.
+
+    Args:
+        user_id: Database user ID
+
+    Returns:
+        Encoded JWT autologin token (expires in 10 minutes)
+    """
+    expires = datetime.now(UTC) + timedelta(minutes=10)
+
+    payload = {
+        'sub': str(user_id),
+        'type': 'autologin',
+        'exp': expires,
+        'iat': datetime.now(UTC),
+    }
+
+    secret = settings.get_cabinet_jwt_secret()
+    return jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
+
+
 def decode_token(token: str) -> dict[str, Any] | None:
     """
     Decode and validate a JWT token.

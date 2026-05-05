@@ -63,6 +63,12 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str = Field(..., description='Refresh token')
 
 
+class AutoLoginRequest(BaseModel):
+    """Request for automatic login via token."""
+
+    token: str = Field(..., description='Auto-login token')
+
+
 class PasswordForgotRequest(BaseModel):
     """Request to initiate password reset."""
 

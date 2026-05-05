@@ -55,6 +55,7 @@ from ..auth.jwt_handler import get_refresh_token_expires_at
 from ..dependencies import get_cabinet_db, get_current_cabinet_user
 from ..schemas.auth import (
     AuthResponse,
+    AutoLoginRequest,
     CampaignBonusInfo,
     EmailChangeRequest,
     EmailChangeResponse,
@@ -121,6 +122,41 @@ async def _create_auth_response(user: User, db: AsyncSession) -> AuthResponse:
         expires_in=expires_in,
         user=_user_to_response(user),
     )
+
+
+@router.post('/login/auto', response_model=AuthResponse)
+async def auth_auto_login(
+    payload: AutoLoginRequest,
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """Authenticate user automatically using a token."""
+    token_data = get_token_payload(payload.token, expected_type='autologin')
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid or expired auto-login token',
+        )
+
+    user_id = int(token_data['sub'])
+    user = await get_user_by_id(db, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found',
+        )
+
+    # Update last login
+    user.cabinet_last_login = datetime.now(UTC)
+    await db.commit()
+
+    # Generate tokens
+    response = await _create_auth_response(user, db)
+
+    # Store refresh token
+    await _store_refresh_token(db, user.id, response.refresh_token)
+
+    return response
 
 
 async def _store_refresh_token(
