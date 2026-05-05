@@ -1,4 +1,5 @@
 from datetime import datetime, UTC
+import re
 
 
 def format_datetime(dt: datetime | str, format_str: str = '%d.%m.%Y %H:%M') -> str:
@@ -227,3 +228,14 @@ def format_boolean(value: bool, language: str = 'ru') -> str:
     if language_code in {'ru', 'fa'}:
         return '✅ Да' if value else '❌ Нет'
     return '✅ Yes' if value else '❌ No'
+
+
+def strip_telegram_tags(text: str | None) -> str:
+    """Удаляет HTML теги Telegram (например, <tg-emoji>) и возвращает чистый текст."""
+    if not text:
+        return ""
+    # Удаляем теги <tg-emoji>, оставляя их содержимое
+    text = re.sub(r'<tg-emoji[^>]*>(.*?)</tg-emoji>', r'\1', text)
+    # Удаляем любые другие HTML-подобные теги
+    text = re.sub(r'<[^>]+>', '', text)
+    return text.strip()

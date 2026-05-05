@@ -117,7 +117,7 @@ export default function SubscriptionCardExpired({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl ${className ?? ''}`}
+      className={`relative overflow-hidden rounded-3xl p-5 sm:p-7 ${className ?? ''}`}
       style={{
         background: g.cardBg,
         border: isDark
@@ -126,7 +126,6 @@ export default function SubscriptionCardExpired({
         boxShadow: isDark
           ? g.shadow
           : `0 2px 16px rgba(${accent.r},${accent.g},${accent.b},0.1), 0 0 0 1px rgba(${accent.r},${accent.g},${accent.b},0.06)`,
-        padding: '28px 28px 24px',
       }}
     >
       {/* Glow */}
@@ -223,7 +222,7 @@ export default function SubscriptionCardExpired({
         style={{
           background: `rgba(${accent.r},${accent.g},${accent.b},0.04)`,
           border: `1px solid rgba(${accent.r},${accent.g},${accent.b},0.08)`,
-          padding: '14px 18px',
+          padding: '12px 14px',
         }}
       >
         <div className="flex items-center">

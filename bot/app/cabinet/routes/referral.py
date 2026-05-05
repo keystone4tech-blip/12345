@@ -85,6 +85,7 @@ async def get_referral_info(
     return ReferralInfoResponse(
         referral_code=user.referral_code or '',
         referral_link=referral_link,
+        bot_referral_link=referral_link,
         total_referrals=total_referrals,
         active_referrals=active_referrals,
         total_earnings_kopeks=total_earnings,

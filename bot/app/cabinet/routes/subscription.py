@@ -38,6 +38,7 @@ from app.services.user_cart_service import user_cart_service
 from app.utils.cache import RateLimitCache, cache, cache_key
 from app.utils.pricing_utils import format_period_description
 from app.utils.promo_offer import get_user_active_promo_discount_percent
+from app.utils.formatters import strip_telegram_tags
 
 from ..dependencies import get_cabinet_db, get_current_cabinet_user
 from ..schemas.subscription import (
@@ -195,6 +196,10 @@ def _subscription_to_response(
         daily_price_kopeks = getattr(subscription.tariff, 'daily_price_kopeks', None)
         if not tariff_name:  # Only set if not passed as parameter
             tariff_name = getattr(subscription.tariff, 'name', None)
+        
+        # Clean tariff name from Telegram HTML tags
+        if tariff_name:
+            tariff_name = strip_telegram_tags(tariff_name)
         traffic_reset_mode = (
             getattr(subscription.tariff, 'traffic_reset_mode', None) or settings.DEFAULT_TRAFFIC_RESET_STRATEGY
         )
@@ -1473,8 +1478,8 @@ async def _build_tariff_response(
 
     response = {
         'id': tariff.id,
-        'name': tariff.name,
-        'description': tariff.description,
+        'name': strip_telegram_tags(tariff.name),
+        'description': strip_telegram_tags(tariff.description),
         'tier_level': tariff.tier_level,
         'traffic_limit_gb': tariff.traffic_limit_gb,
         'traffic_limit_label': traffic_label,
@@ -4207,12 +4212,12 @@ async def switch_tariff(
 
     response = {
         'success': True,
-        'message': f"Switched from '{old_tariff_name}' to '{new_tariff.name}'"
+        'message': f"Switched from '{strip_telegram_tags(old_tariff_name)}' to '{strip_telegram_tags(new_tariff.name)}'"
         + (' (devices reset)' if devices_reset else ''),
         'subscription': _subscription_to_response(user.subscription),
-        'old_tariff_name': old_tariff_name,
+        'old_tariff_name': strip_telegram_tags(old_tariff_name),
         'new_tariff_id': new_tariff.id,
-        'new_tariff_name': new_tariff.name,
+        'new_tariff_name': strip_telegram_tags(new_tariff.name),
         'charged_kopeks': upgrade_cost,
         'balance_kopeks': user.balance_kopeks,
         'balance_label': settings.format_price(user.balance_kopeks),

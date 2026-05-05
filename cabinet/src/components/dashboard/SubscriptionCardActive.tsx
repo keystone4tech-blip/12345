@@ -72,7 +72,7 @@ export default function SubscriptionCardActive({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl backdrop-blur-xl"
+      className="relative overflow-hidden rounded-3xl backdrop-blur-xl p-5 sm:p-7"
       style={{
         background: g.cardBg,
         border: subscription.is_trial
@@ -80,7 +80,6 @@ export default function SubscriptionCardActive({
           : isDark
             ? `1px solid ${g.cardBorder}`
             : `1px solid rgba(${zone.mainVarRaw}, 0.14)`,
-        padding: '28px 28px 24px',
         boxShadow: isDark
           ? g.shadow
           : `0 2px 16px rgba(${zone.mainVarRaw}, 0.07), 0 0 0 1px rgba(${zone.mainVarRaw}, 0.03)`,
@@ -313,7 +312,7 @@ export default function SubscriptionCardActive({
         {/* Tariff badge — clickable */}
         <Link
           to={`/subscriptions/${subscription.id}`}
-          className="flex-1 rounded-[14px] p-3.5 transition-all duration-500"
+          className="flex-1 min-w-0 rounded-[14px] p-3.5 transition-all duration-500"
           style={{
             background: `linear-gradient(135deg, rgba(${zone.mainVarRaw}, 0.07), rgba(${zone.mainVarRaw}, 0.02))`,
             border: `1px solid rgba(${zone.mainVarRaw}, 0.09)`,
@@ -325,7 +324,7 @@ export default function SubscriptionCardActive({
           >
             {t('dashboard.tariff')}
           </div>
-          <div className="text-base font-bold leading-tight tracking-tight text-dark-50">
+          <div className="text-base font-bold leading-tight tracking-tight text-dark-50 truncate">
             {subscription.tariff_name || t('subscription.currentPlan')}
           </div>
           <div className="mt-0.5 font-mono text-[10px] text-dark-50/30">
@@ -335,7 +334,7 @@ export default function SubscriptionCardActive({
 
         {/* Days remaining */}
         <div
-          className="flex-1 rounded-[14px] p-3.5 transition-colors duration-300"
+          className="flex-1 min-w-0 rounded-[14px] p-3.5 transition-colors duration-300"
           style={{
             background: g.innerBg,
             border:
