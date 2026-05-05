@@ -73,8 +73,8 @@ export default function AdminPaymentMethodEdit() {
       setIsEnabled(config.is_enabled);
       setCustomName(config.display_name || '');
       setSubOptions(config.sub_options || {});
-      setMinAmount(config.min_amount_kopeks ?? '');
-      setMaxAmount(config.max_amount_kopeks ?? '');
+      setMinAmount(config.min_amount_kopeks !== null ? config.min_amount_kopeks / 100 : '');
+      setMaxAmount(config.max_amount_kopeks !== null ? config.max_amount_kopeks / 100 : '');
       setUserTypeFilter(config.user_type_filter);
       setFirstTopupFilter(config.first_topup_filter);
       setPromoGroupFilterMode(config.promo_group_filter_mode);
@@ -114,14 +114,14 @@ export default function AdminPaymentMethodEdit() {
       data.sub_options = subOptions;
     }
 
-    // Amounts
+    // Amounts (Convert RUB from UI back to Kopeks for API)
     if (minAmount !== '') {
-      data.min_amount_kopeks = toNumber(minAmount) || null;
+      data.min_amount_kopeks = Math.round(toNumber(minAmount) * 100);
     } else {
       data.reset_min_amount = true;
     }
     if (maxAmount !== '') {
-      data.max_amount_kopeks = toNumber(maxAmount) || null;
+      data.max_amount_kopeks = Math.round(toNumber(maxAmount) * 100);
     } else {
       data.reset_max_amount = true;
     }
@@ -268,7 +268,7 @@ export default function AdminPaymentMethodEdit() {
 
         {/* Min/Max amounts */}
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className="relative">
             <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.paymentMethods.minAmount')}
             </label>
@@ -276,11 +276,12 @@ export default function AdminPaymentMethodEdit() {
               type="number"
               value={minAmount}
               onChange={createNumberInputHandler(setMinAmount, 0)}
-              placeholder={config.default_min_amount_kopeks.toString()}
-              className="input"
+              placeholder={(config.default_min_amount_kopeks / 100).toString()}
+              className="input pr-12"
             />
+            <div className="absolute right-3 top-[38px] text-xs font-medium text-dark-500">RUB</div>
           </div>
-          <div>
+          <div className="relative">
             <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.paymentMethods.maxAmount')}
             </label>
@@ -288,9 +289,10 @@ export default function AdminPaymentMethodEdit() {
               type="number"
               value={maxAmount}
               onChange={createNumberInputHandler(setMaxAmount, 0)}
-              placeholder={config.default_max_amount_kopeks.toString()}
-              className="input"
+              placeholder={(config.default_max_amount_kopeks / 100).toString()}
+              className="input pr-12"
             />
+            <div className="absolute right-3 top-[38px] text-xs font-medium text-dark-500">RUB</div>
           </div>
         </div>
 

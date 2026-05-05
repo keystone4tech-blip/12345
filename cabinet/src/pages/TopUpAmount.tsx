@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 
 import { balanceApi } from '../api/balance';
+import { subscriptionApi } from '../api/subscription';
 import { useCurrency } from '../hooks/useCurrency';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
@@ -289,7 +290,35 @@ export default function TopUpAmount() {
     }
   };
 
-  const quickAmounts = [100, 300, 500, 1000].filter((a) => a >= minRubles && a <= maxRubles);
+  const { data: purchaseOptions } = useQuery({
+    queryKey: ['purchase-options'],
+    queryFn: () => subscriptionApi.getPurchaseOptions(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const getQuickAmounts = useCallback(() => {
+    if (!purchaseOptions || purchaseOptions.sales_mode !== 'tariffs') {
+      return [100, 300, 500, 1000]; // Fallback
+    }
+
+    const prices = new Set<number>();
+    purchaseOptions.tariffs.forEach((t) => {
+      // Add period prices
+      t.periods?.forEach((p) => {
+        prices.add(Math.round(p.price_kopeks / 100));
+      });
+      // Add daily price if exists
+      if (t.is_daily && t.daily_price_kopeks) {
+        prices.add(Math.round(t.daily_price_kopeks / 100));
+      }
+    });
+
+    return Array.from(prices)
+      .filter((a) => a >= minRubles && a <= maxRubles)
+      .sort((a, b) => a - b);
+  }, [purchaseOptions, minRubles, maxRubles]);
+
+  const quickAmounts = getQuickAmounts();
   const currencyDecimals = targetCurrency === 'IRR' || targetCurrency === 'RUB' ? 0 : 2;
   const getQuickValue = (rub: number) =>
     targetCurrency === 'IRR'
