@@ -385,3 +385,18 @@
 ## Дата: 2026-05-06 (Корректировка)
 ### Изменения:
 - **Исправление домена**: CABINET_URL исправлен на корректный https://lk.mozhnovpn.tech (согласно конфигурации Nginx).
+
+## Дата: 2026-05-07
+### Изменения:
+- **Разделение Лендинга и Кабинета**:
+    - В cabinet/vite.config.ts параметр base изменен на '/cabinet/' для корректной работы ассетов.
+    - В cabinet/src/AppWithNavigator.tsx добавлен basename="/cabinet" в BrowserRouter.
+    - В .env обновлен CABINET_URL на https://lk.mozhnovpn.tech/cabinet.
+- **Инфраструктура (Nginx)**:
+    - Обновлен nginx/reverse-proxy.conf: личный кабинет перенесен на /cabinet/, а корень / отведен под лендинг (/var/www/landing).
+- **Синхронизация**:
+    - Репозиторий обновлен на GitHub: добавлены схемы привязки аккаунтов и отчет за 06.05.
+
+### Заметки:
+- Для применения изменений на сервере необходимо выполнить git pull, пересобрать кабинет (docker-compose build cabinet) и перезапустить Nginx.
+- В BotFather необходимо обновить ссылки на WebApp.

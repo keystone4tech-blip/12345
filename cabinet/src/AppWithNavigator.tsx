@@ -65,7 +65,7 @@ export function AppWithNavigator() {
   const isTelegram = isInTelegramWebApp();
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/cabinet">
       {isTelegram && <TelegramBackButton />}
       <ErrorBoundary level="page">
         <PlatformProvider>
