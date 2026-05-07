@@ -16,7 +16,7 @@ export default defineConfig({
   },
   // Base path - use '/' for standalone Docker deployment
   // Change to '/cabinet/' if serving from a sub-path
-  base: '/cabinet/',
+  base: '/',
   server: {
     port: 5173,
     host: true,
