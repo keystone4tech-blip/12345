@@ -169,3 +169,27 @@ class EmailChangeResponse(BaseModel):
     message: str = Field(..., description='Success message')
     new_email: str = Field(..., description='New email address pending verification')
     expires_in_minutes: int = Field(..., description='Code expiration time in minutes')
+
+
+class LinkedProvider(BaseModel):
+    """Information about a linked social/auth provider."""
+
+    name: str = Field(..., description='Provider name (telegram, email, google, etc.)')
+    linked: bool = Field(..., description='Whether this provider is linked to the account')
+    id: str | int | None = Field(None, description='Provider-specific user ID')
+    username: str | None = Field(None, description='Username on the provider')
+
+
+class LinkedProvidersResponse(BaseModel):
+    """Response containing all linked and available providers."""
+
+    providers: list[LinkedProvider]
+
+
+class LinkCallbackResponse(BaseModel):
+    """Generic response for account linking/unlinking actions."""
+
+    success: bool
+    message: str
+    requires_merge: bool = False
+    merge_token: str | None = None
