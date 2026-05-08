@@ -40,11 +40,29 @@ async def start_email_binding(callback: types.CallbackQuery, state: FSMContext, 
     await callback.message.edit_text(
         texts.t("BIND_EMAIL_PROMPT", "📧 <b>Привязка Email</b>\n\nВведите ваш адрес электронной почты для регистрации в личном кабинете:"),
         reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
-            [types.InlineKeyboardButton(text=texts.BACK, callback_data="back_to_menu")]
+            [types.InlineKeyboardButton(text=texts.t("CANCEL", "❌ Отмена"), callback_data="cancel_email_binding")]
         ]),
         parse_mode="HTML"
     )
     await state.set_state(EmailBindingState.waiting_for_email)
+    await callback.answer()
+
+@router.callback_query(F.data == "cancel_email_binding")
+async def cancel_email_binding(callback: types.CallbackQuery, state: FSMContext, db_user: User, db: AsyncSession):
+    await state.clear()
+    texts = get_texts(db_user.language)
+    
+    is_admin = settings.is_admin(db_user.telegram_id)
+    keyboard = await get_main_menu_keyboard_async(
+        db=db, 
+        user=db_user, 
+        language=db_user.language,
+        is_admin=is_admin
+    )
+    from app.handlers.menu import get_main_menu_text
+    menu_text = await get_main_menu_text(db_user, texts, db)
+    
+    await callback.message.edit_text(menu_text, reply_markup=keyboard, parse_mode="HTML")
     await callback.answer()
 
 @router.message(EmailBindingState.waiting_for_email)
@@ -68,6 +86,9 @@ async def process_email(message: types.Message, state: FSMContext, db_user: User
     await state.update_data(email=email)
     await message.answer(
         texts.t("BIND_PASSWORD_PROMPT", "🔑 <b>Установка пароля</b>\n\nПридумайте пароль для входа на сайт (минимум 8 символов):"),
+        reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
+            [types.InlineKeyboardButton(text=texts.t("CANCEL", "❌ Отмена"), callback_data="cancel_email_binding")]
+        ]),
         parse_mode="HTML"
     )
     await state.set_state(EmailBindingState.waiting_for_password)
@@ -84,47 +105,59 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
     data = await state.get_data()
     email = data['email']
     
-    # Хешируем пароль
-    password_hash = bcrypt.hash(password)
-    
-    # Генерируем токен верификации
-    verification_token = str(uuid.uuid4())
-    expires_at = datetime.now(UTC) + timedelta(hours=settings.get_cabinet_email_verification_expire_hours())
+    try:
+        # Хешируем пароль
+        password_hash = bcrypt.hash(password)
+        
+        # Генерируем токен верификации
+        verification_token = str(uuid.uuid4())
+        expires_at = datetime.now(UTC) + timedelta(hours=settings.get_cabinet_email_verification_expire_hours())
 
-    # Обновляем пользователя
-    db_user.email = email
-    db_user.password_hash = password_hash
-    db_user.email_verification_token = verification_token
-    db_user.email_verification_expires = expires_at
-    db_user.email_verified = False
-    
-    await db.commit()
+        # Обновляем пользователя
+        db_user.email = email
+        db_user.password_hash = password_hash
+        db_user.email_verification_token = verification_token
+        db_user.email_verification_expires = expires_at
+        db_user.email_verified = False
+        
+        await db.commit()
 
-    # Отправляем письмо
-    cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
-    # Путь для верификации на сайте
-    verification_url = f"{cabinet_url}/verify-email"
-    
-    sent = email_service.send_verification_email(
-        to_email=email,
-        verification_token=verification_token,
-        verification_url=verification_url,
-        username=db_user.first_name or db_user.username,
-        language=db_user.language
-    )
-
-    if sent:
-        await message.answer(
-            texts.t("EMAIL_VERIFICATION_SENT", "✅ <b>Письмо отправлено!</b>\n\nМы отправили ссылку для подтверждения на <code>{email}</code>. Пожалуйста, проверьте почту (включая папку Спам).").format(email=email),
-            parse_mode="HTML"
+        # Отправляем письмо
+        cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
+        # Путь для верификации на сайте
+        verification_url = f"{cabinet_url}/verify-email"
+        
+        sent = email_service.send_verification_email(
+            to_email=email,
+            verification_token=verification_token,
+            verification_url=verification_url,
+            username=db_user.first_name or db_user.username,
+            language=db_user.language
         )
-    else:
-        await message.answer(texts.t("EMAIL_SEND_ERROR", "❌ Ошибка при отправке письма. Пожалуйста, обратитесь в поддержку."))
+
+        if sent:
+            await message.answer(
+                texts.t("EMAIL_VERIFICATION_SENT", "✅ <b>Письмо отправлено!</b>\n\nМы отправили ссылку для подтверждения на <code>{email}</code>. Пожалуйста, проверьте почту (включая папку Спам).").format(email=email),
+                parse_mode="HTML"
+            )
+        else:
+            await message.answer(texts.t("EMAIL_SEND_ERROR", "❌ Ошибка при отправке письма. Пожалуйста, обратитесь в поддержку."))
+
+    except Exception as e:
+        logger.error("Error in email binding process", error=e, user_id=db_user.id)
+        await message.answer(texts.t("SYSTEM_ERROR", "❌ Произошла системная ошибка. Пожалуйста, попробуйте позже."))
+        await db.rollback()
 
     await state.clear()
     
     # Возвращаем в главное меню
-    keyboard = await get_main_menu_keyboard_async(db, db_user, db_user.language)
+    is_admin = settings.is_admin(db_user.telegram_id)
+    keyboard = await get_main_menu_keyboard_async(
+        db=db, 
+        user=db_user, 
+        language=db_user.language,
+        is_admin=is_admin
+    )
     from app.handlers.menu import get_main_menu_text
     menu_text = await get_main_menu_text(db_user, texts, db)
     
