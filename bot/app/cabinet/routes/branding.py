@@ -285,6 +285,12 @@ class AnalyticsCountersUpdate(BaseModel):
     google_ads_label: str | None = None
 
 
+class TelegramWidgetConfigResponse(BaseModel):
+    """Telegram widget configuration."""
+
+    bot_username: str
+
+
 # Default theme colors
 DEFAULT_THEME_COLORS = {
     'accent': '#3b82f6',
@@ -986,3 +992,13 @@ async def update_gift_enabled(
     logger.info('Admin set gift system enabled', telegram_id=admin.telegram_id, enabled=payload.enabled)
 
     return GiftEnabledResponse(enabled=payload.enabled)
+
+
+@router.get('/telegram-widget', response_model=TelegramWidgetConfigResponse)
+async def get_telegram_widget_config():
+    """
+    Get Telegram widget configuration.
+    This is used by the frontend to initialize the Telegram login widget.
+    """
+    bot_username = getattr(settings, 'VITE_TELEGRAM_BOT_USERNAME', None) or os.getenv('VITE_TELEGRAM_BOT_USERNAME', 'MozhnoVPN_Robot')
+    return TelegramWidgetConfigResponse(bot_username=bot_username)

@@ -199,7 +199,7 @@ async def get_main_menu_keyboard_async(
         subscription=subscription,
         show_resume_checkout=show_resume_checkout,
         custom_buttons=custom_buttons,
-        user_id=user.id if user and hasattr(user, 'id') else None,
+        user=user,
     )
 
 
@@ -388,7 +388,7 @@ def _build_cabinet_main_menu_keyboard(
     is_admin: bool,
     is_moderator: bool,
     balance_kopeks: int = 0,
-    user_id: int | None = None,
+    user: User | None = None,
 ) -> InlineKeyboardMarkup:
     """Build the main-menu keyboard for Cabinet mode.
 
@@ -413,6 +413,7 @@ def _build_cabinet_main_menu_keyboard(
         style: str | None = None,
         icon_custom_emoji_id: str | None = None,
     ) -> InlineKeyboardButton:
+        user_id = user.id if user else None
         url = build_cabinet_url(path, user_id=user_id)
         if url:
             section = CALLBACK_TO_SECTION.get(callback_fallback)
@@ -442,6 +443,8 @@ def _build_cabinet_main_menu_keyboard(
         keyboard_rows: list[list[InlineKeyboardButton]] = [
             [_cabinet_button(profile_text, '/', 'menu_profile_unavailable')],
         ]
+        if user and not user.email_verified:
+            keyboard_rows.append([InlineKeyboardButton(text=texts.t("BIND_EMAIL_BUTTON", "📧 Привязать Email"), callback_data="bind_email")])
     else:
         keyboard_rows: list[list[InlineKeyboardButton]] = []
 
@@ -574,7 +577,7 @@ def get_main_menu_keyboard(
     *,
     is_moderator: bool = False,
     custom_buttons: list[InlineKeyboardButton] | None = None,
-    user_id: int | None = None,
+    user: User | None = None,
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
 
@@ -585,7 +588,7 @@ def get_main_menu_keyboard(
             is_admin=is_admin,
             is_moderator=is_moderator,
             balance_kopeks=balance_kopeks,
-            user_id=user_id,
+            user=user,
         )
 
     if settings.DEBUG:
@@ -620,6 +623,14 @@ def get_main_menu_keyboard(
         if happ_row:
             keyboard.append(happ_row)
             
+        # Добавляем кнопку привязки Email или Личного кабинета под кнопкой подключения
+        if user:
+            if not user.email_verified:
+                keyboard.append([InlineKeyboardButton(text=texts.t("BIND_EMAIL_BUTTON", "📧 Привязать Email"), callback_data="bind_email")])
+            else:
+                cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
+                keyboard.append([InlineKeyboardButton(text=texts.t("MENU_PROFILE", "👤 Личный кабинет"), web_app=types.WebAppInfo(url=cabinet_url))])
+
         sub_text = settings.SUBSCRIPTION_BUTTON_TEXT or texts.MENU_SUBSCRIPTION
         
         btn_kwargs = {

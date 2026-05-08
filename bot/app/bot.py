@@ -20,6 +20,7 @@ from app.handlers import (
     support,
     tickets,
     gift_vpn,
+    email_binding,
 )
 from app.handlers.admin import (
     backup as admin_backup,
@@ -165,6 +166,7 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     server_status.register_handlers(dp)
     tickets.register_handlers(dp)
     gift_vpn.register_handlers(dp)
+    email_binding.register_handlers(dp)
 
     # DonMatteo-AI-Tiket: register manager-side Forum group handler
     if settings.SUPPORT_AI_FORUM_ID:
