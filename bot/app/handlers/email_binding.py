@@ -4,11 +4,11 @@ import uuid
 from datetime import datetime, timedelta, UTC
 
 import structlog
+import bcrypt
 from aiogram import Router, F, types, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
-from passlib.hash import bcrypt
 
 from app.config import settings
 from app.database.models import User
@@ -123,7 +123,11 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
 
     try:
         logger.info("Hashing password", user_id=user_id)
-        password_hash = bcrypt.hash(password)
+        # Хешируем пароль через нативный bcrypt
+        # bcrypt.hashpw ожидает байты, поэтому кодируем пароль
+        salt = bcrypt.gensalt()
+        password_bytes = password.encode('utf-8')
+        password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
         
         # Генерируем токен верификации
         verification_token = str(uuid.uuid4())
