@@ -99,6 +99,12 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
     user_id = message.from_user.id
     logger.info("Starting process_password", user_id=user_id)
     password = message.text.strip()
+    
+    # Инициализируем переменные заранее, чтобы они были доступны в блоке формирования меню
+    user_first_name = db_user.first_name
+    user_username = db_user.username
+    user_language = db_user.language
+    user_telegram_id = db_user.telegram_id
 
     if len(password) < 8:
         logger.warning("Password too short", user_id=user_id)
@@ -131,12 +137,6 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
         db_user.email_verification_expires = expires_at
         db_user.email_verified = False
         
-        # Сохраняем необходимые данные до комита, так как после комита объект станет expired
-        user_first_name = db_user.first_name
-        user_username = db_user.username
-        user_language = db_user.language
-        user_telegram_id = db_user.telegram_id
-
         logger.info("Committing transaction", user_id=user_id)
         await db.commit()
         logger.info("Transaction committed successfully", user_id=user_id)
