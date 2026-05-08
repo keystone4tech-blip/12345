@@ -16,6 +16,10 @@ class EmailService:
     """Service for sending emails via SMTP."""
 
     def __init__(self):
+        self.refresh_settings()
+
+    def refresh_settings(self):
+        """Refresh SMTP settings from app.config.settings."""
         self.host = settings.SMTP_HOST
         self.port = settings.SMTP_PORT
         self.user = settings.SMTP_USER
@@ -23,6 +27,14 @@ class EmailService:
         self.from_email = settings.get_smtp_from_email()
         self.from_name = settings.SMTP_FROM_NAME
         self.use_tls = settings.SMTP_USE_TLS
+        logger.info(
+            "Email service settings refreshed",
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            from_email=self.from_email,
+            use_tls=self.use_tls
+        )
 
     def is_configured(self) -> bool:
         """Check if SMTP is properly configured."""

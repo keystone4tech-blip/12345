@@ -159,10 +159,19 @@ async def show_referral_info(callback: types.CallbackQuery, db_user: User, db: A
             referral_text += line + '\n'
 
 
+    bot_link_text = texts.t('REFERRAL_BOT_LINK_TITLE', '🤖 <b>Ссылка на бота:</b>')
+    cabinet_url = settings.CABINET_URL
+    
+    links_section = f"\n{bot_link_text}\n<code>{referral_link}</code>\n"
+    
+    if cabinet_url:
+        cabinet_referral_link = f"{cabinet_url.rstrip('/')}/login?ref={db_user.referral_code}"
+        cabinet_link_text = texts.t('REFERRAL_CABINET_LINK_TITLE', '🔗 <b>Ссылка на личный кабинет:</b>')
+        links_section += f"\n{cabinet_link_text}\n<code>{cabinet_referral_link}</code>\n"
+
     referral_text += (
-        '\n'
-        + texts.t('REFERRAL_LINK_TITLE', '🔗 <b>Ваша реферальная ссылка:</b>')
-        + f'\n<code>{referral_link}</code>\n\n'
+        links_section
+        + '\n'
         + texts.t('REFERRAL_CODE_TITLE', '🆔 <b>Ваш код:</b> <code>{code}</code>').format(code=db_user.referral_code)
         + '\n\n'
     )
@@ -536,8 +545,13 @@ async def create_invite_message(callback: types.CallbackQuery, db_user: User):
         + texts.t_raw('REFERRAL_INVITE_FEATURE_EASY', '📱 Настраивается за 1 минуту на любом устройстве')
         + '\n\n'
         + texts.t_raw('REFERRAL_INVITE_LINK_PROMPT', '👇 Забирай доступ здесь:')
-        + f'\n{referral_link}'
+        + f'\n🤖 {referral_link}'
     )
+    
+    cabinet_url = settings.CABINET_URL
+    if cabinet_url:
+        cabinet_referral_link = f"{cabinet_url.rstrip('/')}/login?ref={db_user.referral_code}"
+        invite_text += f'\n🔗 {cabinet_referral_link}'
 
     share_url = f"https://t.me/share/url?text={quote(invite_text)}"
 

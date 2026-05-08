@@ -623,11 +623,22 @@ def get_main_menu_keyboard(
         if happ_row:
             keyboard.append(happ_row)
             
-        # Добавляем кнопку привязки Email или Личного кабинета под кнопкой подключения
+        # Кнопка личного кабинета / привязки Email под кнопкой подключения
         if user:
-            if not user.email_verified:
+            from app.utils.miniapp_buttons import build_cabinet_url
+            cabinet_webapp_url = build_cabinet_url('/profile', user_id=user.telegram_id)
+            if cabinet_webapp_url:
+                if not user.email_verified:
+                    btn_text = texts.t("BIND_EMAIL_BUTTON", "📧 Привязать Email")
+                else:
+                    btn_text = texts.t("MENU_PROFILE", "👤 Личный кабинет")
+                
+                keyboard.append([InlineKeyboardButton(text=btn_text, web_app=types.WebAppInfo(url=cabinet_webapp_url))])
+            elif not user.email_verified:
+                # Fallback if cabinet URL is not configured
                 keyboard.append([InlineKeyboardButton(text=texts.t("BIND_EMAIL_BUTTON", "📧 Привязать Email"), callback_data="bind_email")])
             else:
+                # Fallback for profile
                 cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
                 keyboard.append([InlineKeyboardButton(text=texts.t("MENU_PROFILE", "👤 Личный кабинет"), web_app=types.WebAppInfo(url=cabinet_url))])
 

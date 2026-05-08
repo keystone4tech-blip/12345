@@ -166,6 +166,12 @@ CATEGORY_GROUP_METADATA: dict[str, dict[str, object]] = {
         'icon': '🔧',
         'categories': ('MAINTENANCE', 'BACKUP', 'VERSION'),
     },
+    'cabinet': {
+        'title': '🏢 Кабинет и Почта',
+        'description': 'Настройки Личного Кабинета, SMTP для писем и OAuth авторизация.',
+        'icon': '🏢',
+        'categories': ('CABINET', 'OAUTH'),
+    },
     'advanced': {
         'title': '⚡ Расширенные',
         'description': 'Web API, webhook, логирование, модерация и режим отладки.',
@@ -194,6 +200,7 @@ CATEGORY_GROUP_ORDER: tuple[str, ...] = (
     'reply_buttons',
     'server',
     'maintenance',
+    'cabinet',
     'advanced',
 )
 
@@ -368,6 +375,15 @@ def _get_group_status(group_key: str) -> tuple[str, str]:
     if key == 'interface':
         branding = bool(settings.ENABLE_LOGO_MODE or settings.MINIAPP_CUSTOM_URL)
         return ('🟢', 'Брендинг настроен') if branding else ('⚪', 'Настройки по умолчанию')
+
+    if key == 'cabinet':
+        smtp_ready = bool(settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD)
+        cabinet_ready = bool(settings.CABINET_URL or settings.MINIAPP_CUSTOM_URL)
+        if smtp_ready and cabinet_ready:
+            return '🟢', 'Настроено'
+        if not smtp_ready and not cabinet_ready:
+            return '⚪', 'Не настроено'
+        return '🟡', 'Частично'
 
     return '🟢', 'Готово к работе'
 

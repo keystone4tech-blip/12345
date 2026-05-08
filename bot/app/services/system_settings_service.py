@@ -2612,6 +2612,13 @@ class BotConfigurationService:
                     remnawave_sync_service.refresh_configuration()
                 except Exception as error:
                     logger.error('Не удалось обновить конфигурацию сервиса автосинхронизации RemnaWave', error=error)
+            elif key.startswith('SMTP_'):
+                try:
+                    from app.cabinet.services.email_service import email_service
+
+                    email_service.refresh_settings()
+                except Exception as error:
+                    logger.error('Не удалось обновить настройки EmailService', error=error)
         except Exception as error:
             logger.error('Не удалось применить значение', key=key, setting_value=value, error=error)
 

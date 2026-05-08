@@ -1297,6 +1297,8 @@
   "REFERRAL_INVITE_TITLE": "🎉 Join the VPN service!",
   "REFERRAL_LINK_CAPTION": "🔗 Your referral link:\n{link}",
   "REFERRAL_LINK_TITLE": "🔗 <b>Your referral link:</b>",
+  "REFERRAL_BOT_LINK_TITLE": "🤖 <b>Telegram Bot link:</b>",
+  "REFERRAL_CABINET_LINK_TITLE": "🔗 <b>Web Cabinet link:</b>",
   "REFERRAL_LIST_BUTTON": "👥 Referral list",
   "REFERRAL_LIST_EMPTY": "📋 You have no referrals yet.\n\nShare your referral link to start earning!",
   "REFERRAL_LIST_HEADER": "👥 <b>Your referrals</b> (page {current}/{total})",
