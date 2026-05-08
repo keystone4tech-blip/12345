@@ -295,6 +295,15 @@ async def main():
         ) as stage:
             try:
                 await bot_configuration_service.initialize()
+                
+                # Принудительно обновляем настройки почтового сервиса после загрузки из БД
+                try:
+                    from app.cabinet.services.email_service import email_service
+                    email_service.refresh_settings()
+                    logger.info("✅ Настройки EmailService обновлены после загрузки конфигурации из БД")
+                except Exception as email_err:
+                    logger.error("❌ Ошибка при обновлении настроек EmailService в main.py", error=email_err)
+                    
             except Exception as error:
                 stage.warning(f'Не удалось загрузить конфигурацию: {error}')
                 logger.error('❌ Не удалось загрузить конфигурацию', error=error)

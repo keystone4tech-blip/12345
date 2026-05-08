@@ -27,13 +27,16 @@ class EmailService:
         self.from_email = settings.get_smtp_from_email()
         self.from_name = settings.SMTP_FROM_NAME
         self.use_tls = settings.SMTP_USE_TLS
+        
+        # Логируем текущее состояние настроек после обновления из объекта settings
         logger.info(
-            "Email service settings refreshed",
+            "Email service settings refreshed from global settings object",
             host=self.host,
             port=self.port,
             user=self.user,
             from_email=self.from_email,
-            use_tls=self.use_tls
+            use_tls=self.use_tls,
+            is_smtp_configured=settings.is_smtp_configured()
         )
 
     def is_configured(self) -> bool:

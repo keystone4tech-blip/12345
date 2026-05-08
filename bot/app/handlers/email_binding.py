@@ -12,10 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database.models import User
-from app.database.crud.user import update_user
+from app.database.crud.user import update_user, get_user_by_id
 from app.localization.texts import get_texts
 from app.cabinet.services.email_service import email_service
 from app.keyboards.inline import get_main_menu_keyboard_async
+from app.services.main_menu_button_service import MainMenuButtonService
+from app.services.support_settings_service import SupportSettingsService
+from app.services.user_cart_service import user_cart_service
 
 logger = structlog.get_logger(__name__)
 
@@ -52,12 +55,48 @@ async def cancel_email_binding(callback: types.CallbackQuery, state: FSMContext,
     await state.clear()
     texts = get_texts(db_user.language)
     
+    # Расчет флагов подписки и статуса модератора для корректного отображения меню
+    subscription = db_user.subscription
+    has_active_subscription = False
+    subscription_is_active = False
+    
+    if subscription:
+        actual_status = getattr(subscription, 'actual_status', None)
+        has_active_subscription = actual_status in {'active', 'trial'}
+        subscription_is_active = bool(getattr(subscription, 'is_active', False))
+    
     is_admin = settings.is_admin(db_user.telegram_id)
+    is_moderator = (not is_admin) and SupportSettingsService.is_moderator(db_user.telegram_id)
+    
+    # Проверяем наличие сохраненной корзины
+    try:
+        has_saved_cart = await user_cart_service.has_user_cart(db_user.id)
+    except Exception:
+        has_saved_cart = False
+
+    # Получаем кастомные кнопки
+    custom_buttons = []
+    if not settings.is_text_main_menu_mode():
+        custom_buttons = await MainMenuButtonService.get_buttons_for_user(
+            db,
+            is_admin=is_admin,
+            has_active_subscription=has_active_subscription,
+            subscription_is_active=subscription_is_active,
+        )
+
     keyboard = await get_main_menu_keyboard_async(
         db=db, 
         user=db_user, 
         language=db_user.language,
-        is_admin=is_admin
+        is_admin=is_admin,
+        is_moderator=is_moderator,
+        has_had_paid_subscription=db_user.has_had_paid_subscription,
+        has_active_subscription=has_active_subscription,
+        subscription_is_active=subscription_is_active,
+        balance_kopeks=db_user.balance_kopeks,
+        subscription=db_user.subscription,
+        has_saved_cart=has_saved_cart,
+        custom_buttons=custom_buttons,
     )
     from app.handlers.menu import get_main_menu_text
     menu_text = await get_main_menu_text(db_user, texts, db)
@@ -188,12 +227,49 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
     # Возвращаем в главное меню
     # Используем db_user, который мы заново получили из базы после комита
     logger.info("Generating main menu keyboard", user_id=user_id)
-    is_admin = settings.is_admin(user_telegram_id) # Используем сохраненный ID
+    
+    # Расчет флагов подписки и статуса модератора для корректного отображения меню
+    subscription = db_user.subscription
+    has_active_subscription = False
+    subscription_is_active = False
+    
+    if subscription:
+        actual_status = getattr(subscription, 'actual_status', None)
+        has_active_subscription = actual_status in {'active', 'trial'}
+        subscription_is_active = bool(getattr(subscription, 'is_active', False))
+
+    is_admin = settings.is_admin(user_telegram_id)
+    is_moderator = (not is_admin) and SupportSettingsService.is_moderator(user_telegram_id)
+    
+    # Проверяем наличие сохраненной корзины
+    try:
+        has_saved_cart = await user_cart_service.has_user_cart(db_user.id)
+    except Exception:
+        has_saved_cart = False
+
+    # Получаем кастомные кнопки
+    custom_buttons = []
+    if not settings.is_text_main_menu_mode():
+        custom_buttons = await MainMenuButtonService.get_buttons_for_user(
+            db,
+            is_admin=is_admin,
+            has_active_subscription=has_active_subscription,
+            subscription_is_active=subscription_is_active,
+        )
+
     keyboard = await get_main_menu_keyboard_async(
         db=db, 
         user=db_user, 
-        language=user_language, # Используем сохраненный язык
-        is_admin=is_admin
+        language=user_language,
+        is_admin=is_admin,
+        is_moderator=is_moderator,
+        has_had_paid_subscription=db_user.has_had_paid_subscription,
+        has_active_subscription=has_active_subscription,
+        subscription_is_active=subscription_is_active,
+        balance_kopeks=db_user.balance_kopeks,
+        subscription=db_user.subscription,
+        has_saved_cart=has_saved_cart,
+        custom_buttons=custom_buttons,
     )
     
     logger.info("Generating main menu text", user_id=user_id)
