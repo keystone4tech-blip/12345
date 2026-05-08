@@ -127,7 +127,11 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
         user_language = db_user.language
 
         await db.commit()
-        await db.refresh(db_user)
+        
+        # Заново получаем пользователя из БД со всеми необходимыми связями, 
+        # чтобы избежать MissingGreenlet при отрисовке меню
+        from app.database.crud.user import get_user_by_id
+        db_user = await get_user_by_id(db, user_id)
 
         # Отправляем письмо
         cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
@@ -158,6 +162,7 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
     await state.clear()
     
     # Возвращаем в главное меню
+    # Используем db_user, который мы заново получили из базы после комита
     is_admin = settings.is_admin(db_user.telegram_id)
     keyboard = await get_main_menu_keyboard_async(
         db=db, 
