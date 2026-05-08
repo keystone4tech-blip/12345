@@ -120,7 +120,13 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
         db_user.email_verification_expires = expires_at
         db_user.email_verified = False
         
+        # Сохраняем необходимые данные до комита, так как после комита объект станет expired
+        user_first_name = db_user.first_name
+        user_username = db_user.username
+        user_language = db_user.language
+
         await db.commit()
+        await db.refresh(db_user)
 
         # Отправляем письмо
         cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
@@ -131,8 +137,8 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
             to_email=email,
             verification_token=verification_token,
             verification_url=verification_url,
-            username=db_user.first_name or db_user.username,
-            language=db_user.language
+            username=user_first_name or user_username,
+            language=user_language
         )
 
         if sent:
@@ -144,7 +150,7 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
             await message.answer(texts.t("EMAIL_SEND_ERROR", "❌ Ошибка при отправке письма. Пожалуйста, обратитесь в поддержку."))
 
     except Exception as e:
-        logger.error("Error in email binding process", error=e, user_id=db_user.id)
+        logger.error("Error in email binding process", error=e, user_id=user_id)
         await message.answer(texts.t("SYSTEM_ERROR", "❌ Произошла системная ошибка. Пожалуйста, попробуйте позже."))
         await db.rollback()
 
