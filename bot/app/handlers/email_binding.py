@@ -96,6 +96,7 @@ async def process_email(message: types.Message, state: FSMContext, db_user: User
 @router.message(EmailBindingState.waiting_for_password)
 async def process_password(message: types.Message, state: FSMContext, db_user: User, db: AsyncSession):
     texts = get_texts(db_user.language)
+    user_id = message.from_user.id
     password = message.text.strip()
 
     if len(password) < 8:
