@@ -97,23 +97,33 @@ async def process_email(message: types.Message, state: FSMContext, db_user: User
 async def process_password(message: types.Message, state: FSMContext, db_user: User, db: AsyncSession):
     texts = get_texts(db_user.language)
     user_id = message.from_user.id
+    logger.info("Starting process_password", user_id=user_id)
     password = message.text.strip()
 
     if len(password) < 8:
+        logger.warning("Password too short", user_id=user_id)
         await message.answer(texts.t("PASSWORD_TOO_SHORT", "❌ Пароль слишком короткий. Минимум 8 символов:"))
         return
 
+    logger.info("Retrieving state data", user_id=user_id)
     data = await state.get_data()
-    email = data['email']
+    email = data.get('email')
     
+    if not email:
+        logger.error("Email not found in state data", user_id=user_id)
+        await message.answer(texts.t("SYSTEM_ERROR", "❌ Произошла системная ошибка. Пожалуйста, попробуйте позже."))
+        await state.clear()
+        return
+
     try:
-        # Хешируем пароль
+        logger.info("Hashing password", user_id=user_id)
         password_hash = bcrypt.hash(password)
         
         # Генерируем токен верификации
         verification_token = str(uuid.uuid4())
         expires_at = datetime.now(UTC) + timedelta(hours=settings.get_cabinet_email_verification_expire_hours())
 
+        logger.info("Updating user object in session", user_id=user_id, email=email)
         # Обновляем пользователя
         db_user.email = email
         db_user.password_hash = password_hash
@@ -125,15 +135,21 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
         user_first_name = db_user.first_name
         user_username = db_user.username
         user_language = db_user.language
+        user_telegram_id = db_user.telegram_id
 
+        logger.info("Committing transaction", user_id=user_id)
         await db.commit()
+        logger.info("Transaction committed successfully", user_id=user_id)
         
         # Заново получаем пользователя из БД со всеми необходимыми связями, 
         # чтобы избежать MissingGreenlet при отрисовке меню
+        logger.info("Refetching user from DB with relations", user_id=user_id)
         from app.database.crud.user import get_user_by_id
-        db_user = await get_user_by_id(db, user_id)
+        db_user = await get_user_by_id(db, db_user.id)
+        logger.info("User refetched successfully", user_id=user_id)
 
         # Отправляем письмо
+        logger.info("Sending verification email", user_id=user_id, email=email)
         cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
         # Путь для верификации на сайте
         verification_url = f"{cabinet_url}/verify-email"
@@ -147,33 +163,42 @@ async def process_password(message: types.Message, state: FSMContext, db_user: U
         )
 
         if sent:
+            logger.info("Verification email sent successfully", user_id=user_id)
             await message.answer(
                 texts.t("EMAIL_VERIFICATION_SENT", "✅ <b>Письмо отправлено!</b>\n\nМы отправили ссылку для подтверждения на <code>{email}</code>. Пожалуйста, проверьте почту (включая папку Спам).").format(email=email),
                 parse_mode="HTML"
             )
         else:
+            logger.warning("Failed to send verification email", user_id=user_id)
             await message.answer(texts.t("EMAIL_SEND_ERROR", "❌ Ошибка при отправке письма. Пожалуйста, обратитесь в поддержку."))
 
     except Exception as e:
         logger.error("Error in email binding process", error=e, user_id=user_id)
         await message.answer(texts.t("SYSTEM_ERROR", "❌ Произошла системная ошибка. Пожалуйста, попробуйте позже."))
+        logger.info("Rolling back transaction", user_id=user_id)
         await db.rollback()
 
+    logger.info("Clearing state", user_id=user_id)
     await state.clear()
     
     # Возвращаем в главное меню
     # Используем db_user, который мы заново получили из базы после комита
-    is_admin = settings.is_admin(db_user.telegram_id)
+    logger.info("Generating main menu keyboard", user_id=user_id)
+    is_admin = settings.is_admin(user_telegram_id) # Используем сохраненный ID
     keyboard = await get_main_menu_keyboard_async(
         db=db, 
         user=db_user, 
-        language=db_user.language,
+        language=user_language, # Используем сохраненный язык
         is_admin=is_admin
     )
+    
+    logger.info("Generating main menu text", user_id=user_id)
     from app.handlers.menu import get_main_menu_text
     menu_text = await get_main_menu_text(db_user, texts, db)
     
+    logger.info("Sending main menu message", user_id=user_id)
     await message.answer(menu_text, reply_markup=keyboard, parse_mode="HTML")
+    logger.info("Process password completed", user_id=user_id)
 
 def register_handlers(dp: Dispatcher):
     dp.include_router(router)
