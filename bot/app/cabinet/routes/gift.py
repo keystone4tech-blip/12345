@@ -288,14 +288,14 @@ async def activate_gift(
         # Extend existing subscription
         # Note: In a production system, we should check if the tariff is compatible.
         # For simplicity, we just add days.
-        await extend_subscription(db, sub.id, gift.period_days)
+        await extend_subscription(db, sub, gift.period_days)
     else:
         # Create new subscription
         await create_paid_subscription(
             db, 
             user_id=user.id, 
             tariff_id=tariff.id, 
-            days=gift.period_days
+            duration_days=gift.period_days
         )
         
     # Mark gift as used
