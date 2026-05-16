@@ -25,7 +25,7 @@ class ThrottlingMiddleware(BaseMiddleware):
     def __init__(
         self,
         rate_limit: float = 0.5,
-        start_max_calls: int = 3,
+        start_max_calls: int = 10,  # Увеличено с 3 до 10 для стабильной регистрации
         start_window: float = 60.0,
     ):
         self.rate_limit = rate_limit
@@ -93,6 +93,12 @@ class ThrottlingMiddleware(BaseMiddleware):
 
             timestamps.append(now)
             self.start_buckets[user_id] = timestamps
+            
+            # ВАЖНО: Если это команда /start, мы пропускаем общую проверку (0.5 сек),
+            # так как у неё есть свой burst-лимит выше. Это решает проблему блокировки
+            # при дублировании запросов при регистрации.
+            self.user_buckets[user_id] = now
+            return await handler(event, data)
 
         # --- Общий троттлинг (0.5 сек) ---
         last_call = self.user_buckets.get(user_id, 0)

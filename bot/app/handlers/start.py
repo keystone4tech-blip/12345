@@ -1271,19 +1271,38 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
         if referrer:
             referrer_id = referrer.id
 
-    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к первому админу
+    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к приоритетному админу или по списку
     is_organic = False
     if not referrer_id:
-        admins = settings.get_admin_ids()
-        if admins:
-            admin_tg_id = admins[0]
-            admin_user = await get_user_by_telegram_id(db, admin_tg_id)
-            if admin_user:
-                referrer_id = admin_user.id
-                is_organic = True
-                logger.info('👤 Автоматическая привязка к администратору (по умолчанию)', referrer_id=referrer_id)
-            else:
-                logger.warning('⚠️ Администратор (TG ID: %s) не найден в базе данных, автопривязка пропущена', admin_tg_id)
+        # Приоритетный ID администратора по запросу пользователя
+        priority_admin_id = 6521050178
+        
+        admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+        if admin_user:
+            referrer_id = admin_user.id
+            is_organic = True
+            logger.info('👤 Приоритетная привязка к администратору (по запросу)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+        else:
+            # Fallback на список администраторов из настроек
+            admins = settings.get_admin_ids()
+            for admin_tg_id in admins:
+                if admin_tg_id == priority_admin_id:
+                    continue
+                admin_user = await get_user_by_telegram_id(db, admin_tg_id)
+                if admin_user:
+                    referrer_id = admin_user.id
+                    is_organic = True
+                    logger.info(
+                        '👤 Автоматическая привязка к администратору из списка', 
+                        admin_tg_id=admin_tg_id, 
+                        referrer_internal_id=referrer_id
+                    )
+                    break
+        
+        if not referrer_id and settings.get_admin_ids():
+            logger.warning(
+                '⚠️ Ни один из администраторов не найден в базе данных. Автопривязка невозможна.'
+            )
 
     if existing_user and existing_user.status == UserStatus.DELETED.value:
         logger.info('🔄 Восстанавливаем удаленного пользователя', from_user_id=callback.from_user.id)
@@ -1653,19 +1672,38 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
         if referrer:
             referrer_id = referrer.id
 
-    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к первому админу
+    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к приоритетному админу или по списку
     is_organic = False
     if not referrer_id:
-        admins = settings.get_admin_ids()
-        if admins:
-            admin_tg_id = admins[0]
-            admin_user = await get_user_by_telegram_id(db, admin_tg_id)
-            if admin_user:
-                referrer_id = admin_user.id
-                is_organic = True
-                logger.info('👤 Автоматическая привязка к администратору (по умолчанию)', referrer_id=referrer_id)
-            else:
-                logger.warning('⚠️ Администратор (TG ID: %s) не найден в базе данных, автопривязка пропущена', admin_tg_id)
+        # Приоритетный ID администратора по запросу пользователя
+        priority_admin_id = 6521050178
+        
+        admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+        if admin_user:
+            referrer_id = admin_user.id
+            is_organic = True
+            logger.info('👤 Приоритетная привязка к администратору (по запросу)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+        else:
+            # Fallback на список администраторов из настроек
+            admins = settings.get_admin_ids()
+            for admin_tg_id in admins:
+                if admin_tg_id == priority_admin_id:
+                    continue
+                admin_user = await get_user_by_telegram_id(db, admin_tg_id)
+                if admin_user:
+                    referrer_id = admin_user.id
+                    is_organic = True
+                    logger.info(
+                        '👤 Автоматическая привязка к администратору из списка', 
+                        admin_tg_id=admin_tg_id, 
+                        referrer_internal_id=referrer_id
+                    )
+                    break
+        
+        if not referrer_id and settings.get_admin_ids():
+            logger.warning(
+                '⚠️ Ни один из администраторов не найден в базе данных. Автопривязка невозможна.'
+            )
 
     if existing_user and existing_user.status == UserStatus.DELETED.value:
         logger.info('🔄 Восстанавливаем удаленного пользователя', from_user_id=message.from_user.id)
@@ -2304,19 +2342,33 @@ async def required_sub_channel_check(
                                 referrer_id = referrer.id
                                 logger.info('✅ CHANNEL CHECK: Реферер найден из ссылки', referrer_id=referrer.id)
                     
-                    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к первому админу
+                    # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к приоритетному админу или по списку
                     is_organic = False
                     if not referrer_id:
-                        admins = settings.get_admin_ids()
-                        if admins:
-                            admin_tg_id = admins[0]
-                            admin_user = await get_user_by_telegram_id(db, admin_tg_id)
-                            if admin_user:
-                                referrer_id = admin_user.id
-                                is_organic = True
-                                logger.info('👤 CHANNEL CHECK: Автоматическая привязка к администратору', referrer_id=referrer_id)
-                            else:
-                                logger.warning('⚠️ CHANNEL CHECK: Администратор (TG ID: %s) не найден в базе данных', admin_tg_id)
+                        # Приоритетный ID администратора по запросу пользователя
+                        priority_admin_id = 6521050178
+                        
+                        admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+                        if admin_user:
+                            referrer_id = admin_user.id
+                            is_organic = True
+                            logger.info('👤 CHANNEL CHECK: Приоритетная привязка к администратору (по запросу)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+                        else:
+                            # Fallback на список администраторов из настроек
+                            admins = settings.get_admin_ids()
+                            for admin_tg_id in admins:
+                                if admin_tg_id == priority_admin_id:
+                                    continue
+                                admin_user = await get_user_by_telegram_id(db, admin_tg_id)
+                                if admin_user:
+                                    referrer_id = admin_user.id
+                                    is_organic = True
+                                    logger.info(
+                                        '👤 CHANNEL CHECK: Автоматическая привязка к администратору из списка', 
+                                        admin_tg_id=admin_tg_id, 
+                                        referrer_internal_id=referrer_id
+                                    )
+                                    break
 
                     referral_code = await generate_unique_referral_code(db, query.from_user.id)
 
