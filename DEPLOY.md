@@ -108,7 +108,7 @@ cp cabinet/.env.example cabinet/.env
 
 ```ini
 # База данных
-POSTGRES_DB=jarvis_vpn
+POSTGRES_DB=mozhnovpn_db
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=ваш_надёжный_пароль
 
@@ -118,8 +118,8 @@ CABINET_PORT=3020
 
 # Кабинет
 VITE_API_URL=http://bot:8080/cabinet
-VITE_TELEGRAM_BOT_USERNAME=Jarvis_VPN_Robot
-VITE_APP_NAME=Jarvis VPN Cabinet
+VITE_TELEGRAM_BOT_USERNAME=MozhnoVPN_Robot
+VITE_APP_NAME=MozhnoVPN Cabinet
 VITE_APP_LOGO=MV
 ```
 
@@ -143,8 +143,8 @@ REMNAWAVE_API_KEY=ваш_api_ключ
 
 ```ini
 VITE_API_URL=http://bot:8080/cabinet
-VITE_TELEGRAM_BOT_USERNAME=Jarvis_VPN_Robot
-VITE_APP_NAME=Jarvis VPN Cabinet
+VITE_TELEGRAM_BOT_USERNAME=MozhnoVPN_Robot
+VITE_APP_NAME=MozhnoVPN Cabinet
 VITE_APP_LOGO=MV
 CABINET_PORT=3020
 ```
