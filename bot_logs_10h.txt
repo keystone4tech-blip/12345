@@ -1,345 +1,295 @@
-[2m2026-05-16 14:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 14:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 14:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 14:47:00[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 14:47:39[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 15:17:00[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 15:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 15:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 15:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 15:47:00[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 15:47:39[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 16:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 16:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 16:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 16:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 16:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 16:47:40[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 17:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35m/start[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.middlewares.auth] 🚀 Пропускаем команду /start от пользователя[0m [36mchat_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🚀 START: Обработка /start от[0m [36mchat_id[0m=[35m7418675037[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🆕 Новый пользователь, начинаем регистрацию[0m [36mchat_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🌐 LANGUAGE: Автоматически определен язык пользователя[0m [36mchat_id[0m=[35m7418675037[0m [36mlang[0m=[35mru[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🌐 LANGUAGE: выбор языка отключен или автоопределен: ''[0m [36mchat_id[0m=[35m7418675037[0m [36mdetected_lang[0m=[35mru[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35m/start[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:20:57[0m [[32m[1minfo[0m] [1m[app.handlers.start] 📋 LANGUAGE: Правила отправлены после выбора языка[0m [36mchat_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mrules_accept[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mrules_accept[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mrules_accept[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mrules_accept[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mrules_accept[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.auth] 🔍 Пропускаем пользователя в процессе регистрации[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.handlers.start] 📋 RULES: Начало обработки правил[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.handlers.start] 📊 Callback data[0m [36mcallback_data[0m=[35mrules_accept[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.handlers.start] 👤 User[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.handlers.start] 📊 Текущее состояние[0m [36mcurrent_state[0m=[35mRegistrationStates:waiting_for_rules_accept[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35m/menu[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.handlers.start] ✅ Правила приняты пользователем[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:29:59[0m [[32m[1minfo[0m] [1m[app.handlers.start] ⚠️ Политика конфиденциальности не включена, пропускаем её показ[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:00[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35m/start[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:00[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🔍 Ожидание ввода реферального кода[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:00[0m [[32m[1minfo[0m] [1m[app.handlers.start] ✅ Правила обработаны для пользователя[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:01[0m [[32m[1minfo[0m] [1m[app.cabinet.routes.auth] Creating new user from cabinet (initData): telegram_id[0m [36mhttp_method[0m=[35mPOST[0m [36mhttp_path[0m=[35m/cabinet/auth/telegram[0m [36mtelegram_id[0m=[35m7418675037[0m
-[2m2026-05-16 17:30:01[0m [[32m[1minfo[0m] [1m[app.database.crud.user] ✅ Создан пользователь с реферальным кодом[0m [36mhttp_method[0m=[35mPOST[0m [36mhttp_path[0m=[35m/cabinet/auth/telegram[0m [36mreferral_code[0m=[35mrefAiS9WQDp[0m [36mtelegram_id[0m=[35m7418675037[0m
-[2m2026-05-16 17:30:01[0m [[32m[1minfo[0m] [1m[app.cabinet.routes.auth] User created successfully: id=, telegram_id[0m [36mhttp_method[0m=[35mPOST[0m [36mhttp_path[0m=[35m/cabinet/auth/telegram[0m [36mtelegram_id[0m=[35m7418675037[0m [36muser_id[0m=[35m45[0m
-[2m2026-05-16 17:30:52[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mreferral_skip[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:52[0m [[32m[1minfo[0m] [1m[app.middlewares.auth] 🔄 [Middleware] Фамилия обновлена для[0m [36mlast_name[0m=[35mNone[0m [36mold_last_name[0m=[35m[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:52[0m [[32m[1minfo[0m] [1m[app.middlewares.auth] 💾 [Middleware] Профиль пользователя обновлен в middleware[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:52[0m [[32m[1minfo[0m] [1m[app.handlers.start] ⭐️ SKIP: Пропуск реферального кода от пользователя[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:52[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🗑️ Сообщение с вопросом о реферальном коде удалено[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:52[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🎯 COMPLETE: Завершение регистрации для пользователя[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:52[0m [[33m[1mwarning[0m] [1m[app.handlers.start] ⚠️ Пользователь уже активен! Показываем главное меню.[0m [36mfrom_user_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:58[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35mПодключиться[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:59[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mchat_id[0m=[35m7418675037[0m [36mitem[0m=[35mSUBSCRIPTION_CONNECT_NO_ACTIVE_PROMPT[0m [36mlanguage[0m=[35mru[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:30:59[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mchat_id[0m=[35m7418675037[0m [36mitem[0m=[35mMENU_BUY[0m [36mlanguage[0m=[35mru[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:31:02[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mmenu_buy[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:31:45[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mtariff_select:2[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:32:14[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mtariff_period:2:30[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:32:14[0m [[32m[1minfo[0m] [1m[app.services.user_cart_service] 🛒 Корзина пользователя сохранена в Redis (mode=, ttl=s)[0m [36mcart_mode[0m=[35mtariff_purchase[0m [36meffective_ttl[0m=[35m3600[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35mПодключиться[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35m'💥 Оплатить'[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mbalance_topup[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mbalance_topup[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mbalance_topup[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mbalance_topup[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mchat_id[0m=[35m7418675037[0m [36mitem[0m=[35mSUBSCRIPTION_CONNECT_NO_ACTIVE_PROMPT[0m [36mlanguage[0m=[35mru[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:34:46[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mchat_id[0m=[35m7418675037[0m [36mitem[0m=[35mMENU_BUY[0m [36mlanguage[0m=[35mru[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:11[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mmenu_buy[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:22[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mtariff_select:2[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:25[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mtariff_period:2:30[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:25[0m [[32m[1minfo[0m] [1m[app.services.user_cart_service] 🛒 Корзина пользователя сохранена в Redis (mode=, ttl=s)[0m [36mcart_mode[0m=[35mtariff_purchase[0m [36meffective_ttl[0m=[35m3600[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:27[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mbalance_topup[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:29[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mtopup_yookassa[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mquick_amount_16000[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] YooKassa SDK сконфигурирован для shop_id: ...[0m [36mshop_id[0m=[35m12917[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] YooKassa Service return_url[0m [36mreturn_url[0m=[35mhttps://t.me/MozhnoVPN_Robot[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] Создание платежа YooKassa (Idempotence-Key: ). Сумма: . Метаданные: . Чек[0m [36mamount[0m=[35m160.0[0m [36mcurrency[0m=[35mRUB[0m [36midempotence_key[0m=[35m83210f0d-ee6c-4e48-bf96-5e1ecf211735[0m [36mmetadata[0m=[35m{'user_telegram_id': '7418675037', 'user_username': 'Evgenijaleader', 'purpose': 'balance_topup', 'user_id': '45', 'amount_kopeks': '16000', 'type': 'balance_topup'}[0m [36mreceipt_data_dict[0m=[35m{'customer': {'email': 'yekaterina_plotnikova_86@vk.com'}, 'items': [{'description': 'Интернет-сервис - Пополнение баланса на 160 ₽ (ID 7418675037)', 'quantity': '1.00', 'amount': {'value': '160.0', 'currency': 'RUB'}, 'vat_code': 1, 'payment_mode': 'full_payment', 'payment_subject': 'service'}]}[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] Ответ YooKassa Payment.create: ID=, Status=, Paid[0m [36mpaid[0m=[35mFalse[0m [36mresponse_id[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m [36mstatus[0m=[35mpending[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.database.crud.yookassa] Создан платеж YooKassa: на ₽ для пользователя[0m [36mamount_kopeks[0m=[35m160.0[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m [36myookassa_payment_id[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m
-[2m2026-05-16 17:35:33[0m [[32m[1minfo[0m] [1m[app.payments] Создан платеж YooKassa на ₽ для пользователя[0m [36mamount_rubles[0m=[35m160.0[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m [36myookassa_response[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m
-[2m2026-05-16 17:35:33[0m [[33m[1mwarning[0m] [1m[app.handlers.balance.yookassa] Не удалось удалить сообщение с запросом суммы YooKassa[0m [36mdelete_error[0m=[35mTelegramBadRequest('Telegram server says - Bad Request: message to delete not found')[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:35:34[0m [[32m[1minfo[0m] [1m[app.handlers.balance.yookassa] Создан платеж YooKassa для пользователя ₽, ID[0m [36mpayment_result[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m [36mtelegram_id[0m=[35m7418675037[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m [36mvalue[0m=[35m160[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.services.payment_verification_service] 🔄 Автопроверка пополнений: найдено инвойсов[0m [36mcandidates_count[0m=[35m1[0m [36msummary[0m=[35m'YooKassa: 1'[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] Получение информации о платеже YooKassa ID[0m [36mpayment_id_in_yookassa[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] Информация о платеже YooKassa Status=, Paid[0m [36mpaid[0m=[35mTrue[0m [36mpayment_id_in_yookassa[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m [36mstatus[0m=[35msucceeded[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.yookassa] Обновлен статус платежа YooKassa , paid[0m [36mis_paid[0m=[35mTrue[0m [36mstatus[0m=[35msucceeded[0m [36myookassa_payment_id[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.payments] Метаданные платежа[0m [36mpayment_metadata[0m=[35m{'user_telegram_id': '7418675037', 'user_username': 'Evgenijaleader', 'purpose': 'balance_topup', 'user_id': '45', 'amount_kopeks': '16000', 'type': 'balance_topup', 'cms_name': 'yookassa_sdk_python', 'invoice_message': {'chat_id': 7418675037, 'message_id': 8560}}[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.transaction] 💳 Создана транзакция: на ₽ для пользователя[0m [36mamount_kopeks[0m=[35m160.0[0m [36mtype_value[0m=[35mdeposit[0m [36muser_id[0m=[35m45[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.yookassa] Платеж YooKassa связан с транзакцией[0m [36mtransaction_id[0m=[35m53[0m [36myookassa_payment_id[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.services.admin_notification_service] Начинаем отправку уведомления о пополнении баланса[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.payments] Уведомление админам о пополнении отправлено успешно[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.services.user_cart_service] 🛒 Проверка корзины пользователя[0m [36muser_id[0m=[35m45[0m [36mvalue[0m=[35mнайдена[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.payments] Уведомление пользователю о платеже отправлено успешно[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.services.subscription_auto_purchase_service] 🔁 Автопокупка: обнаружена сохранённая корзина у пользователя[0m [36mformat_user_id[0m=[35m7418675037[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.user] 💸 ОТЛАДКА subtract_user_balance:[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.user] 👤 User ID: (ID: )[0m [36muser_id[0m=[35m45[0m [36muser_id_display[0m=[35m7418675037[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.user] 💰 Баланс до списания: копеек[0m [36mbalance_kopeks[0m=[35m16000[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.user] 💸 Сумма к списанию: копеек[0m [36mamount_kopeks[0m=[35m16000[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.user] 📝 Описание[0m [36mdescription[0m=[35m'Покупка тарифа <tg-emoji emoji-id="5323547156630483403">👍</tg-emoji> Можно Всё на 30 дней'[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.user] ✅ Средства списаны: →[0m [36mbalance_kopeks[0m=[35m0[0m [36mold_balance[0m=[35m16000[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 💎 Создана платная подписка для пользователя ID: статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[app.database.crud.transaction] 💳 Создана транзакция: на ₽ для пользователя[0m [36mamount_kopeks[0m=[35m160.0[0m [36mtype_value[0m=[35msubscription_payment[0m [36muser_id[0m=[35m45[0m
-[2m2026-05-16 17:37:26[0m [[32m[1minfo[0m] [1m[resolve_hwid_device_limit] hwid_device_limit resolved[0m [36mresolved_limit[0m=[35m3[0m [36msubscription_id[0m=[35m28[0m
-[2m2026-05-16 17:37:27[0m [[31m[1merror[0m] [1m[app.external.remnawave_api] API Error 404: User with specified params not found | URL: https://p.mozhnovpn.tech/api/users/by-username/MozhnoVPN_7418675037 | Method: GET[0m
-[2m2026-05-16 17:37:27[0m [[31m[1merror[0m] [1m[app.external.remnawave_api] Подсказка: 404 может означать неверный префикс /api или старую версию панели[0m
-[2m2026-05-16 17:37:27[0m [[31m[1merror[0m] [1m[app.external.remnawave_api] Response: {"timestamp":"2026-05-16T14:37:27.091Z","path":"/api/users/by-username/MozhnoVPN_7418675037","message":"User with specified params not found","errorCode":"A063"}[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_service] 🆕 Создаем нового пользователя в панели для[0m [36m_format_user_log[0m=[35m'user 7418675037'[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_service] 🔄 Стратегия сброса трафика из конфига[0m [36mmapped_strategy[0m=[35mMONTH[0m [36mstrategy[0m=[35mMONTH[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_service] 🔄 Сброшен трафик RemnaWave для[0m [36m_format_user_log[0m=[35m'user 7418675037'[0m [36mreason_text[0m=[35m' (покупка тарифа)'[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_service] ✅ Создан/обновлен RemnaWave пользователь для подписки[0m [36msubscription_id[0m=[35m28[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_service] 🔗 Ссылка на подписку[0m [36msubscription_url[0m=[35mhttps://s.mozhnovpn.tech/Qg8X4_8nxXoGWzh-[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_service] 📊 Стратегия сброса трафика[0m [36mstrategy_name[0m=[35mMONTH[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.subscription_auto_purchase_service] ✅ Автопокупка тарифа: подписка на тариф (дней) оформлена для пользователя[0m [36mformat_user_id[0m=[35m7418675037[0m [36mperiod_days[0m=[35m30[0m [36mtariff_name[0m=[35m'<tg-emoji emoji-id="5323547156630483403">👍</tg-emoji> Можно Всё'[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.payments] Успешно обработан платеж YooKassa : пользователь пополнил баланс на ₽[0m [36mamount_rubles[0m=[35m160.0[0m [36muser_id[0m=[35m45[0m [36myookassa_payment_id[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m
-[2m2026-05-16 17:37:27[0m [[32m[1minfo[0m] [1m[app.services.payment_verification_service] ✅ отмечен как оплаченный после автопроверки[0m [36midentifier[0m=[35m319a9475-000f-5001-8000-1616522da8e0[0m [36mmethod_display_name[0m=[35mYooKassa[0m
-[2m2026-05-16 17:39:37[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m7418675037[0m [36mtext[0m=[35mСтатус[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:39:37[0m [[32m[1minfo[0m] [1m[app.services.user_cart_service] 🛒 Проверка корзины пользователя[0m [36mchat_id[0m=[35m7418675037[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m [36mvalue[0m=[35m'не найдена'[0m
-[2m2026-05-16 17:40:55[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mmenu_subscription[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:40:55[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-16 17:40:55 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 17:43:44[0m [[33m[1mwarning[0m] [1m[app.external.remnawave_api] Request failed on retry / after s[0m [36mattempt[0m=[35m1[0m [36mdelay[0m=[35m1.0[0m [36me[0m=[35mClientConnectorError(ConnectionKey(host='p.mozhnovpn.tech', port=443, is_ssl=True, ssl=True, proxy=None, proxy_auth=None, proxy_headers_hash=None), ConnectionResetError(104, 'Connection reset by peer'))[0m [36mendpoint[0m=[35m/api/system/stats[0m [36mmax_retries[0m=[35m3[0m [36mmethod[0m=[35mGET[0m
-[2m2026-05-16 17:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 17:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 17:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 17:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 17:47:40[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 17:49:41[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/contests/count[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m
-[2m2026-05-16 17:49:41[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-16 17:49:41 MSK'[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/contests/count[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m
-[2m2026-05-16 17:49:41[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/wheel/config[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m
-[2m2026-05-16 17:49:41[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-16 17:49:41 MSK'[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/wheel/config[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m
-[2m2026-05-16 18:08:30[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35msubscription_autopay[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:08:56[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mautopay_enable[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:08:56[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 💳 Автоплатеж для подписки пользователя[0m [36mstatus[0m=[35mвключен[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:08:56[0m [[31m[1merror[0m] [1m[app.middlewares.logging] ❌ Ошибка при обработке события за[0m [36merror[0m=[35mTelegramBadRequest('Telegram server says - Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message')[0m [36mexecution_time[0m=[35m0.24[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[31m╭─[0m[31m────────────────────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────────────────────[0m[31m─╮[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1mlogging.py[0m:32 in __call__                                                                       [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m31 [0m[2m│   │   │   [0m                                                                                                    [31m│[0m
-[31m│[0m [31m❱ [0m32 [2m│   │   │   [0mresult = [94mawait[0m handler(event, data)                                                                 [31m│[0m
-[31m│[0m   [2m33 [0m                                                                                                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1mmaintenance.py[0m:30 in __call__                                                                   [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m29 [0m[2m│   │   [0m[94mif[0m [95mnot[0m maintenance_service.is_maintenance_active():                                                     [31m│[0m
-[31m│[0m [31m❱ [0m30 [2m│   │   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m handler(event, data)[0m                                                                   [31m│[0m
-[31m│[0m   [2m31 [0m                                                                                                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1mblacklist.py[0m:31 in __call__                                                                     [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m30 [0m[2m│   │   [0m[94mif[0m [95mnot[0m is_blacklisted:                                                                                  [31m│[0m
-[31m│[0m [31m❱ [0m31 [2m│   │   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m handler(event, data)[0m                                                                   [31m│[0m
-[31m│[0m   [2m32 [0m                                                                                                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1mthrottling.py[0m:132 in __call__                                                                   [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m131 [0m[2m│   │   [0m                                                                                                       [31m│[0m
-[31m│[0m [31m❱ [0m132 [2m│   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m handler(event, data)[0m                                                                      [31m│[0m
-[31m│[0m   [2m133 [0m                                                                                                               [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1mchannel_checker.py[0m:91 in __call__                                                               [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m 90 [0m[2m│   │   [0m[94mif[0m [95mnot[0m settings.CHANNEL_IS_REQUIRED_SUB:                                                               [31m│[0m
-[31m│[0m [31m❱ [0m 91 [2m│   │   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m handler(event, data)[0m                                                                  [31m│[0m
-[31m│[0m   [2m 92 [0m                                                                                                               [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1mauth.py[0m:219 in __call__                                                                         [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m218 [0m[2m│   │   │   │   [0m                                                                                               [31m│[0m
-[31m│[0m [31m❱ [0m219 [2m│   │   │   │   [0mresult = [94mawait[0m handler(event, data)                                                            [31m│[0m
-[31m│[0m   [2m220 [0m[2m│   │   │   │   [0m[94mtry[0m:                                                                                           [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/middlewares/[0m[1msubscription_checker.py[0m:76 in __call__                                                          [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m75 [0m[2m│   │   [0m                                                                                                        [31m│[0m
-[31m│[0m [31m❱ [0m76 [2m│   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m handler(event, data)[0m                                                                       [31m│[0m
-[31m│[0m   [2m77 [0m                                                                                                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/opt/venv/lib/python3.13/site-packages/aiogram/dispatcher/event/[0m[1mhandler.py[0m:43 in call                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m42 [0m[2m│   │   [0m[94mif[0m [96mself[0m.awaitable:                                                                                      [31m│[0m
-[31m│[0m [31m❱ [0m43 [2m│   │   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m wrapped()[0m                                                                              [31m│[0m
-[31m│[0m   [2m44 [0m[2m│   │   [0m[94mreturn[0m [94mawait[0m asyncio.to_thread(wrapped)                                                                 [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/handlers/subscription/[0m[1mautopay.py[0m:110 in toggle_autopay                                                      [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m109 [0m[2m│   [0m                                                                                                           [31m│[0m
-[31m│[0m [31m❱ [0m110 [2m│   [0m[1;4;94mawait[0m[1;4m handle_autopay_menu(callback, db_user, db)[0m                                                           [31m│[0m
-[31m│[0m   [2m111 [0m                                                                                                               [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/handlers/subscription/[0m[1mautopay.py[0m:74 in handle_autopay_menu                                                  [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m 73 [0m[2m│   [0m                                                                                                           [31m│[0m
-[31m│[0m [31m❱ [0m 74 [2m│   [0m[1;4;94mawait[0m[1;4m callback.message.edit_text([0m                                                                          [31m│[0m
-[31m│[0m   [2m 75 [0m[2m│   │   [0m[1;4mtext,[0m                                                                                                  [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/utils/[0m[1mmessage_patch.py[0m:192 in _edit_with_photo                                                              [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m191 [0m[2m│   │   [0mkwargs.setdefault([33m'[0m[33mdisable_web_page_preview[0m[33m'[0m, [94mTrue[0m)                                                    [31m│[0m
-[31m│[0m [31m❱ [0m192 [2m│   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m _original_edit_text([0m[1;4;96mself[0m[1;4m, text, **kwargs)[0m                                                 [31m│[0m
-[31m│[0m   [2m193 [0m[2m│   [0m[94mif[0m [96mself[0m.photo:                                                                                             [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/opt/venv/lib/python3.13/site-packages/aiogram/methods/[0m[1mbase.py[0m:84 in emit                                            [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m83 [0m[2m│   [0m[94masync[0m [94mdef[0m[90m [0m[92memit[0m([96mself[0m, bot: Bot) -> TelegramType:                                                             [31m│[0m
-[31m│[0m [31m❱ [0m84 [2m│   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m bot([0m[1;4;96mself[0m[1;4m)[0m                                                                                  [31m│[0m
-[31m│[0m   [2m85 [0m                                                                                                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/opt/venv/lib/python3.13/site-packages/aiogram/client/[0m[1mbot.py[0m:485 in __call__                                         [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m 484 [0m[2;33m│   │   [0m[33m"""[0m                                                                                                   [31m│[0m
-[31m│[0m [31m❱ [0m 485 [2m│   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m [0m[1;4;96mself[0m[1;4m.session([0m[1;4;96mself[0m[1;4m, method, timeout=request_timeout)[0m                                      [31m│[0m
-[31m│[0m   [2m 486 [0m                                                                                                              [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/opt/venv/lib/python3.13/site-packages/aiogram/client/session/[0m[1mbase.py[0m:254 in __call__                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m253 [0m[2m│   │   [0mmiddleware = [96mself[0m.middleware.wrap_middlewares([96mself[0m.make_request,                                       [31m│[0m
-[31m│[0m       timeout=timeout)                                                                                               [31m│[0m
-[31m│[0m [31m❱ [0m254 [2m│   │   [0m[94mreturn[0m cast(TelegramType, [1;4;94mawait[0m[1;4m middleware(bot, method)[0m)                                               [31m│[0m
-[31m│[0m   [2m255 [0m                                                                                                               [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/app/app/utils/[0m[1mpremium_emojis.py[0m:211 in __call__                                                                     [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m210 [0m[2m│   │   [0m                                                                                                       [31m│[0m
-[31m│[0m [31m❱ [0m211 [2m│   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m make_request(bot, method)[0m                                                                 [31m│[0m
-[31m│[0m   [2m212 [0m                                                                                                               [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/opt/venv/lib/python3.13/site-packages/aiogram/client/session/[0m[1maiohttp.py[0m:185 in make_request                         [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m184 [0m[2m│   │   │   [0m[94mraise[0m TelegramNetworkError(method=method, message=[33mf[0m[33m"[0m[33m{[0m[96mtype[0m(e).[91m__name__[0m[33m}[0m[33m: [0m                           [31m│[0m
-[31m│[0m       [33m{[0me[33m}[0m[33m"[0m)                                                                                                          [31m│[0m
-[31m│[0m [31m❱ [0m185 [2m│   │   [0mresponse = [1;4;96mself[0m[1;4m.check_response([0m                                                                        [31m│[0m
-[31m│[0m   [2m186 [0m[2m│   │   │   [0m[1;4mbot=bot, method=method, status_code=resp.status, content=raw_result[0m                                [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m [2m/opt/venv/lib/python3.13/site-packages/aiogram/client/session/[0m[1mbase.py[0m:120 in check_response                          [31m│[0m
-[31m│[0m                                                                                                                      [31m│[0m
-[31m│[0m   [2m119 [0m[2m│   │   [0m[94mif[0m status_code == HTTPStatus.BAD_REQUEST:                                                              [31m│[0m
-[31m│[0m [31m❱ [0m120 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m TelegramBadRequest(method=method, message=description)[0m                                       [31m│[0m
-[31m│[0m   [2m121 [0m[2m│   │   [0m[94mif[0m status_code == HTTPStatus.NOT_FOUND:                                                                [31m│[0m
-[31m╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯[0m
-[1;91mTelegramBadRequest: [0mTelegram server says - Bad Request: message is not modified: specified new message content and reply
-markup are exactly the same as a current content and reply markup of the message
-
-[2m2026-05-16 18:09:05[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mautopay_set_days[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:09:12[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mautopay_days_1[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:09:12[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 💳 Автоплатеж для подписки пользователя[0m [36mstatus[0m=[35mвключен[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:09:32[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35mmenu_subscription[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:09:32[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-16 18:09:32 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m7418675037[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:09:38[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35msubscription_settings[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:09:47[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35msubscription_manage_devices[0m [36muser_id[0m=[35m7418675037[0m [36muser_info[0m=[35m@Evgenijaleader[0m [36musername[0m=[35mEvgenijaleader[0m
-[2m2026-05-16 18:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 18:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 18:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 18:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 18:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 18:47:40[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 19:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 19:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 19:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 19:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 19:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 19:47:41[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 20:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 20:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 20:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 20:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 20:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 20:47:41[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 21:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 21:46:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 21:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 21:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 21:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 21:47:41[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 22:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 22:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 22:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 22:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 22:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 22:47:41[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-16 23:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 23:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🧹 Очищен кеш уведомлений ( записей)[0m [36mold_count[0m=[35m0[0m
-[2m2026-05-16 23:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 23:46:48[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 23:47:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
-[2m2026-05-16 23:47:42[0m [[32m[1minfo[0m] [1m[app.services.version_service] Получено релизов из GitHub[0m [36mreleases_count[0m=[35m0[0m
-[2m2026-05-17 00:12:00[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m6521050178[0m [36mtext[0m=[35m/start[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:00[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🚀 START: Обработка /start от[0m [36mchat_id[0m=[35m6521050178[0m [36mfrom_user_id[0m=[35m6521050178[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:00[0m [[32m[1minfo[0m] [1m[app.handlers.start] ✅ Активный пользователь найден[0m [36mchat_id[0m=[35m6521050178[0m [36mtelegram_id[0m=[35m6521050178[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:02[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_panel[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:02[0m [[32m[1minfo[0m] [1m[app.services.remnawave_service] Получение системной статистики RemnaWave...[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:03[0m [[32m[1minfo[0m] [1m[app.services.remnawave_service] Системная статистика получена[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:03[0m [[32m[1minfo[0m] [1m[app.services.remnawave_service] Статистика трафика получена[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:03[0m [[32m[1minfo[0m] [1m[app.services.remnawave_service] Реалтайм статистика получена[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:04[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_submenu_users[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:06[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_users[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:09[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_users_list[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:12[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:12[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:12[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:12:12 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:45[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_transactions_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:55[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:55[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:12:55[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:12:55 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:10[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_users_list[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:12[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_44[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:12[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m27[0m [36muser_id[0m=[35m44[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:12[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-11 08:36:45 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:13:12 MSK'[0m [36msubscription_id[0m=[35m27[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:50[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_statistics_44[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:50[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m27[0m [36muser_id[0m=[35m44[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:13:50[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-11 08:36:45 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:13:50 MSK'[0m [36msubscription_id[0m=[35m27[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:03[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_44[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:03[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m27[0m [36muser_id[0m=[35m44[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:03[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-11 08:36:45 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:14:03 MSK'[0m [36msubscription_id[0m=[35m27[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:04[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_users_list[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:07[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:07[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:07[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:14:07 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:10[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_statistics_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:10[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:10[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:14:10 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:21[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:21[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:21[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:14:21 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:22[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_users_list[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:37[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 🔘 Callback от[0m [36mevent_data[0m=[35madmin_user_manage_45[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:37[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m28[0m [36muser_id[0m=[35m45[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:14:37[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-06-15 17:37:26 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 00:14:37 MSK'[0m [36msubscription_id[0m=[35m28[0m [36msubscription_status[0m=[35mactive[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
-[2m2026-05-17 00:17:01[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
+[2m2026-05-17 01:03:41[0m [[32m[1minfo     [0m] [1mEmail service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mNone[0m [36mhost[0m=[35mNone[0m [36mis_smtp_configured[0m=[35mFalse[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mNone[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m╔═════════════════════════════════════════════════════════════╗[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m║ 🚀 MozhnoVPN Bot                                            ║[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m║ Python 3.13.13 | Уровень логирования: INFO | Режим БД: auto ║[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m╚═════════════════════════════════════════════════════════════╝[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🗂️[0m [36mtitle[0m=[35m'Подготовка локализаций'[0m
+[2m2026-05-17 01:03:44[0m [[33m[1mwarning[0m] [1m[app.localization.loader] Locale directory is not writable. Ensure the mounted directory allows writes for the container user or configure LOCALES_PATH to a writable path.[0m [36mdirectory[0m=[35mPosixPath('/app/locales')[0m [36merror[0m=[35mPermissionError(13, 'Permission denied')[0m [36muser_hint[0m=[35m' (running as UID:GID 1000:1000)'[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Шаблоны локализаций готовы'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Подготовка локализаций'[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🧬[0m [36mtitle[0m=[35m'Миграция базы данных (Alembic)'[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Context impl PostgresqlImpl.[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Will assume transactional DDL.[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0001 -> 0002, add campaign_id to referral_earnings[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0002 -> 0003, add partner system tables and columns[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0003 -> 0004, add email_templates table[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0004 -> 0005, repair missing columns from skipped migrations[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0005 -> 0006, add missing broadcast_history columns[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0006 -> 0007, fix all remaining naive timestamp columns to timestamptz[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0007 -> 0008, add required_channels and user_channel_subscriptions tables[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0008 -> 0009, add channel_id index for user_channel_subscriptions[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0009 -> 0010, add per-channel disable settings (disable_trial_on_leave, disable_paid_on_leave)[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0010 -> 0011, add RBAC tables (admin_roles, user_roles, access_policies, admin_audit_log)[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0011 -> 0012, add missing subscription columns[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0012 -> 0013, add desired_commission_percent to partner_applications[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0013 -> 0014, add AI ticket tables[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0014 -> 0015, add media fields to forum_ticket_messages[0m
+[2m2026-05-17 01:03:44[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0015 -> 0016, add ai_faq_media table[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0016 -> 0017, add_buttons_to_broadcast_history[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[alembic.runtime.migration] Running upgrade 0017 -> 0018, add_buttons_to_pinned_messages[0m
+[2m2026-05-17 01:03:45[0m [[31m[1merror[0m] [1mОшибка выполнения миграции[0m [36mmigration_error[0m=[35mProgrammingError('(sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class \'asyncpg.exceptions.DuplicateColumnError\'>: column "buttons" of relation "pinned_messages" already exists')[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.3[0m [36mmessage[0m=[35m'Ошибка миграции: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class \'asyncpg.exceptions.DuplicateColumnError\'>: column "buttons" of relation "pinned_messages" already exists\n[SQL: ALTER TABLE pinned_messages ADD COLUMN buttons JSON]\n(Background on this error at: https://sqlalche.me/e/20/f405) (ALLOW_MIGRATION_FAILURE=true)'[0m [36mstatus_icon[0m=[35m⚠️[0m [36mtitle[0m=[35m'Миграция базы данных (Alembic)'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🛠️[0m [36mtitle[0m=[35m'Синхронизация схемы (Auto-Sync)'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.database.schema_sync] Запуск автоматической синхронизации схемы БД...[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.database.schema_sync] Синхронизация схемы БД завершена успешно[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.13[0m [36mmessage[0m=[35m'Схема БД синхронизирована'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Синхронизация схемы (Auto-Sync)'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🗄️[0m [36mtitle[0m=[35m'Инициализация базы данных'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.18[0m [36mmessage[0m=[35m'База данных готова'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Инициализация базы данных'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🔐[0m [36mtitle[0m=[35m'RBAC bootstrap'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.48[0m [36mmessage[0m=[35m'RBAC roles and superadmins ready'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'RBAC bootstrap'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m💰[0m [36mtitle[0m=[35m'Синхронизация тарифов из конфига'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.database.crud.tariff] Загружены периоды из тарифа '<tg-emoji emoji-id="5323547156630483403">👍</tg-emoji> Можно Всё': {'14д': '100₽', '30д': '160₽', '180д': '960₽', '360д': '1920₽', '60д': '320₽', '90д': '480₽'}[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.02[0m [36mmessage[0m=[35m'Тарифы синхронизированы'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Синхронизация тарифов из конфига'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🖥️[0m [36mtitle[0m=[35m'Синхронизация серверов из RemnaWave'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.database.crud.server_squad] ✅ В базе уже есть серверов, пропускаем синхронизацию[0m [36mserver_count[0m=[35m1[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Серверы синхронизированы'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Синхронизация серверов из RemnaWave'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m💳[0m [36mtitle[0m=[35m'Инициализация платёжных методов'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Платёжные методы инициализированы'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Инициализация платёжных методов'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m⚙️[0m [36mtitle[0m=[35m'Загрузка конфигурации из БД'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.system_settings_service] Применяем настройку из БД поверх .env[0m [36mkey[0m=[35mREMNAWAVE_API_KEY[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.system_settings_service] Применяем настройку из БД поверх .env[0m [36mkey[0m=[35mCABINET_ENABLED[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.system_settings_service] Применяем настройку из БД поверх .env[0m [36mkey[0m=[35mCABINET_URL[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.system_settings_service] Применяем настройку из БД поверх .env[0m [36mkey[0m=[35mWEBHOOK_URL[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.system_settings_service] Применяем настройку из БД поверх .env[0m [36mkey[0m=[35mSUPPORT_AI_ENABLED[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mNone[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mFalse[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mNone[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mNone[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mFalse[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mNone[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mmozhnovpn@gmail.com[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mTrue[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mmozhnovpn@gmail.com[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mmozhnovpn@gmail.com[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mTrue[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mmozhnovpn@gmail.com[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mmozhnovpn@gmail.com[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mTrue[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mmozhnovpn@gmail.com[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mmozhnovpn@gmail.com[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mTrue[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mmozhnovpn@gmail.com[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mmozhnovpn@gmail.com[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mTrue[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mmozhnovpn@gmail.com[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.cabinet.services.email_service] Email service settings refreshed from global settings object[0m [36mfrom_email[0m=[35mmozhnovpn@gmail.com[0m [36mhost[0m=[35msmtp.gmail.com[0m [36mis_smtp_configured[0m=[35mTrue[0m [36mport[0m=[35m587[0m [36muse_tls[0m=[35mTrue[0m [36muser[0m=[35mmozhnovpn@gmail.com[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m✅ Настройки EmailService обновлены после загрузки конфигурации из БД[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.01[0m [36mmessage[0m=[35m'Конфигурация загружена'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Загрузка конфигурации из БД'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🤖[0m [36mtitle[0m=[35m'Настройка бота'[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.utils.cache] ✅ Подключение к Redis кешу установлено[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] Кеш инициализирован[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.maintenance_service] Бот установлен для maintenance_service[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] Бот установлен в maintenance_service[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] Подключено к Redis для FSM storage[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.middlewares.channel_checker] ChannelCheckerMiddleware initialized (multi-channel mode)[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.handlers.menu] 🛠 Регистрация Reply-кнопок для языков[0m [36mlanguages[0m=[35m['ru', 'en', 'ua', 'zh', 'fa'][0m
+[2m2026-05-17 01:03:45[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mitem[0m=[35mADMIN_PANEL_BUTTON[0m [36mlanguage[0m=[35mru[0m
+[2m2026-05-17 01:03:45[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mitem[0m=[35mADMIN_PANEL_BUTTON[0m [36mlanguage[0m=[35men[0m
+[2m2026-05-17 01:03:45[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mitem[0m=[35mADMIN_PANEL_BUTTON[0m [36mlanguage[0m=[35mua[0m
+[2m2026-05-17 01:03:45[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mitem[0m=[35mADMIN_PANEL_BUTTON[0m [36mlanguage[0m=[35mzh[0m
+[2m2026-05-17 01:03:45[0m [[33m[1mwarning[0m] [1m[app.localization.texts] Missing localization key '' for language ''[0m [36mitem[0m=[35mADMIN_PANEL_BUTTON[0m [36mlanguage[0m=[35mfa[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.handlers.subscription.common] 🔄 TRAFFIC_PRICES обновлены из конфигурации[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] 🤖 AI-Tiket менеджер-обработчик зарегистрирован[0m [36mforum_id[0m=[35m-1003717352634[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.handlers.stars_payments] 🌟 Зарегистрированы обработчики Telegram Stars платежей[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] ⭐ Зарегистрированы обработчики Telegram Stars платежей[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] ⚡ Зарегистрированы обработчики простой покупки[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] ⚡ Зарегистрированы обработчики простой подписки[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.maintenance_service] 🔥 Состояние техработ загружено из кеша: активен[0m [36mis_active[0m=[35mFalse[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.services.maintenance_service] 🔄 Запущен мониторинг API Remnawave (интервал: с, попыток:)[0m [36mget_maintenance_check_interval[0m=[35m30[0m [36mget_maintenance_retry_attempts[0m=[35m1[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] Мониторинг техработ запущен[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] 🛡️ GlobalErrorMiddleware активирован - бот защищен от устаревших callback queries[0m
+[2m2026-05-17 01:03:45[0m [[32m[1minfo[0m] [1m[app.bot] Бот успешно настроен[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.utils.bot_commands] ✅ Команды бота успешно зарегистрированы в Telegram[0m
+✅ Команды бота успешно зарегистрированы в Telegram
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Кеш и FSM подготовлены, команды меню установлены'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.28[0m [36mmessage[0m=[35m'Бот настроен'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Настройка бота'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.maintenance_service] Бот установлен для maintenance_service[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🔗[0m [36mtitle[0m=[35m'Интеграция сервисов'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Репозиторий версий: keystone4tech-blip/12345'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Текущая версия: 3.20.1'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Мониторинг, уведомления и рассылки подключены'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Интеграция сервисов'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🗄️[0m [36mtitle[0m=[35m'Сервис бекапов'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.backup_service] 📄 Автобекапы включены, интервал: ч, ближайший запуск[0m [36mnext_run[0m=[35m'17.05.2026 03:00:00'[0m [36mtotal_seconds[0m=[35m24.0[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Автобекапы включены: интервал 24ч, запуск 03:00'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Сервис бекапов инициализирован'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Сервис бекапов'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m📊[0m [36mtitle[0m=[35m'Сервис отчетов'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.reporting_service] Сервис отчетов отключен настройками[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Сервис отчетов готов'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Сервис отчетов'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🏆[0m [36mtitle[0m=[35m'Реферальные конкурсы'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.referral_contest_service] Сервис конкурсов отключен настройками[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Сервис конкурсов выключен настройками'[0m [36mstatus_icon[0m=[35m⏭️[0m [36mtitle[0m=[35m'Реферальные конкурсы'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🎲[0m [36mtitle[0m=[35m'Ротация игр'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.contest_rotation_service] Сервис игр отключён настройками[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Ротация игр выключена настройками'[0m [36mstatus_icon[0m=[35m⏭️[0m [36mtitle[0m=[35m'Ротация игр'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🔄[0m [36mtitle[0m=[35m'Автосинхронизация RemnaWave'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Автосинхронизация отключена настройками'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Сервис автосинхронизации готов'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Автосинхронизация RemnaWave'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] YooKassa SDK сконфигурирован для shop_id: ...[0m [36mshop_id[0m=[35m12917[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.yookassa_service] YooKassa Service return_url[0m [36mreturn_url[0m=[35mhttps://t.me/MozhnoVPN_Robot[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m💳[0m [36mtitle[0m=[35m'Сервис проверки пополнений'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Ожидающие пополнения автоматически отбираются не старше 24ч'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Доступна ручная проверка для: YooKassa'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Автопроверка каждые 10 мин: YooKassa'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.payment_verification_service] 🔄 Автопроверка пополнений запущена (каждые мин) для[0m [36mdisplay_names[0m=[35mYooKassa[0m [36minterval_minutes[0m=[35m10[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Фоновая автопроверка запущена'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Активно провайдеров: 1'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Сервис проверки пополнений'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🧾[0m [36mtitle[0m=[35m'Очередь чеков NaloGO'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'NaloGO отключен настройками'[0m [36mstatus_icon[0m=[35m⏭️[0m [36mtitle[0m=[35m'Очередь чеков NaloGO'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🛡️[0m [36mtitle[0m=[35m'Внешняя админка'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.services.backup_service] ⏰ Следующий автоматический бекап запланирован на (через ч)[0m [36mdelay[0m=[35m4.937185345277778[0m [36mnext_run[0m=[35m'17.05.2026 03:00:00'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Токен синхронизирован'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.1[0m [36mmessage[0m=[35m'Токен внешней админки готов'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Внешняя админка'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🌐[0m [36mtitle[0m=[35m'Единый веб-сервер'[0m
+[2m2026-05-17 01:03:46[0m [[32m[1minfo[0m] [1m[app.webapi.server] 🌐 Запуск административного API на[0m [36mWEB_API_HOST[0m=[35m0.0.0.0[0m [36mWEB_API_PORT[0m=[35m8080[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.disposable_email_service] Disposable email domains updated[0m [36mdomain_count[0m=[35m72305[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.disposable_email_service] DisposableEmailService started[0m [36mdomain_count[0m=[35m72305[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Базовый URL: https://mozhnovpn.tech:8443'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Активные сервисы: админка, платежные webhook-и'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.86[0m [36mmessage[0m=[35m'HTTP-сервисы активны'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Единый веб-сервер'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🤖[0m [36mtitle[0m=[35m'Telegram webhook'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Режим webhook отключен'[0m [36mstatus_icon[0m=[35m⏭️[0m [36mtitle[0m=[35m'Telegram webhook'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m📈[0m [36mtitle[0m=[35m'Служба мониторинга'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Интервал опроса: 60с'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Служба мониторинга запущена'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Служба мониторинга'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🛡️[0m [36mtitle[0m=[35m'Служба техработ'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Служба техработ уже активна'[0m [36mstatus_icon[0m=[35m⏭️[0m [36mtitle[0m=[35m'Служба техработ'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m📊[0m [36mtitle[0m=[35m'Мониторинг трафика'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Мониторинг трафика отключен настройками'[0m [36mstatus_icon[0m=[35m⏭️[0m [36mtitle[0m=[35m'Мониторинг трафика'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m💳[0m [36mtitle[0m=[35m'Суточные подписки'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Интервал проверки: 30 мин'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Сервис суточных подписок запущен'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Суточные подписки'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m📄[0m [36mtitle[0m=[35m'Сервис проверки версий'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'Интервал проверки: 1ч'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Проверка версий запущена'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Сервис проверки версий'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏[0m [36micon[0m=[35m🤖[0m [36mtitle[0m=[35m'Запуск polling'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃[0m [36micon[0m=[35m•[0m [36mmessage[0m=[35m'skip_updates=False — накопившиеся обновления будут обработаны'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗ — [s][0m [36mduration[0m=[35m0.0[0m [36mmessage[0m=[35m'Aiogram polling запущен'[0m [36mstatus_icon[0m=[35m✅[0m [36mtitle[0m=[35m'Запуск polling'[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┌ ──────────────────────────────────────────────────────── ┐[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ 🎯 Активные webhook endpoints                            │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m├ ──────────────────────────────────────────────────────── ┤[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • YooKassa: https://mozhnovpn.tech:8443/yookassa-webhook │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m└ ──────────────────────────────────────────────────────── ┘[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┌ ─────────────────────────────────── ┐[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ 📄 Активные фоновые сервисы         │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m├ ─────────────────────────────────── ┤[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Мониторинг: Включен               │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Техработы: Отключен               │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Мониторинг трафика: Отключен      │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Суточные подписки: Включен        │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Проверка версий: Включен          │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Отчеты: Отключен                  │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Проверка пополнений: Включена     │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m│ • Автопроверка пополнений: Включена │[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m└ ─────────────────────────────────── ┘[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃                                                                                                                                                                                                  РЕЗЮМЕ ЗАПУСКА                                                                                                                                                                                                  ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Подготовка локализаций — Готово [0.00s] :: Шаблоны локализаций готовы                                                                                                                                                                                                                                                                                                                                         ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⚠️ Миграция базы данных (Alembic) — Предупреждение [0.30s] :: Ошибка миграции: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.DuplicateColumnError'>: column "buttons" of relation "pinned_messages" already exists
+[SQL: ALTER TABLE pinned_messages ADD COLUMN buttons JSON]
+(Background on this error at: https://sqlalche.me/e/20/f405) (ALLOW_MIGRATION_FAILURE=true) ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Синхронизация схемы (Auto-Sync) — Готово [0.13s] :: Схема БД синхронизирована                                                                                                                                                                                                                                                                                                                                 ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Инициализация базы данных — Готово [0.18s] :: База данных готова                                                                                                                                                                                                                                                                                                                                              ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ RBAC bootstrap — Готово [0.48s] :: RBAC roles and superadmins ready                                                                                                                                                                                                                                                                                                                                           ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Синхронизация тарифов из конфига — Готово [0.02s] :: Тарифы синхронизированы                                                                                                                                                                                                                                                                                                                                  ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Синхронизация серверов из RemnaWave — Готово [0.00s] :: Серверы синхронизированы                                                                                                                                                                                                                                                                                                                              ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Инициализация платёжных методов — Готово [0.00s] :: Платёжные методы инициализированы                                                                                                                                                                                                                                                                                                                         ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Загрузка конфигурации из БД — Готово [0.01s] :: Конфигурация загружена                                                                                                                                                                                                                                                                                                                                        ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Настройка бота — Готово [0.28s] :: Бот настроен                                                                                                                                                                                                                                                                                                                                                               ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Интеграция сервисов — Готово [0.00s] :: Мониторинг, уведомления и рассылки подключены                                                                                                                                                                                                                                                                                                                         ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Сервис бекапов — Готово [0.00s] :: Сервис бекапов инициализирован                                                                                                                                                                                                                                                                                                                                             ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Сервис отчетов — Готово [0.00s] :: Сервис отчетов готов                                                                                                                                                                                                                                                                                                                                                       ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⏭️ Реферальные конкурсы — Пропущено [0.00s] :: Сервис конкурсов выключен настройками                                                                                                                                                                                                                                                                                                                             ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⏭️ Ротация игр — Пропущено [0.00s] :: Ротация игр выключена настройками                                                                                                                                                                                                                                                                                                                                          ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Автосинхронизация RemnaWave — Готово [0.00s] :: Сервис автосинхронизации готов                                                                                                                                                                                                                                                                                                                                ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Сервис проверки пополнений — Готово [0.00s] :: Активно провайдеров: 1                                                                                                                                                                                                                                                                                                                                         ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⏭️ Очередь чеков NaloGO — Пропущено [0.00s] :: NaloGO отключен настройками                                                                                                                                                                                                                                                                                                                                       ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Внешняя админка — Готово [0.10s] :: Токен внешней админки готов                                                                                                                                                                                                                                                                                                                                               ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Единый веб-сервер — Готово [0.86s] :: HTTP-сервисы активны                                                                                                                                                                                                                                                                                                                                                    ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⏭️ Telegram webhook — Пропущено [0.00s] :: Режим webhook отключен                                                                                                                                                                                                                                                                                                                                                ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Служба мониторинга — Готово [0.00s] :: Служба мониторинга запущена                                                                                                                                                                                                                                                                                                                                            ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⏭️ Служба техработ — Пропущено [0.00s] :: Служба техработ уже активна                                                                                                                                                                                                                                                                                                                                            ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ⏭️ Мониторинг трафика — Пропущено [0.00s] :: Мониторинг трафика отключен настройками                                                                                                                                                                                                                                                                                                                             ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Суточные подписки — Готово [0.00s] :: Сервис суточных подписок запущен                                                                                                                                                                                                                                                                                                                                        ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Сервис проверки версий — Готово [0.00s] :: Проверка версий запущена                                                                                                                                                                                                                                                                                                                                           ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┃ ✅ Запуск polling — Готово [0.00s] :: Aiogram polling запущен                                                                                                                                                                                                                                                                                                                                                    ┃[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 🔄 Запуск службы мониторинга[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.daily_subscription_service] 🔄 Запуск сервиса суточных подписок (интервал: мин)[0m [36minterval_minutes[0m=[35m30[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.version_service] Запуск периодической проверки обновлений для[0m [36mrepo[0m=[35mkeystone4tech-blip/12345[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.version_service] Текущая версия[0m [36mcurrent_version[0m=[35m3.20.1[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Найдено суточных подписок для списания[0m [36msubscriptions_count[0m=[35m0[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.monitoring_service] 📊 Найдено платных подписок для уведомлений[0m [36msubscriptions_count[0m=[35m0[0m
+[2m2026-05-17 01:03:47[0m [[32m[1minfo[0m] [1m[app.services.startup_notification_service] Стартовое уведомление отправлено админу[0m [36madmin_id[0m=[35m6521050178[0m
+[2m2026-05-17 01:04:50[0m [[32m[1minfo[0m] [1m[app.middlewares.logging] 📩 Сообщение от[0m [36mchat_id[0m=[35m6521050178[0m [36mtext[0m=[35m/start[0m [36muser_id[0m=[35m6521050178[0m [36muser_info[0m=[35m@MozhnoVPN[0m [36musername[0m=[35mMozhnoVPN[0m
+[2m2026-05-17 01:04:50[0m [[32m[1minfo[0m] [1m[app.handlers.start] 🚀 START: Обработка /start от[0m [36mchat_id[0m=[35m6521050178[0m [36mfrom_user_id[0m=[35m6521050178[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
+[2m2026-05-17 01:04:50[0m [[32m[1minfo[0m] [1m[app.handlers.start] ✅ Активный пользователь найден[0m [36mchat_id[0m=[35m6521050178[0m [36mtelegram_id[0m=[35m6521050178[0m [36muser_id[0m=[35m6521050178[0m [36musername[0m=[35mMozhnoVPN[0m
+[2m2026-05-17 01:05:02[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/contests/count[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m1[0m [36muser_id[0m=[35m1[0m
+[2m2026-05-17 01:05:02[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-10-30 22:20:18 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 01:05:02 MSK'[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/contests/count[0m [36msubscription_id[0m=[35m1[0m [36msubscription_status[0m=[35mactive[0m
+[2m2026-05-17 01:05:02[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Загружена подписка для пользователя статус[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/wheel/config[0m [36mstatus[0m=[35mactive[0m [36msubscription_id[0m=[35m1[0m [36muser_id[0m=[35m1[0m
+[2m2026-05-17 01:05:02[0m [[32m[1minfo[0m] [1m[app.database.crud.subscription] 🔍 Проверка статуса подписки , текущий статус дата окончания текущее время[0m [36mformat_local_datetime[0m=[35m'2026-10-30 22:20:18 MSK'[0m [36mformat_local_datetime_2[0m=[35m'2026-05-17 01:05:02 MSK'[0m [36mhttp_method[0m=[35mGET[0m [36mhttp_path[0m=[35m/cabinet/wheel/config[0m [36msubscription_id[0m=[35m1[0m [36msubscription_status[0m=[35mactive[0m
 
 
 STDERR:
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
-Invalid HTTP request received.
+Exception in ASGI application
+Traceback (most recent call last):
+  File "/opt/venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/opt/venv/lib/python3.13/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
+    raise exc
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/webapi/middleware.py", line 24, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 87, in __call__
+    await self.app(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/opt/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/fastapi/routing.py", line 119, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/opt/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/opt/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/venv/lib/python3.13/site-packages/fastapi/routing.py", line 105, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.13/site-packages/fastapi/routing.py", line 424, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/opt/venv/lib/python3.13/site-packages/fastapi/routing.py", line 312, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/cabinet/routes/gift.py", line 181, in get_pending_gifts
+    sender_display=user.display_name or user.username or "Anonymous",
+                   ^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'display_name'

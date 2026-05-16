@@ -108,7 +108,7 @@ cp cabinet/.env.example cabinet/.env
 
 ```ini
 # База данных
-POSTGRES_DB=mozhnovpn_db
+POSTGRES_DB=jarvis_vpn
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=ваш_надёжный_пароль
 

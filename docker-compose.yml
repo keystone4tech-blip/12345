@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     environment:
       # Параметры БД берём из .env или используем значения по умолчанию
-      POSTGRES_DB: ${POSTGRES_DB:-mozhnovpn_db}
+      POSTGRES_DB: ${POSTGRES_DB:-jarvis_vpn}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-2046}
       POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
@@ -32,7 +32,7 @@ services:
       test:
         [
           'CMD-SHELL',
-          'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mozhnovpn_db}',
+          'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-jarvis_vpn}',
         ]
       interval: 30s
       timeout: 5s
@@ -83,7 +83,7 @@ services:
       # Хост PostgreSQL — имя сервиса в docker-compose
       POSTGRES_HOST: 'postgres'
       POSTGRES_PORT: '5432'
-      POSTGRES_DB: '${POSTGRES_DB:-mozhnovpn_db}'
+      POSTGRES_DB: '${POSTGRES_DB:-jarvis_vpn}'
       POSTGRES_USER: '${POSTGRES_USER:-postgres}'
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-2046}'
       # Redis URL — подключение к сервису redis
