@@ -178,7 +178,7 @@ async def get_pending_gifts(
             tariff_name=strip_telegram_tags(tariff.name) if tariff else "Unknown",
             period_days=g.period_days,
             gift_message=None,
-            sender_display=user.display_name or user.username or "Anonymous",
+            sender_display=user.full_name or user.username or "Anonymous",
             created_at=g.created_at
         ))
     return items
@@ -211,7 +211,7 @@ async def get_sent_gifts(
             period_days=g.period_days,
             device_limit=tariff.device_limit if tariff else 0,
             status="activated" if g.is_used else "pending",
-            gift_recipient_value=recipient.display_name if recipient else None,
+            gift_recipient_value=recipient.full_name if recipient else None,
             gift_message=None,
             activated_by_username=recipient.username if recipient else None,
             created_at=g.created_at
@@ -246,7 +246,7 @@ async def get_received_gifts(
             period_days=g.period_days,
             device_limit=tariff.device_limit if tariff else 0,
             status="activated",
-            sender_display=gifter.display_name if gifter else "System",
+            sender_display=gifter.full_name if gifter else "System",
             gift_message=None,
             created_at=g.created_at
         ))
