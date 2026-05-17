@@ -661,6 +661,7 @@
     "withdrawal": "Withdrawal",
     "subscriptionPayment": "Subscription Payment",
     "referralReward": "Referral Reward",
+    "gift_vpn": "Gift Purchase",
     "minAmount": "Min.",
     "maxAmount": "Max.",
     "notAvailable": "Not available",

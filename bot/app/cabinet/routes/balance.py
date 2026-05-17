@@ -98,11 +98,21 @@ async def get_transactions(
 
     items = []
     for t in transactions:
-        # Determine sign based on transaction type
-        # Credits (positive): DEPOSIT, REFERRAL_REWARD, REFUND, POLL_REWARD
-        # Debits (negative): SUBSCRIPTION_PAYMENT, WITHDRAWAL
-        is_debit = t.type in ['subscription_payment', 'withdrawal']
+        # Определяем знак суммы транзакции в зависимости от ее типа:
+        # Пополнения (положительные): DEPOSIT, REFERRAL_REWARD, REFUND, POLL_REWARD
+        # Списания (отрицательные): SUBSCRIPTION_PAYMENT, WITHDRAWAL, GIFT_VPN, PURCHASE_GIFTS
+        is_debit = t.type in ['subscription_payment', 'withdrawal', 'gift_vpn', 'purchase_gift']
         amount_kopeks = -abs(t.amount_kopeks) if is_debit else abs(t.amount_kopeks)
+        
+        # Логируем тип транзакции и вычисленный знак суммы для отладки
+        logger.debug(
+            "Mapping transaction sign",
+            transaction_id=t.id,
+            transaction_type=t.type,
+            original_amount=t.amount_kopeks,
+            computed_amount=amount_kopeks,
+            is_debit=is_debit
+        )
 
         items.append(
             TransactionResponse(

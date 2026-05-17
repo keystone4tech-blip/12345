@@ -579,7 +579,16 @@ async def get_user_detail(
     transactions_result = await db.execute(transactions_q)
     transactions = transactions_result.scalars().all()
 
-    _EXPENSE_TYPES = {TransactionType.WITHDRAWAL.value, TransactionType.SUBSCRIPTION_PAYMENT.value}
+    # Типы расходных операций (списаний с баланса), которые должны отображаться со знаком минус:
+    # 1. WITHDRAWAL - Вывод средств
+    # 2. SUBSCRIPTION_PAYMENT - Оплата подписки
+    # 3. GIFT_VPN / purchase_gift - Покупка подарочного тарифа
+    _EXPENSE_TYPES = {
+        TransactionType.WITHDRAWAL.value,
+        TransactionType.SUBSCRIPTION_PAYMENT.value,
+        TransactionType.GIFT_VPN.value,
+        'purchase_gift'
+    }
 
     recent_transactions = [
         UserTransactionItem(

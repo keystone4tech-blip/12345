@@ -112,32 +112,40 @@ export default function Balance() {
   const normalizeType = (type: string) => type?.toUpperCase?.() ?? type;
 
   const getTypeBadge = (type: string) => {
+    // Нормализуем строку к верхнему регистру для надежности сравнения
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return 'badge-success';
+        return 'badge-success'; // Пополнение - зеленый бейдж
       case 'SUBSCRIPTION_PAYMENT':
-        return 'badge-info';
+        return 'badge-info'; // Оплата подписки - синий/информационный бейдж
       case 'REFERRAL_REWARD':
-        return 'badge-warning';
+        return 'badge-warning'; // Реферальный бонус - желтый/предупреждающий бейдж
       case 'WITHDRAWAL':
-        return 'badge-error';
+        return 'badge-error'; // Вывод средств - красный бейдж
+      case 'GIFT_VPN':
+      case 'PURCHASE_GIFT':
+        return 'badge-error'; // Покупка подарка (расходная операция) - красный бейдж
       default:
-        return 'badge-neutral';
+        return 'badge-neutral'; // По умолчанию - серый бейдж
     }
   };
 
   const getTypeLabel = (type: string) => {
+    // Нормализуем строку к верхнему регистру для надежности сравнения
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return t('balance.deposit');
+        return t('balance.deposit'); // Локализованная строка для "Пополнение"
       case 'SUBSCRIPTION_PAYMENT':
-        return t('balance.subscriptionPayment');
+        return t('balance.subscriptionPayment'); // Локализованная строка для "Оплата подписки"
       case 'REFERRAL_REWARD':
-        return t('balance.referralReward');
+        return t('balance.referralReward'); // Локализованная строка для "Реферальный бонус"
       case 'WITHDRAWAL':
-        return t('balance.withdrawal');
+        return t('balance.withdrawal'); // Локализованная строка для "Списание"
+      case 'GIFT_VPN':
+      case 'PURCHASE_GIFT':
+        return t('balance.gift_vpn', 'Покупка подарка'); // Локализованная строка для "Покупка подарка"
       default:
-        return type;
+        return type; // Если тип неизвестен, выводим исходное системное имя
     }
   };
 
