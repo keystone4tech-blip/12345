@@ -449,10 +449,12 @@ export function AppShell({ children }: AppShellProps) {
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">{children}</main>
 
       {/* Mobile Bottom Navigation */}
+      {/* Передаем состояние доступности подарков (giftEnabled) в мобильный нижний бар навигации */}
       <MobileBottomNav
         isKeyboardOpen={isKeyboardOpen}
         referralEnabled={referralEnabled}
         wheelEnabled={wheelEnabled}
+        giftEnabled={giftEnabled}
       />
     </div>
   );

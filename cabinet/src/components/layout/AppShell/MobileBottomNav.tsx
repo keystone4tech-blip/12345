@@ -6,18 +6,21 @@ import { cn } from '@/lib/utils';
 import { usePlatform } from '@/platform';
 
 // Icons
-import { HomeIcon, SubscriptionIcon, WalletIcon, UsersIcon, ChatIcon, WheelIcon } from './icons';
+// Импортируем иконку подарков GiftIcon из локального набора иконок
+import { HomeIcon, SubscriptionIcon, WalletIcon, UsersIcon, ChatIcon, WheelIcon, GiftIcon } from './icons';
 
 interface MobileBottomNavProps {
   isKeyboardOpen: boolean;
   referralEnabled?: boolean;
   wheelEnabled?: boolean;
+  giftEnabled?: boolean; // Добавляем флаг доступности системы подарков
 }
 
 export function MobileBottomNav({
   isKeyboardOpen,
   referralEnabled,
   wheelEnabled,
+  giftEnabled, // Деструктурируем флаг доступности подарков
 }: MobileBottomNavProps) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -26,13 +29,15 @@ export function MobileBottomNav({
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
-  // Core navigation items for bottom bar
-  // When wheel is enabled, it replaces Support in the bottom nav (Support is still accessible via hamburger menu)
+  // Основные элементы навигации для нижнего мобильного бара
+  // Если включено колесо фортуны (wheelEnabled), оно заменяет Поддержку (Support) в нижнем баре
+  // Кнопка "Подарки" (giftEnabled) добавляется строго между Рефералами и Поддержкой/Колесом
   const coreItems = [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
     { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
     { path: '/balance', label: t('nav.balance'), icon: WalletIcon },
     ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),
+    ...(giftEnabled ? [{ path: '/gift', label: t('nav.gift'), icon: GiftIcon }] : []), // Кнопка "Подарки" между Рефералами и Поддержкой
     ...(wheelEnabled
       ? [{ path: '/wheel', label: t('nav.wheel'), icon: WheelIcon }]
       : [{ path: '/support', label: t('nav.support'), icon: ChatIcon }]),
