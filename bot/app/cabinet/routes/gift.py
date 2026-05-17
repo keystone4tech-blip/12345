@@ -77,16 +77,53 @@ async def get_gift_config(
             periods=sorted(periods, key=lambda x: x.days)
         ))
 
+    # Динамически получаем доступные платежные методы для текущего пользователя
+    # Импортируем get_payment_methods из соседнего модуля balance для получения активных в системе шлюзов
+    from .balance import get_payment_methods
+    from ..schemas.gift import GiftPaymentMethod, GiftPaymentMethodSubOption
+    
+    # Получаем актуальный список платежных шлюзов (ЮКасса, Platega, PAL24 и т.д.)
+    balance_methods = await get_payment_methods(user=user, db=db)
+    gift_payment_methods = []
+    
+    # Итерируемся по методам и приводим их к схеме GiftPaymentMethod
+    for bm in balance_methods:
+        sub_opts = None
+        # Если у платежного метода есть под-опции (например, СБП/карта у ЮКасса), добавляем их
+        if bm.options:
+            sub_opts = [
+                GiftPaymentMethodSubOption(id=opt['id'], name=opt['name'])
+                for opt in bm.options
+            ]
+        gift_payment_methods.append(GiftPaymentMethod(
+            method_id=bm.id,
+            display_name=bm.name,
+            description=bm.description,
+            icon_url=None, # Иконку фронтенд может подбирать автоматически или рендерить дефолтную
+            min_amount_kopeks=bm.min_amount_kopeks,
+            max_amount_kopeks=bm.max_amount_kopeks,
+            sub_options=sub_opts
+        ))
+
+    # Логируем загрузку конфигурации подарков для аудита
+    logger.debug(
+        "Loaded gift config for user",
+        user_id=user.id,
+        is_enabled=is_enabled,
+        payment_methods_count=len(gift_payment_methods),
+    )
+
     return GiftConfig(
         is_enabled=is_enabled,
         tariffs=gift_tariffs,
-        payment_methods=[],  # Minimal implementation: balance only
+        payment_methods=gift_payment_methods,
         balance_kopeks=user.balance_kopeks,
         currency_symbol="RUB",
         promo_group_name=None,
         active_discount_percent=None,
         active_discount_expires_at=None
     )
+
 
 
 @router.post('/purchase', response_model=GiftPurchaseResponse)

@@ -513,7 +513,6 @@ function PaymentMethodCard({
     </div>
   );
 }
-
 function BuyTabContent({
   config,
   onPurchaseComplete,
@@ -526,14 +525,20 @@ function BuyTabContent({
   const { openInvoice, capabilities } = usePlatform();
   const haptic = useHaptic();
 
-  // Selection state
+  // Добавляем хуки навигации и параметров URL для редиректов оплаты
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Состояние для отображения уведомления об успешном пополнении через шлюз
+  const [showGatewaySuccessMsg, setShowGatewaySuccessMsg] = useState(false);
+
+  // Состояния выбора тарифа, периода и платежного метода
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number | null>(null);
   const [paymentMode, setPaymentMode] = useState<'balance' | 'gateway'>('balance');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
   // Collect ALL unique periods across ALL tariffs
   const allPeriods = useMemo(() => {
     const periodMap = new Map<number, GiftTariffPeriod>();
@@ -585,6 +590,39 @@ function BuyTabContent({
     }
   }, [visibleTariffs, selectedTariffId]);
 
+  // Восстанавливаем выбранный тариф и период из параметров URL (после редиректа оплаты)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const tariffIdStr = searchParams.get('tariffId');
+    const daysStr = searchParams.get('days');
+
+    if (action === 'buy' && tariffIdStr && daysStr) {
+      const tid = parseInt(tariffIdStr, 10);
+      const days = parseInt(daysStr, 10);
+      if (!isNaN(tid)) {
+        setSelectedTariffId(tid);
+      }
+      if (!isNaN(days)) {
+        setSelectedPeriodDays(days);
+      }
+    }
+  }, [searchParams]);
+
+  // Обрабатываем успешный возврат со шлюза оплаты
+  useEffect(() => {
+    if (searchParams.get('gatewayPaid') === 'true') {
+      setShowGatewaySuccessMsg(true);
+      // Очищаем параметры URL, чтобы уведомление не висело постоянно при перезагрузке
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('gatewayPaid');
+      newParams.delete('action');
+      newParams.delete('tariffId');
+      newParams.delete('days');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+
   // Derived data
   const selectedTariff = useMemo(
     () => config.tariffs.find((tr) => tr.id === selectedTariffId),
@@ -604,9 +642,10 @@ function BuyTabContent({
   const canSubmit = useMemo(() => {
     if (!selectedTariffId || !selectedPeriodDays) return false;
     if (paymentMode === 'gateway' && !selectedMethod) return false;
-    if (insufficientBalance) return false;
+    // Кнопка остается активной даже при нехватке баланса, так как меняется на «Пополнить баланс»
     return true;
-  }, [selectedTariffId, selectedPeriodDays, paymentMode, selectedMethod, insufficientBalance]);
+  }, [selectedTariffId, selectedPeriodDays, paymentMode, selectedMethod]);
+
 
   // Purchase mutation
   const purchaseMutation = useMutation({
@@ -656,23 +695,42 @@ function BuyTabContent({
 
     setSubmitError(null);
 
-    let paymentMethod: string | undefined;
-    if (paymentMode === 'gateway' && selectedMethod) {
-      paymentMethod = selectedMethod;
-      if (selectedSubOption) {
-        paymentMethod = `${paymentMethod}_${selectedSubOption}`;
-      }
+    // 1. Обработка оплаты с баланса, если средств недостаточно
+    if (paymentMode === 'balance' && insufficientBalance) {
+      // Вычисляем недостающую сумму в рублях
+      const missingAmount = Math.ceil((currentPrice - config.balance_kopeks) / 100);
+      
+      // Формируем URL для возврата на страницу подарков с сохранением контекста покупки
+      const returnUrl = `/gift?action=buy&tariffId=${selectedTariffId}&days=${selectedPeriodDays}&gatewayPaid=true`;
+      
+      // Перенаправляем на выбор платежной системы для пополнения баланса на недостающую сумму
+      navigate(`/balance?amount=${missingAmount}&returnTo=${encodeURIComponent(returnUrl)}`);
+      return;
     }
 
+    // 2. Обработка прямой оплаты через выбранный платежный шлюз
+    if (paymentMode === 'gateway' && selectedMethod) {
+      // Сумма к оплате в рублях
+      const amountRubles = (currentPrice / 100).toFixed(2);
+      
+      // Формируем URL для возврата на страницу подарков с сохранением контекста
+      const returnUrl = `/gift?action=buy&tariffId=${selectedTariffId}&days=${selectedPeriodDays}&gatewayPaid=true`;
+      
+      // Перенаправляем на страницу ввода/подтверждения платежа конкретного шлюза
+      navigate(`/balance/top-up/${selectedMethod}?amount=${amountRubles}&returnTo=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
+    // 3. Стандартная покупка с достаточного баланса
     const data: GiftPurchaseRequest = {
       tariff_id: selectedTariffId,
       period_days: selectedPeriodDays,
       payment_mode: paymentMode,
-      payment_method: paymentMethod,
     };
 
     purchaseMutation.mutate(data);
   };
+
 
   // Balance label with current amount
   const balanceLabel = useMemo(() => {
@@ -864,6 +922,38 @@ function BuyTabContent({
         )}
       </AnimatePresence>
 
+      {/* Success notification from gateway return */}
+      <AnimatePresence>
+        {showGatewaySuccessMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex items-center gap-3 rounded-xl border border-success-500/30 bg-success-500/10 p-3"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-500/20">
+              <svg
+                className="h-4 w-4 text-success-400 animate-bounce"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-success-400">
+                Баланс успешно пополнен!
+              </div>
+              <div className="text-xs text-dark-400">
+                Нажмите кнопку ниже, чтобы завершить покупку подарка.
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Error */}
       <AnimatePresence>
         {submitError && (
@@ -892,6 +982,14 @@ function BuyTabContent({
       >
         {purchaseMutation.isPending ? (
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : paymentMode === 'balance' && insufficientBalance ? (
+          <>
+            Пополнить баланс на {formatPrice(currentPrice - config.balance_kopeks)}
+          </>
+        ) : paymentMode === 'gateway' ? (
+          <>
+            Оплатить и подарить {currentPrice > 0 ? formatPrice(currentPrice) : ''}
+          </>
         ) : (
           <>
             {t('gift.giftButton')} {currentPrice > 0 ? formatPrice(currentPrice) : ''}
