@@ -1,7 +1,7 @@
 import uuid
 import structlog
 from datetime import datetime, UTC
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -15,10 +15,20 @@ class GiftService:
     @staticmethod
     async def get_gift_by_token(db: AsyncSession, token: str) -> dict | None:
         """Получить информацию о подарке по токену."""
+        # Очистка токена
+        cleaned_token = token.strip()
+        if cleaned_token.upper().startswith("GIFT-"):
+            cleaned_token = cleaned_token[5:]
+        elif cleaned_token.lower().startswith("gift_"):
+            cleaned_token = cleaned_token[5:]
+
         query = (
             select(Gift)
             .options(joinedload(Gift.gifter), joinedload(Gift.tariff))
-            .where(Gift.token == token, Gift.is_used == False)
+            .where(
+                Gift.is_used == False,
+                or_(Gift.token == cleaned_token, Gift.token.like(f"{cleaned_token}%"))
+            )
         )
         result = await db.execute(query)
         gift = result.scalar_one_or_none()
@@ -62,11 +72,21 @@ class GiftService:
         bot=None
     ) -> dict:
         """Активировать подарок по токену для указанного пользователя."""
+        # Очистка токена
+        cleaned_token = token.strip()
+        if cleaned_token.upper().startswith("GIFT-"):
+            cleaned_token = cleaned_token[5:]
+        elif cleaned_token.lower().startswith("gift_"):
+            cleaned_token = cleaned_token[5:]
+
         # Ищем подарок в БД с подгрузкой дарителя
         query = (
             select(Gift)
             .options(joinedload(Gift.gifter))
-            .where(Gift.token == token, Gift.is_used == False)
+            .where(
+                Gift.is_used == False,
+                or_(Gift.token == cleaned_token, Gift.token.like(f"{cleaned_token}%"))
+            )
         )
         result = await db.execute(query)
         gift = result.scalar_one_or_none()

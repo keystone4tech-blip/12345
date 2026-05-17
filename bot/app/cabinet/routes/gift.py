@@ -51,9 +51,6 @@ async def get_gift_config(
     
     gift_tariffs = []
     for t in tariffs:
-        if t.is_trial_available:  # Skip trial-only tariffs
-            continue
-            
         periods = []
         if t.period_prices:
             for days_str, price in t.period_prices.items():
@@ -134,7 +131,7 @@ async def create_gift_purchase(
         )
 
     # 4. Create gift
-    token = str(uuid.uuid4()).replace('-', '')[:32]
+    token = uuid.uuid4().hex[:12]
     gift = Gift(
         token=token,
         tariff_id=tariff.id,

@@ -398,8 +398,8 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
         await state.set_data(data)
 
     if start_parameter:
-        if start_parameter.startswith('gift_'):
-            gift_token = start_parameter.replace('gift_', '', 1)
+        if start_parameter.lower().startswith('gift_'):
+            gift_token = start_parameter[5:]
             data['gift_token'] = gift_token
             await state.update_data(gift_token=gift_token)
             logger.info('🎁 Найден токен подарка в ссылке', gift_token=gift_token)

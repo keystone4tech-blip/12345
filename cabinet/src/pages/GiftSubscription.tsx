@@ -127,6 +127,23 @@ function InboxIcon({ className }: { className?: string }) {
   );
 }
 
+function CopyIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  );
+}
+
 function formatPeriodLabel(
   days: number,
   t: (key: string, options?: Record<string, unknown>) => string,
@@ -1027,6 +1044,7 @@ function CopiedToast({ onDismiss }: { onDismiss: () => void }) {
 function SentGiftCard({ gift }: { gift: SentGift }) {
   const { t } = useTranslation();
   const [showToast, setShowToast] = useState(false);
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
 
   const shortCode = gift.token.slice(0, 12);
   const giftCode = `GIFT-${shortCode}`;
@@ -1040,10 +1058,9 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
       : t(getGiftStatusKey(gift.status));
 
   const buildShareMessage = useCallback(() => {
-    const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
     // Encode underscores as %5F so Telegram auto-link detection doesn't strip them
     const safeCode = shortCode.replace(/_/g, '%5F');
-    const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFT%5F${safeCode}` : null;
+    const botLink = botUsername ? `https://t.me/${botUsername}?start=gift_${safeCode}` : null;
     const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${safeCode}`;
     return [
       t('gift.shareText'),
@@ -1094,11 +1111,65 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
       {/* Gift code + actions (only when not activated) */}
       {!isActivated && (
         <>
-          {/* Gift code display */}
-          <div className="mb-3 rounded-xl bg-dark-800/80 px-4 py-4 text-center">
-            <p className="font-mono text-base font-bold tracking-[0.15em] text-accent-400">
+          {/* Gift code display (clickable to copy raw code!) */}
+          <div
+            onClick={async () => {
+              await copyToClipboard(shortCode);
+              setShowToast(true);
+            }}
+            className="mb-3 rounded-xl bg-dark-800/80 px-4 py-3 text-center border border-dark-800/50 hover:border-accent-500/50 cursor-pointer group transition-all"
+            title="Нажмите, чтобы скопировать чистый код"
+          >
+            <p className="text-[10px] text-dark-400 font-bold uppercase tracking-wider mb-1">Код подарка</p>
+            <p className="font-mono text-base font-bold tracking-[0.15em] text-accent-400 group-hover:text-accent-300 transition-colors">
               {giftCode}
             </p>
+            <p className="text-[9px] text-dark-500 mt-1">Нажмите, чтобы скопировать код отдельно</p>
+          </div>
+
+          {/* Copyable links fields */}
+          <div className="mb-4 space-y-2">
+            {botUsername && (
+              <div className="flex items-center gap-2 rounded-xl bg-dark-800/40 p-2 border border-dark-800/60">
+                <div className="flex-1 min-w-0 px-1">
+                  <p className="text-[10px] text-dark-400 font-bold">Ссылка на бота</p>
+                  <p className="font-mono text-[10px] text-dark-300 truncate">
+                    {`https://t.me/${botUsername}?start=gift_${shortCode}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await copyToClipboard(`https://t.me/${botUsername}?start=gift_${shortCode}`);
+                    setShowToast(true);
+                  }}
+                  className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 active:scale-95 text-dark-300 hover:text-accent-400 transition-all"
+                  title="Скопировать ссылку на бота"
+                >
+                  <CopyIcon className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 rounded-xl bg-dark-800/40 p-2 border border-dark-800/60">
+              <div className="flex-1 min-w-0 px-1">
+                <p className="text-[10px] text-dark-400 font-bold">Ссылка на кабинет</p>
+                <p className="font-mono text-[10px] text-dark-300 truncate">
+                  {`${window.location.origin}/gift?tab=activate&code=${shortCode}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  await copyToClipboard(`${window.location.origin}/gift?tab=activate&code=${shortCode}`);
+                  setShowToast(true);
+                }}
+                className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 active:scale-95 text-dark-300 hover:text-accent-400 transition-all"
+                title="Скопировать ссылку на кабинет"
+              >
+                <CopyIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Share button — copies message and shows toast */}
