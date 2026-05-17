@@ -697,14 +697,17 @@ function BuyTabContent({
 
     // 1. Обработка оплаты с баланса, если средств недостаточно
     if (paymentMode === 'balance' && insufficientBalance) {
-      // Вычисляем недостающую сумму в рублях
-      const missingAmount = Math.ceil((currentPrice - config.balance_kopeks) / 100);
+      // Вычисляем недостающую сумму в копейках
+      const missingKopeks = currentPrice - config.balance_kopeks;
+      // Ограничиваем минимальную сумму пополнения 100 рублями (10000 копеек) по правилу системы
+      const topUpKopeks = Math.max(10000, missingKopeks);
+      const topUpAmountRubles = Math.ceil(topUpKopeks / 100);
       
       // Формируем URL для возврата на страницу подарков с сохранением контекста покупки
       const returnUrl = `/gift?action=buy&tariffId=${selectedTariffId}&days=${selectedPeriodDays}&gatewayPaid=true`;
       
-      // Перенаправляем на выбор платежной системы для пополнения баланса на недостающую сумму
-      navigate(`/balance?amount=${missingAmount}&returnTo=${encodeURIComponent(returnUrl)}`);
+      // Перенаправляем на выбор платежной системы для пополнения баланса на вычисленную сумму
+      navigate(`/balance?amount=${topUpAmountRubles}&returnTo=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
@@ -984,7 +987,7 @@ function BuyTabContent({
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : paymentMode === 'balance' && insufficientBalance ? (
           <>
-            Пополнить баланс на {formatPrice(currentPrice - config.balance_kopeks)}
+            Пополнить баланс на {formatPrice(Math.max(10000, currentPrice - config.balance_kopeks))}
           </>
         ) : paymentMode === 'gateway' ? (
           <>
