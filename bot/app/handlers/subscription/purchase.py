@@ -4291,6 +4291,10 @@ async def _extend_existing_subscription(
     current_subscription.end_date = new_end_date
     current_subscription.updated_at = current_time
 
+    if not db_user.has_had_paid_subscription:
+        db_user.has_had_paid_subscription = True
+        logger.info('✅ Пользователь отмечен как имевший платную подписку', user_id=db_user.id)
+
     # Сохраняем изменения
     await db.commit()
     await db.refresh(current_subscription)
