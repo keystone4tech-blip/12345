@@ -276,6 +276,6 @@ async def activate_gift(
             
     return ActivateGiftResponse(
         status='ok',
-        tariff_name=result.get("tariff_name"),
+        tariff_name=strip_telegram_tags(result.get("tariff_name")) if result.get("tariff_name") else "VPN",
         period_days=result.get("period")
     )
