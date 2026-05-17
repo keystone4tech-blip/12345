@@ -1046,6 +1046,34 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
   const [showToast, setShowToast] = useState(false);
   const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
 
+  // Инициализируем клиент react-query для сброса кеша после отправки
+  const queryClient = useQueryClient();
+  const [username, setUsername] = useState('');
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendSuccess, setSendSuccess] = useState(false);
+
+  // Мутация для отправки подарка пользователю по никнейму
+  const sendMutation = useMutation({
+    mutationFn: () => giftApi.sendGiftToUser(gift.token, username),
+    onSuccess: () => {
+      setSendSuccess(true);
+      // Сбрасываем кэш отправленных подарков, чтобы обновить UI
+      queryClient.invalidateQueries({ queryKey: ['gift-sent'] });
+      queryClient.invalidateQueries({ queryKey: ['gift-pending'] });
+    },
+    onError: (err) => {
+      const msg = getApiErrorMessage(err, t('gift.failedDesc'));
+      setSendError(msg);
+    },
+  });
+
+  const handleSendToUser = () => {
+    const trimmed = username.trim();
+    if (!trimmed || sendMutation.isPending) return;
+    setSendError(null);
+    sendMutation.mutate();
+  };
+
   const shortCode = gift.token.slice(0, 12);
   const giftCode = `GIFT-${shortCode}`;
   const isActivated = isGiftActivated(gift);
@@ -1058,7 +1086,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
       : t(getGiftStatusKey(gift.status));
 
   const buildShareMessage = useCallback(() => {
-    // Encode underscores as %5F so Telegram auto-link detection doesn't strip them
+    // Кодируем символы подчеркивания как %5F для авто-ссылок в Telegram
     const safeCode = shortCode.replace(/_/g, '%5F');
     const botLink = botUsername ? `https://t.me/${botUsername}?start=gift_${safeCode}` : null;
     const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${safeCode}`;
@@ -1082,7 +1110,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
 
   return (
     <div className="rounded-2xl border border-dark-800/50 bg-dark-900/50 p-4">
-      {/* Header: tariff name + status badge */}
+      {/* Шапка карточки: название тарифа + статус */}
       <div className="mb-3 flex items-start justify-between">
         <h3 className="text-base font-bold text-dark-50">{gift.tariff_name ?? t('gift.tariff')}</h3>
         <span
@@ -1099,7 +1127,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
         </span>
       </div>
 
-      {/* Info line */}
+      {/* Описание подарка: дата покупки, дни, лимит устройств */}
       <p className="mb-3 text-xs text-dark-400">
         {formatGiftDate(gift.created_at)}
         {' \u2022 '}
@@ -1108,10 +1136,10 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
         {gift.device_limit} {t('gift.devicesShort', { count: gift.device_limit })}
       </p>
 
-      {/* Gift code + actions (only when not activated) */}
+      {/* Отображается только если подарок не активирован */}
       {!isActivated && (
         <>
-          {/* Gift code display (clickable to copy raw code!) */}
+          {/* Интерактивное поле с кодом подарка (клик для копирования) */}
           <div
             onClick={async () => {
               await copyToClipboard(shortCode);
@@ -1127,7 +1155,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
             <p className="text-[9px] text-dark-500 mt-1">Нажмите, чтобы скопировать код отдельно</p>
           </div>
 
-          {/* Copyable links fields */}
+          {/* Быстрые ссылки для отправки */}
           <div className="mb-4 space-y-2">
             {botUsername && (
               <div className="flex items-center gap-2 rounded-xl bg-dark-800/40 p-2 border border-dark-800/60">
@@ -1172,7 +1200,69 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
             </div>
           </div>
 
-          {/* Share button — copies message and shows toast */}
+          {/* Форма для отправки по никнейму Telegram (показывается только если подарок еще не привязан к получателю) */}
+          {!gift.gift_recipient_value && (
+            <div className="mb-4 rounded-2xl border border-dark-800/80 bg-dark-950/40 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">✨</span>
+                <p className="text-xs font-bold text-dark-100">
+                  Отправить напрямую по никнейму Telegram
+                </p>
+              </div>
+              <p className="text-[11px] text-dark-400 leading-relaxed">
+                Получатель мгновенно получит уведомление в боте с кнопкой для активации подписки, а подарок отобразится у него в кабинете.
+              </p>
+
+              {sendSuccess ? (
+                <div className="rounded-xl bg-success-500/10 p-3 text-center border border-success-500/20">
+                  <p className="text-xs font-bold text-success-400">
+                    🎉 Подарок успешно отправлен!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        setSendError(null);
+                      }}
+                      placeholder="Введите никнейм (например, @username)"
+                      disabled={sendMutation.isPending}
+                      className="flex-1 min-w-0 rounded-xl border border-dark-700 bg-dark-900/60 px-3.5 py-2.5 text-xs text-dark-100 placeholder-dark-500 outline-none transition-all focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendToUser}
+                      disabled={!username.trim() || sendMutation.isPending}
+                      className={cn(
+                        "rounded-xl px-5 py-2.5 text-xs font-bold transition-all active:scale-[0.97]",
+                        username.trim() && !sendMutation.isPending
+                          ? "bg-accent-500 text-white hover:bg-accent-400 hover:shadow-lg hover:shadow-accent-500/20"
+                          : "bg-dark-800 text-dark-500 cursor-not-allowed"
+                      )}
+                    >
+                      {sendMutation.isPending ? (
+                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      ) : (
+                        "Отправить"
+                      )}
+                    </button>
+                  </div>
+
+                  {sendError && (
+                    <p className="text-[10px] text-error-400 font-medium flex items-center gap-1">
+                      <span>⚠️</span> {sendError}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Кнопка "Поделиться" (всегда доступна) */}
           <button
             type="button"
             onClick={handleShare}
@@ -1184,21 +1274,21 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
         </>
       )}
 
-      {/* Activated by */}
+      {/* Информация об активации (если подарок уже активирован) */}
       {isActivated && gift.activated_by_username && (
         <p className="mt-2 text-xs text-dark-500">
           {t('gift.activatedBy', { username: gift.activated_by_username })}
         </p>
       )}
 
-      {/* Sent to */}
+      {/* Информация об отправке (если подарок отправлен конкретному пользователю) */}
       {gift.gift_recipient_value && (
-        <p className="mt-1 text-xs text-dark-500">
-          {t('gift.sentTo', { recipient: gift.gift_recipient_value })}
+        <p className="mt-1.5 text-xs text-dark-400 flex items-center gap-1.5 bg-dark-800/40 p-2 rounded-xl border border-dark-800/50">
+          <span>🎁</span> {t('gift.sentTo', { recipient: gift.gift_recipient_value })}
         </p>
       )}
 
-      {/* Copied toast — portal to escape motion.div transform context */}
+      {/* Тост об успешном копировании */}
       {createPortal(
         <AnimatePresence>
           {showToast && <CopiedToast onDismiss={handleDismissToast} />}

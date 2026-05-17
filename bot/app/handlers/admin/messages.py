@@ -434,11 +434,46 @@ async def process_pinned_message_update(
 
     pinned_text = message.html_text or message.caption_html or message.text or message.caption or ''
 
+    # ВАЖНО: Валидация наличия контента
     if not pinned_text and not media_file_id:
         await message.answer(
             texts.t('ADMIN_PINNED_NO_CONTENT', '❌ Не удалось прочитать текст или медиа в сообщении, попробуйте снова.')
         )
         return
+
+    # ВАЖНО: Валидация длины текста/подписи в соответствии с жесткими лимитами Telegram API
+    if media_file_id:
+        # Если сообщение содержит медиа (фото/видео), лимит подписи составляет 1024 символа
+        if len(pinned_text) > 1024:
+            logger.warning(
+                'Попытка установить закрепленное сообщение с медиа и слишком длинным текстом',
+                text_length=len(pinned_text),
+                admin_id=db_user.id
+            )
+            await message.answer(
+                f'❌ <b>Ошибка: текст слишком длинный!</b>\n\n'
+                f'Длина подписи к медиафайлу (фото/видео) составляет <b>{len(pinned_text)} символов</b>, '
+                f'что превышает лимит Telegram для подписи (1024 символа).\n\n'
+                f'Пожалуйста, сократите текст или отправьте его без медиафайла.',
+                parse_mode='HTML'
+            )
+            return
+    else:
+        # Если сообщение текстовое, лимит составляет 4096 символов
+        if len(pinned_text) > 4096:
+            logger.warning(
+                'Попытка установить закрепленное сообщение со слишком длинным текстом',
+                text_length=len(pinned_text),
+                admin_id=db_user.id
+            )
+            await message.answer(
+                f'❌ <b>Ошибка: текст слишком длинный!</b>\n\n'
+                f'Длина сообщения составляет <b>{len(pinned_text)} символов</b>, '
+                f'что превышает лимит Telegram для текста (4096 символов).\n\n'
+                f'Пожалуйста, сократите текст сообщения.',
+                parse_mode='HTML'
+            )
+            return
 
     await state.update_data(
         broadcast_message=pinned_text,
@@ -792,11 +827,14 @@ async def select_broadcast_target(callback: types.CallbackQuery, db_user: User, 
 @admin_required
 @error_handler
 async def process_broadcast_message(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
+    # Получаем исходный текст сообщения с HTML-разметкой
     broadcast_text = message.html_text or ""
 
-    # Валидация HTML-тегов
+    # Выполняем валидацию HTML-тегов, чтобы убедиться, что они корректно закрыты и разрешены в Telegram
     is_valid, error_msg = validate_html_tags(broadcast_text)
     if not is_valid:
+        # Если разметка невалидна, логируем предупреждение и отправляем сообщение об ошибке администратору
+        logger.warning('Обнаружена невалидная HTML-разметка при создании рассылки', error=error_msg, text=broadcast_text[:100])
         await message.answer(
             f'❌ <b>Ошибка в HTML-разметке:</b>\n{error_msg}\n\n'
             f'Проверьте правильность тегов и попробуйте снова.',
@@ -804,8 +842,34 @@ async def process_broadcast_message(message: types.Message, db_user: User, state
         )
         return
 
+    # Сохраняем проверенный текст рассылки в состояние FSM (Finite State Machine)
     await state.update_data(broadcast_message=broadcast_text)
 
+    # ВАЖНО: Проверяем длину текста сообщения. Лимит подписи (caption) к медиафайлу в Telegram составляет строго 1024 символа!
+    # Если текст длиннее 1024 символов, медиафайл прикрепить физически невозможно (вызовет ошибку TelegramBadRequest: message caption is too long).
+    if len(broadcast_text) > 1024:
+        # Логируем автоматический пропуск шага добавления медиа из-за длины текста
+        logger.info(
+            'Длина текста рассылки превышает лимит для медиафайлов. Автоматически переключаем на текстовый режим.',
+            text_length=len(broadcast_text),
+            admin_id=db_user.id
+        )
+        # Устанавливаем в состояние, что рассылка будет без медиафайлов
+        await state.update_data(has_media=False)
+        # Отправляем подробное и понятное предупреждение администратору о причинах пропуска
+        await message.answer(
+            f'📝 <b>Сообщение сохранено!</b>\n\n'
+            f'⚠️ Длина вашего текста составляет <b>{len(broadcast_text)} символов</b>, '
+            f'что превышает лимит Telegram для сообщений с медиафайлами (1024 символа).\n\n'
+            f'Сообщение будет отправлено <b>без медиафайла</b> (как обычный текст, для которого лимит составляет 4096 символов).\n\n'
+            f'Переходим к выбору дополнительных кнопок...',
+            parse_mode='HTML'
+        )
+        # Сразу переходим к интерфейсу выбора дополнительных кнопок для рассылки
+        await show_button_selector(message, db_user, state)
+        return
+
+    # Если текст укладывается в 1024 символа, предлагаем администратору выбрать медиафайл как обычно
     await message.answer(
         '🖼️ <b>Добавление медиафайла</b>\n\n'
         'Вы можете добавить к сообщению фото, видео или документ.\n'
@@ -945,6 +1009,26 @@ async def handle_media_confirmation(callback: types.CallbackQuery, db_user: User
 @admin_required
 @error_handler
 async def handle_change_media(callback: types.CallbackQuery, db_user: User, state: FSMContext):
+    # Получаем сохраненное состояние, чтобы проверить длину текста сообщения
+    data = await state.get_data()
+    message_text = data.get('broadcast_message', '')
+
+    # Проверяем, не превышает ли длина текста лимит для подписи под медиафайлом
+    if len(message_text) > 1024:
+        # Логируем попытку добавить медиа к слишком длинному тексту
+        logger.info(
+            'Попытка изменить/добавить медиа к сообщению, длина которого превышает лимит подписи в Telegram (1024 символа).',
+            text_length=len(message_text),
+            admin_id=db_user.id
+        )
+        # Показываем администратору модальное предупреждение (alert)
+        await callback.answer(
+            f'❌ Длина сообщения ({len(message_text)} симв.) превышает лимит в 1024 символа для медиафайлов!',
+            show_alert=True
+        )
+        return
+
+    # Если длина текста корректная, переходим к меню выбора типа медиа
     await safe_edit_or_send_text(
         callback,
         '🖼️ <b>Изменение медиафайла</b>\n\nВыберите новый тип медиа:',
@@ -1540,7 +1624,8 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                 err = str(e).lower()
                 if 'bot was blocked' in err or 'user is deactivated' in err or 'chat not found' in err:
                     return 'blocked'
-                logger.debug('BadRequest при рассылке пользователю', telegram_id=telegram_id, e=e)
+                # ВАЖНО: логируем как warning, чтобы видеть проблемы с валидацией/разметкой/лимитами Telegram в логах продакшена
+                logger.warning('BadRequest при рассылке пользователю', telegram_id=telegram_id, error=str(e))
                 return 'failed'
 
             except Exception as e:

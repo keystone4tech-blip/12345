@@ -157,4 +157,10 @@ export const giftApi = {
     const { data } = await apiClient.post<ActivateGiftResponse>('/cabinet/gift/activate', { code });
     return data;
   },
+
+  sendGiftToUser: async (token: string, username: string): Promise<{ status: string; message: string }> => {
+    const { data } = await apiClient.post<{ status: string; message: string }>('/cabinet/gift/send-to-user', { token, username });
+    return data;
+  },
 };
+

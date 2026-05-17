@@ -302,6 +302,8 @@ class BroadcastService:
                     err = str(e).lower()
                     if 'bot was blocked' in err or 'user is deactivated' in err or 'chat not found' in err:
                         return 'blocked'
+                    # Логируем ошибку, чтобы администратор мог понять причину сбоя (например, слишком длинный текст подписи к медиа)
+                    logger.warning('TelegramBadRequest при рассылке из веб-панели', telegram_id=telegram_id, error=str(e))
                     return 'failed'
 
                 except Exception as exc:

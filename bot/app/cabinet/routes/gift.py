@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -28,6 +28,8 @@ from ..schemas.gift import (
     ReceivedGift,
     ActivateGiftResponse,
     ActivateGiftRequest,
+    SendGiftToUserRequest,
+    SendGiftToUserResponse,
 )
 
 logger = structlog.get_logger(__name__)
@@ -158,10 +160,10 @@ async def get_pending_gifts(
     user: User = Depends(get_current_cabinet_user),
     db: AsyncSession = Depends(get_cabinet_db),
 ):
-    """Get gifts purchased by user that are not yet activated."""
+    """Get gifts received by user that are not yet activated."""
     query = (
         select(Gift)
-        .where(Gift.gifter_id == user.id, Gift.is_used == False)
+        .where(Gift.recipient_id == user.id, Gift.is_used == False)
         .order_by(desc(Gift.created_at))
     )
     result = await db.execute(query)
@@ -171,12 +173,22 @@ async def get_pending_gifts(
     for g in gifts:
         # Load tariff (can be optimized with selectinload)
         tariff = await get_tariff_by_id(db, g.tariff_id)
+        
+        # Load actual gifter's info
+        gifter = None
+        if g.gifter_id:
+            gifter = await get_user_by_id(db, g.gifter_id)
+            
+        sender_display = "Anonymous"
+        if gifter:
+            sender_display = gifter.full_name or gifter.username or "Anonymous"
+            
         items.append(PendingGift(
             token=g.token,
             tariff_name=strip_telegram_tags(tariff.name) if tariff else "Unknown",
             period_days=g.period_days,
             gift_message=None,
-            sender_display=user.full_name or user.username or "Anonymous",
+            sender_display=sender_display,
             created_at=g.created_at
         ))
     return items
@@ -202,6 +214,10 @@ async def get_sent_gifts(
         recipient = None
         if g.recipient_id:
             recipient = await get_user_by_id(db, g.recipient_id)
+            
+        recipient_display = None
+        if recipient:
+            recipient_display = f"@{recipient.username}" if recipient.username else (recipient.full_name or "Пользователь")
         
         items.append(SentGift(
             token=g.token,
@@ -209,7 +225,7 @@ async def get_sent_gifts(
             period_days=g.period_days,
             device_limit=tariff.device_limit if tariff else 0,
             status="activated" if g.is_used else "pending",
-            gift_recipient_value=recipient.full_name if recipient else None,
+            gift_recipient_value=recipient_display,
             gift_message=None,
             activated_by_username=recipient.username if recipient else None,
             created_at=g.created_at
@@ -278,4 +294,133 @@ async def activate_gift(
         status='ok',
         tariff_name=strip_telegram_tags(result.get("tariff_name")) if result.get("tariff_name") else "VPN",
         period_days=result.get("period")
+    )
+
+
+@router.post('/send-to-user', response_model=SendGiftToUserResponse)
+async def send_gift_to_user(
+    req: Request,
+    payload: SendGiftToUserRequest,
+    user: User = Depends(get_current_cabinet_user),
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """Отправить подарок конкретному пользователю по его никнейму Telegram (регистронезависимо)."""
+    logger.info("Direct gift send request initiated", user_id=user.id, token=payload.token, username=payload.username)
+
+    # 1. Очистка никнейма от пробелов и возможного префикса @
+    cleaned_username = payload.username.strip()
+    if cleaned_username.startswith('@'):
+        cleaned_username = cleaned_username[1:]
+    
+    if not cleaned_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Никнейм пользователя не может быть пустым."
+        )
+
+    # 2. Поиск получателя в базе данных (регистронезависимо)
+    query_recipient = select(User).where(func.lower(User.username) == func.lower(cleaned_username))
+    result_recipient = await db.execute(query_recipient)
+    recipient = result_recipient.scalars().first()
+
+    if not recipient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Пользователь с никнеймом @{cleaned_username} не зарегистрирован в личном кабинете."
+        )
+
+    # 3. Защита от отправки самому себе
+    if recipient.id == user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Вы не можете отправить подарок самому себе."
+        )
+
+    # 4. Поиск подарка в базе данных по токену и проверка прав (даритель должен быть текущим пользователем)
+    # Очищаем токен подарка от возможного префикса GIFT-
+    cleaned_token = payload.token.replace("GIFT-", "").strip()
+    
+    query_gift = select(Gift).where(Gift.token == cleaned_token, Gift.gifter_id == user.id)
+    result_gift = await db.execute(query_gift)
+    gift = result_gift.scalars().first()
+
+    if not gift:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Подарок с указанным кодом не найден."
+        )
+
+    # 5. Проверка статуса подарка: не активирован ли он и не отправлен ли уже кому-то другому
+    if gift.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Этот подарок уже был активирован."
+        )
+
+    if gift.recipient_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Этот подарок уже отправлен другому пользователю."
+        )
+
+    # 6. Привязка получателя к подарку
+    gift.recipient_id = recipient.id
+    await db.commit()
+    logger.info("Gift recipient updated successfully", gift_id=gift.id, recipient_id=recipient.id)
+
+    # 7. Отправка уведомления получателю в Telegram через бот (если привязан telegram_id)
+    if recipient.telegram_id:
+        bot = getattr(req.app.state, 'bot', None)
+        if bot:
+            try:
+                from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+                
+                # Формируем красивое сообщение с кнопкой
+                gifter_name = user.full_name or (f"@{user.username}" if user.username else "Пользователь")
+                
+                tariff = await get_tariff_by_id(db, gift.tariff_id)
+                tariff_name = strip_telegram_tags(tariff.name) if tariff else "VPN подписка"
+                
+                text = (
+                    f"🎁 <b>Вам прислали подарок!</b>\n\n"
+                    f"Пользователь {gifter_name} отправил вам подарок: "
+                    f"подписку на тариф <b>{tariff_name}</b> на <b>{gift.period_days} дней</b>.\n\n"
+                    f"Вы можете прямо сейчас активировать её в личном кабинете!"
+                )
+                
+                cabinet_url = getattr(settings, 'CABINET_URL', 'https://lk.mozhnovpn.tech')
+                # Добавляем код подарка в URL, чтобы на фронтенде он мог автозаполниться
+                activation_url = f"{cabinet_url}/gift?tab=activate&code={gift.token}"
+                
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="🎁 Активировать подарок",
+                            url=activation_url
+                        )
+                    ]
+                ])
+                
+                await bot.send_message(
+                    chat_id=recipient.telegram_id,
+                    text=text,
+                    reply_markup=keyboard,
+                    parse_mode="HTML"
+                )
+                logger.info("Telegram notification sent to recipient", recipient_id=recipient.id, telegram_id=recipient.telegram_id)
+            except Exception as e:
+                # Ошибка отправки сообщения в TG не должна приводить к падению API
+                logger.warning(
+                    "Failed to send Telegram notification to gift recipient",
+                    recipient_id=recipient.id,
+                    error=str(e)
+                )
+        else:
+            logger.warning("Bot instance is not found in app state, skipping notification")
+    else:
+        logger.info("Recipient does not have a linked Telegram account, skipping notification", recipient_id=recipient.id)
+
+    return SendGiftToUserResponse(
+        status="ok",
+        message="Подарок успешно отправлен получателю!"
     )

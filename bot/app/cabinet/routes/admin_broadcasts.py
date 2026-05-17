@@ -411,6 +411,21 @@ async def create_broadcast(
 
     media_payload = request.media
 
+    # ВАЖНО: Валидация длины сообщения в соответствии с лимитами Telegram API
+    message_len = len(message_text)
+    if media_payload:
+        if message_len > 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f'Длина текста подписи для медиафайла превышает лимит Telegram в 1024 символа (сейчас {message_len} симв.)',
+            )
+    else:
+        if message_len > 4096:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f'Длина сообщения превышает лимит Telegram в 4096 символов (сейчас {message_len} симв.)',
+            )
+
     # Create broadcast record
     broadcast = BroadcastHistory(
         target_type=request.target,
@@ -573,6 +588,21 @@ async def create_combined_broadcast(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Message text is required for Telegram broadcast',
             )
+
+        # ВАЖНО: Валидация длины сообщения для Telegram в соответствии с лимитами API
+        message_len = len(request.message_text.strip())
+        if request.media:
+            if message_len > 1024:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f'Длина текста подписи для медиафайла превышает лимит Telegram в 1024 символа (сейчас {message_len} симв.)',
+                )
+        else:
+            if message_len > 4096:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f'Длина сообщения превышает лимит Telegram в 4096 символов (сейчас {message_len} симв.)',
+                )
 
         # Validate buttons
         if not _validate_buttons(request.selected_buttons):

@@ -129,3 +129,16 @@ class ActivateGiftResponse(BaseModel):
 class ActivateGiftRequest(BaseModel):
     """Request to activate a gift code."""
     code: str
+
+
+class SendGiftToUserRequest(BaseModel):
+    """Request to send a gift directly to a user by Telegram username."""
+    token: str
+    username: str
+
+
+class SendGiftToUserResponse(BaseModel):
+    """Response after sending a gift directly to a user by Telegram username."""
+    status: str
+    message: str
+
