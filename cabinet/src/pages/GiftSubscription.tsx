@@ -699,8 +699,11 @@ function BuyTabContent({
     if (paymentMode === 'balance' && insufficientBalance) {
       // Вычисляем недостающую сумму в копейках
       const missingKopeks = currentPrice - config.balance_kopeks;
-      // Ограничиваем минимальную сумму пополнения 100 рублями (10000 копеек) по правилу системы
-      const topUpKopeks = Math.max(10000, missingKopeks);
+      // Получаем минимальное пополнение среди всех активных платежных шлюзов из настроек в админ-панели (дефолт 10000 копеек / 100 рублей)
+      const activeMinKopeks = config.payment_methods.length > 0
+        ? Math.min(...config.payment_methods.map(m => m.min_amount_kopeks ?? 10000))
+        : 10000;
+      const topUpKopeks = Math.max(activeMinKopeks, missingKopeks);
       const topUpAmountRubles = Math.ceil(topUpKopeks / 100);
       
       // Формируем URL для возврата на страницу подарков с сохранением контекста покупки
@@ -713,8 +716,12 @@ function BuyTabContent({
 
     // 2. Обработка прямой оплаты через выбранный платежный шлюз
     if (paymentMode === 'gateway' && selectedMethod) {
-      // Сумма к оплате в рублях
-      const amountRubles = (currentPrice / 100).toFixed(2);
+      // Ищем выбранный шлюз в конфигурации, чтобы учесть его минимальный лимит из настроек админ-панели
+      const methodObj = config.payment_methods.find(m => m.method_id === selectedMethod);
+      const methodMinKopeks = methodObj?.min_amount_kopeks ?? 0;
+      // Сравниваем цену подарка с минимальным лимитом этого шлюза
+      const topUpKopeks = Math.max(methodMinKopeks, currentPrice);
+      const amountRubles = (topUpKopeks / 100).toFixed(2);
       
       // Формируем URL для возврата на страницу подарков с сохранением контекста
       const returnUrl = `/gift?action=buy&tariffId=${selectedTariffId}&days=${selectedPeriodDays}&gatewayPaid=true`;
@@ -987,11 +994,19 @@ function BuyTabContent({
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : paymentMode === 'balance' && insufficientBalance ? (
           <>
-            Пополнить баланс на {formatPrice(Math.max(10000, currentPrice - config.balance_kopeks))}
+            Пополнить баланс на {formatPrice(Math.max(
+              config.payment_methods.length > 0
+                ? Math.min(...config.payment_methods.map(m => m.min_amount_kopeks ?? 10000))
+                : 10000,
+              currentPrice - config.balance_kopeks
+            ))}
           </>
         ) : paymentMode === 'gateway' ? (
           <>
-            Оплатить и подарить {currentPrice > 0 ? formatPrice(currentPrice) : ''}
+            Оплатить и подарить {currentPrice > 0 ? formatPrice(Math.max(
+              config.payment_methods.find(m => m.method_id === selectedMethod)?.min_amount_kopeks ?? 0,
+              currentPrice
+            )) : ''}
           </>
         ) : (
           <>
