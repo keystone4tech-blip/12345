@@ -642,9 +642,9 @@ function BuyTabContent({
   const canSubmit = useMemo(() => {
     if (!selectedTariffId || !selectedPeriodDays) return false;
     if (paymentMode === 'gateway' && !selectedMethod) return false;
-    // Кнопка остается активной даже при нехватке баланса, так как меняется на «Пополнить баланс»
+    if (paymentMode === 'balance' && insufficientBalance && !selectedMethod) return false;
     return true;
-  }, [selectedTariffId, selectedPeriodDays, paymentMode, selectedMethod]);
+  }, [selectedTariffId, selectedPeriodDays, paymentMode, selectedMethod, insufficientBalance]);
 
 
   // Purchase mutation
@@ -699,18 +699,25 @@ function BuyTabContent({
     if (paymentMode === 'balance' && insufficientBalance) {
       // Вычисляем недостающую сумму в копейках
       const missingKopeks = currentPrice - config.balance_kopeks;
-      // Получаем минимальное пополнение среди всех активных платежных шлюзов из настроек в админ-панели (дефолт 10000 копеек / 100 рублей)
-      const activeMinKopeks = config.payment_methods.length > 0
-        ? Math.min(...config.payment_methods.map(m => m.min_amount_kopeks ?? 10000))
-        : 10000;
-      const topUpKopeks = Math.max(activeMinKopeks, missingKopeks);
+      
+      // Ищем выбранный шлюз в конфигурации, чтобы учесть его минимальный лимит из настроек админ-панели
+      const methodObj = config.payment_methods.find(m => m.method_id === selectedMethod);
+      const methodMinKopeks = methodObj?.min_amount_kopeks ?? 10000;
+      
+      // Корректируем сумму в соответствии с минимальным лимитом выбранного шлюза
+      const topUpKopeks = Math.max(methodMinKopeks, missingKopeks);
       const topUpAmountRubles = Math.ceil(topUpKopeks / 100);
       
       // Формируем URL для возврата на страницу подарков с сохранением контекста покупки
       const returnUrl = `/gift?action=buy&tariffId=${selectedTariffId}&days=${selectedPeriodDays}&gatewayPaid=true`;
       
-      // Перенаправляем на выбор платежной системы для пополнения баланса на вычисленную сумму
-      navigate(`/balance?amount=${topUpAmountRubles}&returnTo=${encodeURIComponent(returnUrl)}`);
+      if (selectedMethod) {
+        // Перенаправляем сразу на страницу ввода/подтверждения платежа выбранного шлюза (как при прямой оплате)
+        navigate(`/balance/top-up/${selectedMethod}?amount=${topUpAmountRubles}&returnTo=${encodeURIComponent(returnUrl)}`);
+      } else {
+        // Если платежных методов нет, перенаправляем на общую страницу баланса
+        navigate(`/balance?amount=${topUpAmountRubles}&returnTo=${encodeURIComponent(returnUrl)}`);
+      }
       return;
     }
 
@@ -865,16 +872,21 @@ function BuyTabContent({
         />
       </div>
 
-      {/* Payment method cards (gateway mode only) */}
+      {/* Payment method cards (gateway mode or balance mode with insufficient funds) */}
       <AnimatePresence mode="wait">
-        {paymentMode === 'gateway' && config.payment_methods.length > 0 && (
+        {((paymentMode === 'gateway') || (paymentMode === 'balance' && insufficientBalance)) && config.payment_methods.length > 0 && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden"
+            className="overflow-hidden space-y-3"
           >
+            {paymentMode === 'balance' && insufficientBalance && (
+              <div className="text-xs font-semibold text-dark-400 uppercase tracking-wider mb-1 px-1">
+                Выберите способ пополнения баланса:
+              </div>
+            )}
             <div role="radiogroup" aria-label={t('gift.paymentMethod')} className="space-y-2">
               {config.payment_methods.map((method) => (
                 <PaymentMethodCard
@@ -994,9 +1006,9 @@ function BuyTabContent({
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : paymentMode === 'balance' && insufficientBalance ? (
           <>
-            Пополнить баланс на {formatPrice(Math.max(
-              config.payment_methods.length > 0
-                ? Math.min(...config.payment_methods.map(m => m.min_amount_kopeks ?? 10000))
+            Пополнить через {config.payment_methods.find(m => m.method_id === selectedMethod)?.display_name || 'платежную систему'} на {formatPrice(Math.max(
+              selectedMethod
+                ? (config.payment_methods.find(m => m.method_id === selectedMethod)?.min_amount_kopeks ?? 10000)
                 : 10000,
               currentPrice - config.balance_kopeks
             ))}
