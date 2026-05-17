@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +11,10 @@ import {
   type RecentPaymentsResponse,
 } from '../api/admin';
 import { formatUptime } from '../utils/format';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts';
 
 const CABINET_VERSION = __APP_VERSION__;
 import { useCurrency } from '../hooks/useCurrency';
@@ -322,7 +326,19 @@ function RevenueChart({ data }: { data: { date: string; amount_rubles: number }[
   const { t } = useTranslation();
   const { formatAmount, currencySymbol } = useCurrency();
 
-  if (!data || data.length === 0) {
+  // Подготовка данных: берём последние 7 дней и форматируем
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return data.slice(-7).map((item) => {
+      const date = new Date(item.date);
+      return {
+        name: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
+        value: item.amount_rubles,
+      };
+    });
+  }, [data]);
+
+  if (chartData.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center text-dark-500">
         {t('common.noData')}
@@ -330,36 +346,105 @@ function RevenueChart({ data }: { data: { date: string; amount_rubles: number }[
     );
   }
 
-  const last7Days = data.slice(-7);
-  const maxValue = Math.max(...last7Days.map((d) => d.amount_rubles), 1);
+  return (
+    <div className="h-52">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+          {/* Градиент для заливки под линией */}
+          <defs>
+            <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgb(var(--color-accent-400))" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="rgb(var(--color-accent-400))" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: 'rgb(var(--color-dark-400))' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: 'rgb(var(--color-dark-500))' }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v: number) => formatAmount(v)}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'rgb(var(--color-dark-800))',
+              border: '1px solid rgb(var(--color-dark-700))',
+              borderRadius: '12px',
+              fontSize: '13px',
+              color: 'rgb(var(--color-dark-100))',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            }}
+            formatter={(value: number | undefined) => [`${formatAmount(value ?? 0)} ${currencySymbol}`, '']}
+            labelStyle={{ color: 'rgb(var(--color-dark-400))', marginBottom: 4 }}
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="rgb(var(--color-accent-400))"
+            strokeWidth={2.5}
+            fill="url(#revenueGradient)"
+            animationDuration={800}
+            animationEasing="ease-out"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// Donut-диаграмма распределения подписок
+function SubscriptionDonut({ stats }: { stats: DashboardStats }) {
+  const { t } = useTranslation();
+
+  const data = useMemo(() => [
+    { name: t('adminDashboard.subscriptions.active'), value: stats.subscriptions.active || 0, color: 'rgb(var(--color-success-400))' },
+    { name: t('adminDashboard.subscriptions.trial'), value: stats.subscriptions.trial || 0, color: 'rgb(var(--color-warning-400))' },
+    { name: t('adminDashboard.subscriptions.paid'), value: stats.subscriptions.paid || 0, color: 'rgb(var(--color-accent-400))' },
+    { name: t('adminDashboard.subscriptions.expired'), value: stats.subscriptions.expired || 0, color: 'rgb(var(--color-error-400))' },
+  ].filter(d => d.value > 0), [stats, t]);
+
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+
+  if (total === 0) return null;
 
   return (
-    <div className="space-y-3">
-      {last7Days.map((item) => {
-        const percentage = (item.amount_rubles / maxValue) * 100;
-        const date = new Date(item.date);
-        const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' });
-        const dayNum = date.getDate();
-
-        return (
-          <div key={item.date} className="group">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-sm font-medium capitalize text-dark-300">
-                {dayName}, {dayNum}
-              </span>
-              <span className="text-sm font-semibold text-dark-100">
-                {formatAmount(item.amount_rubles)} {currencySymbol}
-              </span>
-            </div>
-            <div className="h-3 overflow-hidden rounded-full bg-dark-700/50">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-accent-600 to-accent-400 transition-all duration-500 ease-out group-hover:from-accent-500 group-hover:to-accent-300"
-                style={{ width: `${Math.max(percentage, 2)}%` }}
-              />
-            </div>
+    <div className="flex items-center gap-4">
+      <div className="h-28 w-28 flex-shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={30}
+              outerRadius={50}
+              paddingAngle={3}
+              dataKey="value"
+              animationDuration={600}
+              animationEasing="ease-out"
+              stroke="none"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        {data.map((item) => (
+          <div key={item.name} className="flex items-center gap-2 text-xs">
+            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="text-dark-400">{item.name}</span>
+            <span className="font-semibold text-dark-200">{item.value}</span>
+            <span className="text-dark-500">({((item.value / total) * 100).toFixed(0)}%)</span>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
@@ -645,6 +730,10 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4">
+            {/* Donut-диаграмма распределения подписок */}
+            {stats && <SubscriptionDonut stats={stats} />}
+
+            {/* Числовая сетка подписок */}
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg bg-dark-900/50 p-4">
                 <div className="mb-1 text-xs text-dark-500">
@@ -774,7 +863,7 @@ export default function AdminDashboard() {
                     className="border-b border-dark-700/50 transition-colors hover:bg-dark-800/50"
                   >
                     <td className="px-2 py-3">
-                      <span className="font-medium text-dark-100">{tariff.tariff_name}</span>
+                      <span className="font-medium text-dark-100">{tariff.tariff_name.replace(/<[^>]*>/g, '')}</span>
                     </td>
                     <td className="px-2 py-3 text-center">
                       <span className="font-semibold text-success-400">

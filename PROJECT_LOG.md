@@ -1,4 +1,55 @@
-## Дата: 2026-05-17 (Дополнение)
+## Дата: 2026-05-17 (Модернизация UI)
+
+### Изменения:
+
+#### Новые премиальные темы (8 шт.)
+- В файле `cabinet/src/components/admin/constants.ts` добавлены 8 новых тем-пресетов:
+  - **Cyberpunk** — неоново-зелёная на чёрном фоне
+  - **Aurora** — индиго-фиолетовая с северным сиянием
+  - **Midnight Gold** — золото на угольно-чёрном
+  - **Frost Glass** — ледяная голубая с белым
+  - **Neon Tokyo** — ярко-розовая на тёмно-фиолетовом
+  - **Solar Flare** — красная солнечная вспышка
+  - **Lavender Dream** — нежно-лавандовая
+  - **Arctic Night** — цианово-бирюзовая полярная ночь
+- Переводы добавлены во все 4 локали: `ru.json`, `en.json`, `fa.json`, `zh.json`
+
+#### Исправление контраста светлой темы
+- В `cabinet/src/styles/globals.css` для `.light .bento-card` и `.light .card` усилены тени (`shadow-md`) и убрана прозрачность фона для лучшей видимости карточек
+
+#### Premium CSS-анимации
+- В `cabinet/src/styles/globals.css` добавлены:
+  - `animate-float` — парение карточек (только десктоп)
+  - `perspective-card` / `perspective-card-inner` — 3D tilt эффект при hover
+  - `neon-glow` — неоновое свечение для Cyberpunk/Neon тем
+  - `count-up` — плавное появление чисел
+  - `accent-underline` — градиентная линия под заголовками
+  - `pulse-dot` — пульсирующий индикатор онлайн
+  - Все анимации отключаются при `prefers-reduced-motion`
+
+#### Recharts графики в дашборде
+- В `cabinet/src/pages/AdminDashboard.tsx`:
+  - Компонент `RevenueChart` переписан: CSS-полоски заменены на `AreaChart` (recharts) с градиентной заливкой, анимацией, интерактивным tooltip
+  - Добавлен компонент `SubscriptionDonut` — donut-диаграмма распределения подписок с легендой
+  - Очищены `<tg-emoji>` HTML-теги в названиях тарифов
+
+### Структура затронутых файлов:
+- `cabinet/src/components/admin/constants.ts` — 8 новых тем
+- `cabinet/src/styles/globals.css` — контраст + анимации
+- `cabinet/src/pages/AdminDashboard.tsx` — Recharts графики + очистка emoji
+- `cabinet/src/locales/ru.json` — переводы тем
+- `cabinet/src/locales/en.json` — переводы тем
+- `cabinet/src/locales/fa.json` — переводы тем
+- `cabinet/src/locales/zh.json` — переводы тем
+
+### Заметки:
+- TypeScript сборка проходит без ошибок (`tsc --noEmit` → exit 0)
+- Все анимации оптимизированы для мобильных устройств (отключены или упрощены)
+- Для применения изменений требуется пересборка cabinet: `docker compose build --no-cache cabinet`
+
+---
+
+
 
 ### Изменения:
 - **Исправление видимости триал-тарифов в подарках**:

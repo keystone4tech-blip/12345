@@ -2016,7 +2016,15 @@
         "violet": "Фиолет",
         "rose": "Роза",
         "midnight": "Полночь",
-        "turquoise": "Бирюза"
+        "turquoise": "Бирюза",
+        "cyberpunk": "Киберпанк",
+        "aurora": "Северное сияние",
+        "gold": "Золото",
+        "frost": "Мороз",
+        "neon": "Неон",
+        "solar": "Солнечная вспышка",
+        "lavender": "Лаванда",
+        "arctic": "Арктика"
       },
       "colors": {
         "background": "Фон",

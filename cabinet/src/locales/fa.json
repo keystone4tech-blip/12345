@@ -1653,6 +1653,24 @@
         "sys_version": "نسخه",
         "sys_logging": "لاگ‌ها"
       },
+      "presets": {
+        "standard": "استاندارد",
+        "ocean": "اقیانوس",
+        "forest": "جنگل",
+        "sunset": "غروب",
+        "violet": "بنفش",
+        "rose": "رز",
+        "midnight": "نیمه‌شب",
+        "turquoise": "فیروزه‌ای",
+        "cyberpunk": "سایبرپانک",
+        "aurora": "شفق قطبی",
+        "gold": "طلایی",
+        "frost": "یخبندان",
+        "neon": "نئون",
+        "solar": "شراره خورشیدی",
+        "lavender": "اسطوخودوس",
+        "arctic": "قطب شمال"
+      },
       "categories": {
         "TELEGRAM_WIDGET": "Telegram Login Widget",
         "TELEGRAM_OIDC": "Telegram Login (OIDC)"

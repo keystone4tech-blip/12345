@@ -1691,6 +1691,24 @@
         "sys_version": "版本",
         "sys_logging": "日志"
       },
+      "presets": {
+        "standard": "标准",
+        "ocean": "海洋",
+        "forest": "森林",
+        "sunset": "日落",
+        "violet": "紫罗兰",
+        "rose": "玫瑰",
+        "midnight": "午夜",
+        "turquoise": "绿松石",
+        "cyberpunk": "赛博朋克",
+        "aurora": "北极光",
+        "gold": "午夜金",
+        "frost": "冰霜",
+        "neon": "霓虹东京",
+        "solar": "太阳耀斑",
+        "lavender": "薰衣草",
+        "arctic": "北极之夜"
+      },
       "categories": {
         "TELEGRAM_WIDGET": "Telegram Login Widget",
         "TELEGRAM_OIDC": "Telegram Login (OIDC)"

@@ -456,9 +456,12 @@ img.twemoji {
   }
 
   .light .bento-card {
-    @apply border-champagne-300/50 bg-champagne-50/90 shadow-sm;
-    /* Light Theme Glass Border */
-    box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
+    @apply border-champagne-300/60 bg-champagne-50 shadow-md;
+    /* Light Theme — усиленная тень для видимости карточек */
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.08),
+      0 1px 2px -1px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
   }
 
   @media (min-width: 1024px) {
@@ -745,9 +748,13 @@ img.twemoji {
 
   /* Cards - Light */
   .light .card {
-    @apply border-champagne-300/50 bg-champagne-50/90 p-5 shadow-sm sm:p-6;
+    @apply border-champagne-300/60 bg-champagne-50 p-5 shadow-md sm:p-6;
     border-radius: var(--bento-radius);
-    box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
+    /* Усиленная тень для лучшей видимости карточек в светлой теме */
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.08),
+      0 1px 2px -1px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
   }
 
   @media (min-width: 1024px) {
@@ -2005,5 +2012,119 @@ input[type='checkbox']:hover:not(:checked) {
 @media (prefers-reduced-motion: reduce) {
   .admin-orb {
     animation: none;
+  }
+}
+
+/* ========== PREMIUM ANIMATIONS ========== */
+
+/* Floating card animation — лёгкое парение карточек */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: floatCard 4s ease-in-out infinite;
+}
+
+/* Только на десктопе — на мобильных GPU не тратим */
+@media (max-width: 1023px) {
+  .animate-float {
+    animation: none;
+  }
+}
+
+/* 3D Tilt card perspective — контейнер */
+.perspective-card {
+  perspective: 1000px;
+}
+
+.perspective-card-inner {
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  transform-style: preserve-3d;
+}
+
+/* Hover: лёгкий наклон в 3D */
+.perspective-card:hover .perspective-card-inner {
+  transform: rotateY(3deg) rotateX(-2deg) scale(1.02);
+}
+
+/* Neon glow border — неоновое свечение для Cyberpunk и Neon тем */
+.neon-glow {
+  box-shadow:
+    0 0 10px rgba(var(--color-accent-400), 0.3),
+    0 0 30px rgba(var(--color-accent-400), 0.15),
+    inset 0 0 10px rgba(var(--color-accent-400), 0.05);
+  border: 1px solid rgba(var(--color-accent-400), 0.4);
+}
+
+.neon-glow:hover {
+  box-shadow:
+    0 0 15px rgba(var(--color-accent-400), 0.5),
+    0 0 40px rgba(var(--color-accent-400), 0.25),
+    inset 0 0 15px rgba(var(--color-accent-400), 0.08);
+  border-color: rgba(var(--color-accent-400), 0.6);
+}
+
+/* Count-up число — плавное появление */
+.count-up {
+  display: inline-block;
+  animation: countUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes countUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Gradient accent line — акцентная линия под заголовком */
+.accent-underline::after {
+  content: '';
+  display: block;
+  height: 3px;
+  width: 40px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--color-accent-400)),
+    rgb(var(--color-accent-600))
+  );
+}
+
+/* Pulse dot — пульсирующая точка для онлайн-индикаторов */
+.pulse-dot {
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.4;
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .count-up,
+  .pulse-dot::after {
+    animation: none;
+  }
+  .perspective-card:hover .perspective-card-inner {
+    transform: none;
   }
 }

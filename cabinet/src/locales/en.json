@@ -1992,6 +1992,24 @@
         "sys_version": "Version",
         "sys_logging": "Logging"
       },
+      "presets": {
+        "standard": "Standard",
+        "ocean": "Ocean",
+        "forest": "Forest",
+        "sunset": "Sunset",
+        "violet": "Violet",
+        "rose": "Rose",
+        "midnight": "Midnight",
+        "turquoise": "Turquoise",
+        "cyberpunk": "Cyberpunk",
+        "aurora": "Aurora Borealis",
+        "gold": "Midnight Gold",
+        "frost": "Frost Glass",
+        "neon": "Neon Tokyo",
+        "solar": "Solar Flare",
+        "lavender": "Lavender Dream",
+        "arctic": "Arctic Night"
+      },
       "categories": {
         "TELEGRAM_WIDGET": "Telegram Login Widget",
         "TELEGRAM_OIDC": "Telegram Login (OIDC)"
