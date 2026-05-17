@@ -151,6 +151,7 @@ function getGiftStatusKey(status: string): string {
     pending: 'gift.statusPending',
     failed: 'gift.statusFailed',
     expired: 'gift.statusExpired',
+    activated: 'gift.statusActivated',
   };
   return statusMap[status] ?? 'gift.statusPending';
 }
@@ -160,7 +161,7 @@ function isGiftAvailable(status: string): boolean {
 }
 
 function isGiftActivated(gift: SentGift): boolean {
-  return gift.status === 'delivered' && gift.activated_by_username != null;
+  return gift.status === 'activated' || (gift.status === 'delivered' && gift.activated_by_username != null);
 }
 
 function formatGiftDate(dateStr: string | null): string {

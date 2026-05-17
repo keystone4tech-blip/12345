@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, UTC
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -116,14 +116,15 @@ async def create_gift_purchase(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
             
         # Deduct balance
-        await subtract_user_balance(db, user.id, price)
+        desc = f"Purchase gift: {tariff.name} ({request.period_days} days)"
+        await subtract_user_balance(db, user, price, description=desc)
         
         # Create transaction
         await create_transaction(
             db,
             user_id=user.id,
             amount_kopeks=-price,
-            transaction_type=TransactionType.GIFT_VPN,
+            type=TransactionType.GIFT_VPN,
             description=f"Purchase gift: {tariff.name} ({request.period_days} days)"
         )
     else:
@@ -255,60 +256,29 @@ async def get_received_gifts(
 
 @router.post('/activate', response_model=ActivateGiftResponse)
 async def activate_gift(
-    request: ActivateGiftRequest,
+    req: Request,
+    payload: ActivateGiftRequest,
     user: User = Depends(get_current_cabinet_user),
     db: AsyncSession = Depends(get_cabinet_db),
 ):
     """Activate a gift code."""
-    # Find gift
-    query = select(Gift).where(Gift.token == request.code)
-    result = await db.execute(query)
-    gift = result.scalar_one_or_none()
+    from app.services.gift_service import GiftService
     
-    if not gift:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gift code not found")
-        
-    if gift.is_used:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Gift already activated")
-        
-    # Get tariff
-    tariff = await get_tariff_by_id(db, gift.tariff_id)
-    if not tariff:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tariff no longer exists")
-
-    # Process activation
-    from app.database.crud.subscription import (
-        create_paid_subscription, 
-        extend_subscription, 
-        get_subscription_by_user_id
-    )
+    bot = getattr(req.app.state, 'bot', None)
     
-    sub = await get_subscription_by_user_id(db, user.id)
-    if sub:
-        # Extend existing subscription
-        # Note: In a production system, we should check if the tariff is compatible.
-        # For simplicity, we just add days.
-        await extend_subscription(db, sub, gift.period_days)
-    else:
-        # Create new subscription
-        await create_paid_subscription(
-            db, 
-            user_id=user.id, 
-            tariff_id=tariff.id, 
-            duration_days=gift.period_days
-        )
-        
-    # Mark gift as used
-    gift.is_used = True
-    gift.recipient_id = user.id
-    gift.activated_at = datetime.now(UTC)
+    result = await GiftService.activate_gift(db, user, payload.code, bot)
     
-    await db.commit()
-    
-    logger.info('User activated a gift', user_id=user.id, token=gift.token)
-    
+    if not result.get("success"):
+        error = result.get("error")
+        if error == "invalid_token":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gift code not found or already activated")
+        elif error == "tariff_not_found":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tariff no longer exists")
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+            
     return ActivateGiftResponse(
         status='ok',
-        tariff_name=strip_telegram_tags(tariff.name),
-        period_days=gift.period_days
+        tariff_name=result.get("tariff_name"),
+        period_days=result.get("period")
     )
