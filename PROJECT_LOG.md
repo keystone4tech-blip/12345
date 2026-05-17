@@ -1,4 +1,4 @@
-## Дата: 2026-05-18 (Исправление отображения транзакций покупки подарков)
+## Дата: 2026-05-18 (Исправление отображения транзакций покупки подарков и верстки заголовков)
 
 ### Изменения:
 
@@ -7,19 +7,23 @@
 - Добавлено подробное логирование с использованием `logger.debug` для отслеживания знака вычисляемой суммы каждой транзакции при маппинге.
 - В файле [admin_users.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/routes/admin_users.py) в детальной информации о пользователе в панели администратора (`get_user_detail`) типы `'gift_vpn'` и `'purchase_gift'` также внесены в набор расходных операций `_EXPENSE_TYPES`, что гарантирует их отображение с отрицательным знаком в панели управления.
 
-#### Локализация типов транзакций на фронтенде
+#### Локализация типов и описаний транзакций на русском языке
 - В React-компоненте [Balance.tsx](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/pages/Balance.tsx) в функции `getTypeBadge` и `getTypeLabel` добавлена полноценная обработка типов `GIFT_VPN` и `PURCHASE_GIFT` с подробным комментированием кода.
 - Для покупки подарков теперь корректно отображается красный бейдж списания (`badge-error`) и выводится локализованный текст: **«Покупка подарка»** (вместо исходного английского идентификатора типа).
-- Обновлены файлы локализации во всех поддерживаемых языковых пакетах:
-  - [ru.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/ru.json) — `"gift_vpn": "Покупка подарка"`
-  - [en.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/en.json) — `"gift_vpn": "Gift Purchase"`
-  - [zh.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/zh.json) — `"gift_vpn": "购买礼物"`
-  - [fa.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/fa.json) — `"gift_vpn": "خرید هدیه"`
+- Обновлены файлы локализации во всех поддерживаемых языковых пакетах: [ru.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/ru.json), [en.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/en.json), [zh.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/zh.json), [fa.json](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/locales/fa.json).
+- В файле [gift.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/routes/gift.py) создана вспомогательная функция `_format_days` для корректного склонения слова «день» в зависимости от числа (например, *14 дней*, *1 день*, *3 дня*).
+- В роуте создания подарка `/gift/purchase` описание транзакции переведено с английского `Purchase gift` на русский: `Покупка подарка: {tariff_name} ({_format_days(period_days)})`.
+- Добавлено подробное логирование с использованием `logger.info` при списании баланса за покупку подарка.
+
+#### Адаптивный размер заголовка на странице подарков
+- В React-компоненте [GiftSubscription.tsx](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/cabinet/src/pages/GiftSubscription.tsx) на строке 1652 к заголовку страницы `h1` добавлен недостающий адаптивный CSS-класс `sm:text-3xl` (к базовому `text-2xl font-bold text-dark-50`). Теперь главная надпись страницы подарков на экранах компьютеров отображается точно в таком же размере и стиле, как и на всех остальных страницах личного кабинета (Баланс, Профиль, Рефералы и т.д.).
 
 ### Структура затронутых файлов:
 - `bot/app/cabinet/routes/balance.py` — исправление знака суммы транзакции в ЛК
 - `bot/app/cabinet/routes/admin_users.py` — исправление знака суммы транзакции в админ-панели
+- `bot/app/cabinet/routes/gift.py` — перевод описания транзакции на русский язык и склонение дней
 - `cabinet/src/pages/Balance.tsx` — визуальный рендеринг бейджа и лейбла
+- `cabinet/src/pages/GiftSubscription.tsx` — исправление размера адаптивного заголовка страницы подарков
 - `cabinet/src/locales/ru.json` — локализация (русский)
 - `cabinet/src/locales/en.json` — локализация (английский)
 - `cabinet/src/locales/zh.json` — локализация (китайский)
@@ -28,6 +32,7 @@
 ### Заметки:
 - Все изменения успешно протестированы, фронтенд полностью собирается (`tsc --noEmit` и `npm run build` возвращают exit code 0).
 - Исторические и новые транзакции покупки подарков теперь визуально отображаются как полноценные списания средств в личном кабинете пользователя и админ-панели на русском языке.
+- Верстка заголовков страниц приведена к абсолютному единообразию.
 
 ---
 

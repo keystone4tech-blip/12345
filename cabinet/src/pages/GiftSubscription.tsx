@@ -1649,7 +1649,8 @@ export default function GiftSubscription() {
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-500/20">
             <GiftIcon className="h-5 w-5 text-accent-400" />
           </div>
-          <h1 className="text-2xl font-bold text-dark-50">{t('gift.pageTitle')}</h1>
+          {/* Заголовок страницы с темой подарков - адаптирован по размеру (sm:text-3xl) под единый стиль личного кабинета */}
+          <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('gift.pageTitle')}</h1>
         </motion.div>
 
         {/* Tab bar */}

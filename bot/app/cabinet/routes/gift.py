@@ -126,6 +126,22 @@ async def get_gift_config(
 
 
 
+def _format_days(days: int) -> str:
+    """
+    Вспомогательная функция для корректного склонения слова 'день' на русском языке.
+    Пример:
+    - 1 день, 21 день, 31 день
+    - 2 дня, 3 дня, 4 дня
+    - 5 дней, 11 дней, 14 дней
+    """
+    if days % 10 == 1 and days % 100 != 11:
+        return f"{days} день"
+    elif 2 <= days % 10 <= 4 and not (12 <= days % 100 <= 14):
+        return f"{days} дня"
+    else:
+        return f"{days} дней"
+
+
 @router.post('/purchase', response_model=GiftPurchaseResponse)
 async def create_gift_purchase(
     request: GiftPurchaseRequest,
@@ -151,17 +167,29 @@ async def create_gift_purchase(
         if user.balance_kopeks < price:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
             
-        # Deduct balance
-        desc = f"Purchase gift: {tariff.name} ({request.period_days} days)"
+        # Форматируем период действия подарка на русском языке (например: 14 дней, 1 день)
+        formatted_period = _format_days(request.period_days)
+        desc = f"Покупка подарка: {tariff.name} ({formatted_period})"
+        
+        # Логируем начало списания средств
+        logger.info(
+            "Attempting to subtract balance for gift purchase",
+            user_id=user.id,
+            price_kopeks=price,
+            tariff_name=tariff.name,
+            period_days=request.period_days
+        )
+        
+        # Списываем средства с баланса пользователя
         await subtract_user_balance(db, user, price, description=desc)
         
-        # Create transaction
+        # Создаем финансовую транзакцию в БД с русским описанием
         await create_transaction(
             db,
             user_id=user.id,
             amount_kopeks=-price,
             type=TransactionType.GIFT_VPN,
-            description=f"Purchase gift: {tariff.name} ({request.period_days} days)"
+            description=desc
         )
     else:
         raise HTTPException(
