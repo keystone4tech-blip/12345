@@ -65,26 +65,26 @@ export function MobileBottomNav({
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
       }}
     >
-      <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex w-full items-center justify-between gap-0.5">
         {coreItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
             onClick={handleNavClick}
             className={cn(
-              'relative flex min-w-[64px] flex-1 shrink-0 flex-col items-center justify-center rounded-2xl px-2 py-2.5 transition-all duration-200',
+              'relative flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-0.5 py-2 transition-all duration-200',
               isActive(item.path) ? 'text-accent-400' : 'text-dark-500 hover:text-dark-300',
             )}
           >
             {isActive(item.path) && (
               <motion.div
                 layoutId="bottom-nav-active"
-                className="absolute inset-0 rounded-2xl bg-accent-500/15"
+                className="absolute inset-0 rounded-xl bg-accent-500/15"
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             )}
             <item.icon className="relative z-10 h-5 w-5" />
-            <span className="relative z-10 mt-1 whitespace-nowrap text-2xs">{item.label}</span>
+            <span className="relative z-10 mt-1 w-full truncate text-center text-[10px] tracking-tight">{item.label}</span>
           </Link>
         ))}
       </div>
