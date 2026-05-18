@@ -1,3 +1,50 @@
+## Дата: 2026-05-19 (PWA Фаза 2: Нативные Web Push-уведомления)
+
+### Изменения:
+
+#### База Данных и Модели (bot/app/database)
+- **Таблица `push_subscriptions`**:
+  - Создана SQLAlchemy-модель `PushSubscription` в `models.py` для сохранения токенов подписки Web Push (включая `endpoint`, ключи `p256dh` и `auth`) авторизованных пользователей.
+  - Сгенерирована и выполнена Alembic-миграция `0a8b9487c53d_add_push_subscriptions.py`.
+
+#### Бэкенд API (bot/app/cabinet)
+- **Автоматическая настройка VAPID** (`config.py`):
+  - Реализовано авто-создание приватного и публичного VAPID ключей при их отсутствии в системе с помощью `cryptography.hazmat.primitives.asymmetric.ec` с прямой перезаписью конфигурационного файла.
+- **Push Роутер** (`bot/app/cabinet/routes/push.py`):
+  - Созданы эндпоинты `/vapid-key` (получение публичного VAPID-ключа), `/subscribe` (добавление подписки в БД) и `/unsubscribe` (удаление подписки).
+  - Эндпоинты интегрированы в `__init__.py`.
+- **Проверка Web Push через тест-уведомления** (`bot/app/cabinet/routes/notifications.py`):
+  - При вызове тестового уведомления `/notifications/test` теперь автоматически запускается отправка реального Web Push через `pywebpush`.
+  - Добавлена очистка недействительных подписок при получении ошибки доставки `410 Gone`.
+
+#### Фронтенд Личного Кабинета (cabinet)
+- **Фоновый скрипт Push Service Worker** (`cabinet/public/sw-push.js`):
+  - Реализован фоновый слушатель `push` событий для отображения пуш-уведомлений и кликов по ним с перефокусировкой на вкладку приложения.
+- **Интеграция Service Worker в Vite** (`cabinet/vite.config.ts`):
+  - В плагин `VitePWA` добавлены импорты `sw-push.js` через Workbox `importScripts`.
+- **Интеграция API-клиентов** (`cabinet/src/api/`):
+  - Созданы TypeScript методы для работы с подпиской `push.ts` и добавлена отправка тест-уведомления в `notifications.ts`.
+- **React-хук управления пушами** (`cabinet/src/hooks/usePWAPush.ts`):
+  - Инкапсулирует вызов `navigator.serviceWorker` и `pushManager`, запрос разрешений, обмен токенами с бэкендом и очистку.
+- **Интерфейс настроек в Профиле** (`cabinet/src/pages/Profile.tsx`):
+  - Создан Bento-блок настроек пушей на устройстве с переключателем `Switch` и кнопкой отправки моментального тестового пуша.
+
+### Структура затронутых файлов:
+- `bot/app/database/models.py` — [MODIFY] добавление модели `PushSubscription`
+- `bot/migrations/versions/0a8b9487c53d_add_push_subscriptions.py` — [NEW] alembic-миграция для таблицы подписок
+- `bot/app/config.py` — [MODIFY] авто-генерация VAPID ключей
+- `bot/app/cabinet/routes/push.py` — [NEW] эндпоинты подписок push
+- `bot/app/cabinet/routes/__init__.py` — [MODIFY] регистрация push-роутера
+- `bot/app/cabinet/routes/notifications.py` — [MODIFY] рассылка реального пуша в тестовом эндпоинте
+- `cabinet/public/sw-push.js` — [NEW] фоновый обработчик пушей для сервис-воркера
+- `cabinet/vite.config.ts` — [MODIFY] подключение `sw-push.js` в `VitePWA`
+- `cabinet/src/api/push.ts` — [NEW] клиентские запросы push подписок
+- `cabinet/src/api/notifications.ts` — [MODIFY] добавление метода тестовой отправки
+- `cabinet/src/hooks/usePWAPush.ts` — [NEW] хук управления push подписками
+- `cabinet/src/pages/Profile.tsx` — [MODIFY] интеграция Bento-блока пуш-уведомлений и тест-кнопки
+
+---
+
 ## Дата: 2026-05-19 (Инструкции для ручной установки PWA при блокировке beforeinstallprompt)
 
 ### Изменения:

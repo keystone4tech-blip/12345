@@ -46,6 +46,8 @@ export default defineConfig({
       },
       // Настройки Workbox (стратегии кеширования)
       workbox: {
+        // Подключаем фоновый скрипт для обработки Push-уведомлений
+        importScripts: ['/sw-push.js'],
         // Кешируем основные ресурсы приложения
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Для API-запросов: сеть первична, кеш как fallback

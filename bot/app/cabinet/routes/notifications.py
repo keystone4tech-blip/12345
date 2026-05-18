@@ -123,13 +123,70 @@ async def update_notification_settings(
 @router.post('/test')
 async def send_test_notification(
     user: User = Depends(get_current_cabinet_user),
+    db: AsyncSession = Depends(get_cabinet_db),
 ):
     """Send a test notification to the user."""
-    # This would typically trigger a notification via Telegram bot
-    # For now, just return success
+    # Попытка отправить Web Push уведомление, если есть активные подписки
+    push_sent = False
+    push_errors = []
+    
+    from sqlalchemy import select
+    from app.database.models import PushSubscription
+    
+    stmt = select(PushSubscription).where(PushSubscription.user_id == user.id)
+    result = await db.execute(stmt)
+    subscriptions = result.scalars().all()
+    
+    if subscriptions:
+        from pywebpush import webpush, WebPushException
+        import json
+        from app.config import settings
+        
+        payload = {
+            "title": "MozhnoVPN — Тест",
+            "body": "Ваши пуш-уведомления успешно настроены и работают! 🎉",
+            "icon": "/icons/icon-192x192.png",
+            "badge": "/icons/icon-192x192.png",
+            "data": {
+                "url": "/profile"
+            }
+        }
+        
+        for sub in subscriptions:
+            try:
+                # Отправляем пуш-пакет через службу push-уведомлений браузера
+                webpush(
+                    subscription_info={
+                        "endpoint": sub.endpoint,
+                        "keys": {
+                            "p256dh": sub.p256dh,
+                            "auth": sub.auth
+                        }
+                    },
+                    data=json.dumps(payload),
+                    vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                    vapid_claims={
+                        "sub": settings.VAPID_CLAIM_EMAIL
+                    }
+                )
+                push_sent = True
+            except WebPushException as e:
+                # Если подписка устарела (браузер выдал 410 Gone) — удаляем её
+                logger.warning("Failed to send web push", error=str(e), subscription_id=sub.id)
+                push_errors.append(str(e))
+                if getattr(e, 'response', None) is not None and e.response.status_code == 410:
+                    await db.delete(sub)
+                    await db.commit()
+            except Exception as e:
+                logger.error("Unexpected error during web push", error=str(e))
+                push_errors.append(str(e))
+
     return {
         'success': True,
         'message': 'Test notification request received. You will receive a test message shortly.',
+        'push_sent': push_sent,
+        'push_subscriptions_count': len(subscriptions),
+        'push_errors': push_errors
     }
 
 

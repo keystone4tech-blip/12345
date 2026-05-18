@@ -50,3 +50,6 @@ aiofiles==23.2.1
 
 # Архивирование с паролем
 pyzipper==0.3.6
+
+# Web Push уведомления для PWA
+pywebpush==1.14.0

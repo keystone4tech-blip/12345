@@ -8,6 +8,7 @@ export { contestsApi } from './contests';
 export { pollsApi } from './polls';
 export { promoApi } from './promo';
 export { notificationsApi } from './notifications';
+export { pushApi } from './push';
 export { infoApi } from './info';
 export { adminSettingsApi } from './adminSettings';
 export { adminApi, statsApi } from './admin';

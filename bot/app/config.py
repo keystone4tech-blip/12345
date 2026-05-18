@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 import structlog
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -795,6 +795,11 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str | None = None
     SMTP_FROM_NAME: str = 'VPN Service'
     SMTP_USE_TLS: bool = True
+
+    # PWA Web Push VAPID settings
+    VAPID_PUBLIC_KEY: str | None = None
+    VAPID_PRIVATE_KEY: str | None = None
+    VAPID_CLAIM_EMAIL: str | None = None
 
     # Ban System Integration (monitoring)
     BAN_SYSTEM_ENABLED: bool = False
@@ -2620,6 +2625,54 @@ class Settings(BaseSettings):
         except Exception as exc:  # pragma: no cover - defensive validation
             raise ValueError(f'Некорректный идентификатор часового пояса: {value}') from exc
         return value
+
+    @model_validator(mode='after')
+    def generate_vapid_keys_if_missing(self) -> 'Settings':
+        if not self.VAPID_PUBLIC_KEY or not self.VAPID_PRIVATE_KEY:
+            try:
+                # Динамически генерируем VAPID ключи
+                from py_vapid import Vapid
+                vapid = Vapid()
+                vapid.generate_keys()
+                
+                import base64
+                from cryptography.hazmat.primitives import serialization
+                
+                # Получаем публичный ключ в uncompressed bytes
+                pub_bytes = vapid.public_key.public_bytes(
+                    encoding=serialization.Encoding.X962,
+                    format=serialization.PublicFormat.UncompressedPoint
+                )
+                # URL-safe base64 без padding
+                pub_b64 = base64.urlsafe_b64encode(pub_bytes).decode('utf-8').rstrip('=')
+                
+                # Получаем приватный ключ
+                priv_num = vapid.private_key.private_numbers().private_value
+                priv_bytes = priv_num.to_bytes(32, byteorder='big')
+                priv_b64 = base64.urlsafe_b64encode(priv_bytes).decode('utf-8').rstrip('=')
+                
+                self.VAPID_PUBLIC_KEY = pub_b64
+                self.VAPID_PRIVATE_KEY = priv_b64
+                
+                # Записываем в .env файлы для сохранения при перезапуске
+                env_paths = [Path('.env'), Path('bot/.env')]
+                for env_path in env_paths:
+                    if env_path.exists():
+                        content = env_path.read_text(encoding='utf-8')
+                        if 'VAPID_PUBLIC_KEY' not in content:
+                            new_content = content.rstrip() + f"\n\n# PWA Web Push VAPID Keys\nVAPID_PUBLIC_KEY={pub_b64}\nVAPID_PRIVATE_KEY={priv_b64}\n"
+                            env_path.write_text(new_content, encoding='utf-8')
+                            logger.info(f"Generated new VAPID keys and saved them to {env_path}")
+            except Exception as e:
+                logger.error(f"Failed to generate VAPID keys: {e}")
+        
+        # Настраиваем claim email
+        if not self.VAPID_CLAIM_EMAIL:
+            self.VAPID_CLAIM_EMAIL = self.SMTP_FROM_EMAIL or 'mailto:admin@mozhnovpn.tech'
+        elif self.VAPID_CLAIM_EMAIL and not self.VAPID_CLAIM_EMAIL.startswith('mailto:'):
+            self.VAPID_CLAIM_EMAIL = f"mailto:{self.VAPID_CLAIM_EMAIL}"
+            
+        return self
 
 
 settings = Settings()

@@ -3009,5 +3009,29 @@ class Gift(Base):
     def __repr__(self) -> str:
         return f"<Gift(token='{self.token}', tariff_id={self.tariff_id}, is_used={self.is_used})>"
 
+
+class PushSubscription(Base):
+    """Подписки PWA Push-уведомлений для пользователей."""
+
+    __tablename__ = 'push_subscriptions'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    
+    endpoint = Column(Text, nullable=False, unique=True)
+    p256dh = Column(String(255), nullable=False)
+    auth = Column(String(255), nullable=False)
+    
+    created_at = Column(AwareDateTime(), default=func.now())
+    updated_at = Column(AwareDateTime(), default=func.now(), onupdate=func.now())
+
+    # Связь с каскадным удалением при удалении пользователя
+    user = relationship('User', backref=backref('push_subscriptions', cascade='all, delete-orphan'))
+
+    def __repr__(self) -> str:
+        return f"<PushSubscription(id={self.id}, user_id={self.user_id}, endpoint='{self.endpoint[:30]}...')>"
+
+
 import app.database.models_ai_ticket  # noqa: F401, E402
+
 

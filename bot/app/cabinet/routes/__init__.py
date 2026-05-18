@@ -41,6 +41,7 @@ from .info import router as info_router
 from .media import router as media_router
 from .notifications import router as notifications_router
 from .oauth import router as oauth_router
+from .push import router as push_router
 from .partner_application import router as partner_application_router
 from .polls import router as polls_router
 from .promo import router as promo_router
@@ -81,6 +82,7 @@ router.include_router(info_router)
 router.include_router(branding_router)
 router.include_router(gift_router)
 router.include_router(media_router)
+router.include_router(push_router)
 
 # Wheel routes
 router.include_router(wheel_router)

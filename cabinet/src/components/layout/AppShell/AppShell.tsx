@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useBranding } from '@/hooks/useBranding';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { usePWAPush } from '@/hooks/usePWAPush';
 import { themeColorsApi } from '@/api/themeColors';
 import { isLogoPreloaded } from '@/api/branding';
 import { cn } from '@/lib/utils';
@@ -207,6 +208,25 @@ export function AppShell({ children }: AppShellProps) {
   const { appName, logoLetter, hasCustomLogo, logoUrl } = useBranding();
   const { referralEnabled, wheelEnabled, hasContests, hasPolls, giftEnabled } = useFeatureFlags();
   useScrollRestoration();
+
+  // Web Push Auto-subscription on load/installation
+  const {
+    isSupported: isPushSupported,
+    isSubscribed: isPushSubscribed,
+    permission: pushPermission,
+    subscribe: subscribePush,
+  } = usePWAPush();
+
+  useEffect(() => {
+    // Автоматически пытаемся подписать пользователя при монтировании личного кабинета,
+    // чтобы пуши были включены по умолчанию на всех поддерживаемых устройствах.
+    if (isPushSupported && !isPushSubscribed && pushPermission !== 'denied') {
+      console.log('[Web Push] Attempting auto-subscription on layout mount...');
+      subscribePush().catch((err) => {
+        console.warn('[Web Push] Auto-subscription skipped or rejected:', err);
+      });
+    }
+  }, [isPushSupported, isPushSubscribed, pushPermission, subscribePush]);
 
   // Theme toggle visibility
   const { data: enabledThemes } = useQuery({

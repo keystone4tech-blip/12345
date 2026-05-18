@@ -12,6 +12,7 @@ import {
   NotificationSettings,
   NotificationSettingsUpdate,
 } from '../api/notifications';
+import { usePWAPush } from '../hooks/usePWAPush';
 import { referralApi } from '../api/referral';
 import { brandingApi, type EmailAuthEnabled } from '../api/branding';
 import { UI } from '../config/constants';
@@ -304,6 +305,41 @@ export default function Profile() {
   const handleNotificationValue = (key: keyof NotificationSettings, value: number) => {
     const update: NotificationSettingsUpdate = { [key]: value };
     updateNotificationsMutation.mutate(update);
+  };
+
+  // Web Push Hook
+  const {
+    isSupported: isPushSupported,
+    isSubscribed: isPushSubscribed,
+    loading: pushLoading,
+    error: pushError,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+  } = usePWAPush();
+
+  const [testPushLoading, setTestPushLoading] = useState(false);
+
+  const handleSubscribePush = async () => {
+    await subscribePush();
+  };
+
+  const handleUnsubscribePush = async () => {
+    await unsubscribePush();
+  };
+
+  const handleSendTestPush = async () => {
+    setTestPushLoading(true);
+    try {
+      await notificationsApi.sendTestNotification();
+      setSuccess('Тестовое push-уведомление успешно отправлено!');
+      setError(null);
+    } catch (err: any) {
+      console.error(err);
+      setError('Не удалось отправить тестовое уведомление. Проверьте разрешения.');
+      setSuccess(null);
+    } finally {
+      setTestPushLoading(false);
+    }
   };
 
   return (
@@ -803,6 +839,72 @@ export default function Profile() {
           )}
         </Card>
       </motion.div>
+
+      {/* PWA Web Push Settings */}
+      {isPushSupported && (
+        <motion.div variants={staggerItem}>
+          <Card>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-semibold text-dark-100">
+                  Пуш-уведомления на этом устройстве
+                </h2>
+                <p className="text-sm text-dark-400 mt-1">
+                  Получайте мгновенные уведомления об окончании подписки, предупреждениях о трафике и важных событиях прямо на этом устройстве.
+                </p>
+              </div>
+              <Switch
+                checked={isPushSubscribed}
+                onCheckedChange={(checked) => {
+                  if (checked) handleSubscribePush();
+                  else handleUnsubscribePush();
+                }}
+                disabled={pushLoading}
+              />
+            </div>
+
+            {pushError && (
+              <div className="mb-4 rounded-linear border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400">
+                {pushError}
+              </div>
+            )}
+
+            {isPushSubscribed && (
+              <div className="flex items-center justify-between border-t border-dark-800/50 pt-4">
+                <span className="text-sm text-dark-400">
+                  Хотите проверить доставку уведомлений?
+                </span>
+                <Button
+                  onClick={handleSendTestPush}
+                  loading={testPushLoading}
+                  variant="secondary"
+                  size="sm"
+                >
+                  Отправить тест-пуш
+                </Button>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+      )}
+
+      {!isPushSupported && (
+        <motion.div variants={staggerItem}>
+          <Card>
+            <h2 className="text-lg font-semibold text-dark-100 mb-2">
+              Пуш-уведомления на этом устройстве
+            </h2>
+            <div className="rounded-linear border border-warning-500/20 bg-warning-500/5 p-4">
+              <p className="text-sm text-warning-400">
+                Push-уведомления не поддерживаются вашим текущим браузером.
+              </p>
+              <p className="mt-2 text-xs text-dark-400">
+                Примечание для iOS Safari: чтобы включить уведомления, обязательно установите приложение на главный экран (через меню «Поделиться» → «На экран «Домой») и запустите его оттуда.
+              </p>
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* PWA Install Section */}
       <motion.div variants={staggerItem}>
