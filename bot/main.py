@@ -5,6 +5,44 @@ import signal
 import sys
 from pathlib import Path
 
+# ==========================================
+# ГЛОБАЛЬНЫЙ MONKEY-PATCH ДЛЯ CRYPTOGRAPHY / ELLIPTIC CURVES
+# Исправляет ошибку "curve must be an EllipticCurve instance" / "Curve must be N"
+# во всех сторонних библиотеках (pywebpush, http_ece, py-vapid и др.),
+# вызванную несовместимостью старого кода библиотек с новыми версиями cryptography.
+# ==========================================
+try:
+    from cryptography.hazmat.primitives.asymmetric import ec
+    
+    # 1. Патчим метод from_encoded_point
+    original_from_encoded_point = ec.EllipticCurvePublicKey.from_encoded_point
+    def patched_from_encoded_point(curve, data):
+        if isinstance(curve, type) and issubclass(curve, ec.EllipticCurve):
+            curve = curve()
+        return original_from_encoded_point(curve, data)
+    ec.EllipticCurvePublicKey.from_encoded_point = patched_from_encoded_point
+
+    # 2. Патчим метод derive_private_key
+    original_derive_private_key = ec.derive_private_key
+    def patched_derive_private_key(private_value, curve, backend=None):
+        if isinstance(curve, type) and issubclass(curve, ec.EllipticCurve):
+            curve = curve()
+        return original_derive_private_key(private_value, curve, backend)
+    ec.derive_private_key = patched_derive_private_key
+
+    # 3. Патчим метод generate_private_key
+    original_generate_private_key = ec.generate_private_key
+    def patched_generate_private_key(curve, backend=None):
+        if isinstance(curve, type) and issubclass(curve, ec.EllipticCurve):
+            curve = curve()
+        return original_generate_private_key(curve, backend)
+    ec.generate_private_key = patched_generate_private_key
+
+    print("✅ Успешно применен глобальный monkey-patch для cryptography.ec!")
+except Exception as patch_err:
+    print(f"❌ Не удалось применить monkey-patch для cryptography: {patch_err}")
+# ==========================================
+
 import structlog
 
 

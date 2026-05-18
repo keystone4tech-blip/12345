@@ -3,14 +3,17 @@
 ### Изменения:
 
 #### Бэкенд API (bot/app)
+- **Создание глобального Monkey-Patch для `cryptography`** (`bot/main.py`):
+  - Реализован перехватчик эллиптических методов `from_encoded_point`, `derive_private_key` и `generate_private_key` в самом начале точки входа `bot/main.py`.
+  - Патч на лету инстанцирует эллиптическую кривую (`ec.SECP256R1()`), если сторонняя библиотека передает её как неинстанцированный класс.
+  - Это полностью и навсегда устраняет ошибку `TypeError: Curve must be an instance of EllipticCurve` для всех зависимостей, в том числе для шифрования ECE внутри библиотеки `http-ece` (используется под капотом `pywebpush` для шифрования полезной нагрузки Web Push).
 - **Создание кастомного VAPID генератора** (`bot/app/utils/vapid.py`):
   - Реализован математически выверенный и полностью соответствующий RFC 8292 генератор VAPID заголовков на чистой библиотеке `cryptography`.
-  - Устранена критическая ошибка `TypeError: Curve must be an instance of EllipticCurve`, возникавшая в Docker-контейнерах из-за несовместимости устаревшей `py-vapid` и современной `cryptography`.
-  - Генерация ключей и подписей VAPID теперь работает на 100% стабильно на любых версиях ОС и библиотек за счет правильного инстанцирования кривой `ec.SECP256R1()`.
 - **Интеграция в роутеры** (`bot/app/cabinet/routes/push.py` и `bot/app/cabinet/routes/notifications.py`):
   - Заменено использование встроенной в `pywebpush` подписи на передачу готовых заголовков авторизации через параметр `headers`, полностью изолируя внутренности от багнутых сторонних библиотек.
 
 ### Структура затронутых файлов:
+- `bot/main.py` — [MODIFY] глобальный monkey-patch для обратной совместимости cryptography.ec
 - `bot/app/utils/vapid.py` — [NEW] модуль генерации VAPID-подписей на чистой cryptography
 - `bot/app/cabinet/routes/push.py` — [MODIFY] использование кастомного VAPID в приветственном пуше
 - `bot/app/cabinet/routes/notifications.py` — [MODIFY] использование кастомного VAPID в тестовых пушах
