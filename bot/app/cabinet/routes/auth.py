@@ -411,76 +411,136 @@ async def auth_telegram(
             detail='Missing Telegram user ID',
         )
 
-    user = await get_user_by_telegram_id(db, telegram_id)
-
-    # Get user data from initData
-    tg_username = user_data.get('username')
-    tg_first_name = user_data.get('first_name')
-    tg_last_name = user_data.get('last_name')
-    tg_language = user_data.get('language_code', 'ru')
-
-    # Resolve referral code to referrer ID for new users
-    referrer_id = None
-    if request.referral_code and not user:
+    # Инициализируем Bot для отправки реферальных уведомлений
+    bot = None
+    if settings.BOT_TOKEN:
         try:
-            referrer = await get_user_by_referral_code(db, request.referral_code)
-            if referrer:
-                referrer_id = referrer.id
+            from aiogram import Bot
+            bot = Bot(token=settings.BOT_TOKEN)
+            logger.debug('🤖 CABINET: Инициализирован Bot для отправки реферальных уведомлений')
         except Exception as e:
-            logger.warning('Failed to resolve referral code', referral_code=request.referral_code, error=e)
+            logger.warning('Failed to initialize Bot in cabinet auth', error=e)
 
-    if not user:
-        # Create new user from Telegram initData
-        logger.info('Creating new user from cabinet (initData): telegram_id', telegram_id=telegram_id)
-        user = await create_user(
-            db=db,
-            telegram_id=telegram_id,
-            username=tg_username,
-            first_name=tg_first_name,
-            last_name=tg_last_name,
-            language=tg_language,
-            referred_by_id=referrer_id,
-        )
-        logger.info('User created successfully: id=, telegram_id', user_id=user.id, telegram_id=user.telegram_id)
-    else:
-        # Update user info from initData (like bot middleware does)
-        updated = False
-        if tg_username and tg_username != user.username:
-            user.username = tg_username
-            updated = True
-        if tg_first_name and tg_first_name != user.first_name:
-            user.first_name = tg_first_name
-            updated = True
-        if tg_last_name and tg_last_name != user.last_name:
-            user.last_name = tg_last_name
-            updated = True
-        if updated:
-            logger.info('User profile updated from initData', user_id=user.id)
+    try:
+        user = await get_user_by_telegram_id(db, telegram_id)
 
-    if user.status != 'active':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='User account is not active',
-        )
+        # Get user data from initData
+        tg_username = user_data.get('username')
+        tg_first_name = user_data.get('first_name')
+        tg_last_name = user_data.get('last_name')
+        tg_language = user_data.get('language_code', 'ru')
 
-    # Update last login
-    user.cabinet_last_login = datetime.now(UTC)
-    await db.commit()
+        # Resolve referral code to referrer ID for new users
+        referrer_id = None
+        is_organic = False
+        if request.referral_code and not user:
+            try:
+                referrer = await get_user_by_referral_code(db, request.referral_code)
+                if referrer:
+                    referrer_id = referrer.id
+                    logger.info('👤 CABINET: Найден реферер по коду', referrer_id=referrer_id, referral_code=request.referral_code)
+            except Exception as e:
+                logger.warning('Failed to resolve referral code', referral_code=request.referral_code, error=e)
 
-    response = await _create_auth_response(user, db)
+        # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к приоритетному админу или по списку
+        if not referrer_id and not user:
+            priority_admin_id = 6521050178
+            
+            # Сначала ищем по Telegram ID
+            admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+            # Если не нашли, ищем по первичному ключу базы данных (ID 1)
+            if not admin_user:
+                admin_user = await get_user_by_id(db, 1)
+                
+            if admin_user:
+                referrer_id = admin_user.id
+                is_organic = True
+                logger.info('👤 CABINET: Приоритетная привязка к администратору (по запросу/fallback)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+            else:
+                # Fallback на список администраторов из настроек
+                admins = settings.get_admin_ids()
+                for admin_tg_id in admins:
+                    if admin_tg_id == priority_admin_id:
+                        continue
+                    admin_user = await get_user_by_telegram_id(db, admin_tg_id)
+                    if admin_user:
+                        referrer_id = admin_user.id
+                        is_organic = True
+                        logger.info(
+                            '👤 CABINET: Автоматическая привязка к администратору из списка', 
+                            admin_tg_id=admin_tg_id, 
+                            referrer_internal_id=referrer_id
+                        )
+                        break
 
-    # Store refresh token
-    await _store_refresh_token(db, user.id, response.refresh_token)
+        if not user:
+            # Create new user from Telegram initData
+            logger.info('Creating new user from cabinet (initData): telegram_id', telegram_id=telegram_id)
+            user = await create_user(
+                db=db,
+                telegram_id=telegram_id,
+                username=tg_username,
+                first_name=tg_first_name,
+                last_name=tg_last_name,
+                language=tg_language,
+                referred_by_id=referrer_id,
+            )
+            logger.info('User created successfully: id=, telegram_id', user_id=user.id, telegram_id=user.telegram_id)
 
-    # Process referral code (before campaign bonus, which may also set referrer)
-    await _process_referral_code(db, user, request.referral_code)
+            # Мгновенно обрабатываем реферальную регистрацию
+            if referrer_id and referrer_id != user.id:
+                try:
+                    await process_referral_registration(db, user.id, referrer_id, bot=bot, is_organic=is_organic)
+                    logger.info('✅ CABINET: Реферальная регистрация успешно обработана', user_id=user.id, referrer_id=referrer_id, is_organic=is_organic)
+                except Exception as e:
+                    logger.error('❌ CABINET: Ошибка при обработке реферальной регистрации', error=e)
+        else:
+            # Update user info from initData (like bot middleware does)
+            updated = False
+            if tg_username and tg_username != user.username:
+                user.username = tg_username
+                updated = True
+            if tg_first_name and tg_first_name != user.first_name:
+                user.first_name = tg_first_name
+                updated = True
+            if tg_last_name and tg_last_name != user.last_name:
+                user.last_name = tg_last_name
+                updated = True
+            if updated:
+                logger.info('User profile updated from initData', user_id=user.id)
 
-    # Process campaign bonus
-    response.campaign_bonus = await _process_campaign_bonus(db, user, request.campaign_slug)
-    if response.campaign_bonus:
-        response.user = _user_to_response(user)
+        if user.status != 'active':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='User account is not active',
+            )
 
-    return response
+        # Update last login
+        user.cabinet_last_login = datetime.now(UTC)
+        await db.commit()
+
+        response = await _create_auth_response(user, db)
+
+        # Store refresh token
+        await _store_refresh_token(db, user.id, response.refresh_token)
+
+        # Process referral code (before campaign bonus, which may also set referrer)
+        await _process_referral_code(db, user, request.referral_code)
+
+        # Process campaign bonus
+        response.campaign_bonus = await _process_campaign_bonus(db, user, request.campaign_slug)
+        if response.campaign_bonus:
+            response.user = _user_to_response(user)
+
+        return response
+
+    finally:
+        if bot:
+            try:
+                await bot.session.close()
+                logger.debug('🤖 CABINET: Закрыта сессия Bot')
+            except Exception as e:
+                logger.warning('Failed to close bot session', error=e)
 
 
 @router.post('/telegram/widget', response_model=AuthResponse)
@@ -502,63 +562,123 @@ async def auth_telegram_widget(
             detail='Invalid or expired Telegram authentication data',
         )
 
-    user = await get_user_by_telegram_id(db, request.id)
-
-    # Resolve referral code to referrer ID for new users
-    referrer_id = None
-    if request.referral_code and not user:
+    # Инициализируем Bot для отправки реферальных уведомлений
+    bot = None
+    if settings.BOT_TOKEN:
         try:
-            referrer = await get_user_by_referral_code(db, request.referral_code)
-            if referrer:
-                referrer_id = referrer.id
+            from aiogram import Bot
+            bot = Bot(token=settings.BOT_TOKEN)
+            logger.debug('🤖 CABINET WIDGET: Инициализирован Bot для отправки реферальных уведомлений')
         except Exception as e:
-            logger.warning('Failed to resolve referral code', referral_code=request.referral_code, error=e)
+            logger.warning('Failed to initialize Bot in cabinet auth widget', error=e)
 
-    if not user:
-        # Create new user from Telegram data
-        logger.info(
-            'Creating new user from cabinet: telegram_id=, username', request_id=request.id, username=request.username
-        )
-        user = await create_user(
-            db=db,
-            telegram_id=request.id,
-            username=request.username,
-            first_name=request.first_name,
-            last_name=request.last_name,
-            language='ru',
-            referred_by_id=referrer_id,
-        )
-        logger.info('User created successfully: id=, telegram_id', user_id=user.id, telegram_id=user.telegram_id)
+    try:
+        user = await get_user_by_telegram_id(db, request.id)
 
-    if user.status != 'active':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='User account is not active',
-        )
+        # Resolve referral code to referrer ID for new users
+        referrer_id = None
+        is_organic = False
+        if request.referral_code and not user:
+            try:
+                referrer = await get_user_by_referral_code(db, request.referral_code)
+                if referrer:
+                    referrer_id = referrer.id
+                    logger.info('👤 CABINET WIDGET: Найден реферер по коду', referrer_id=referrer_id, referral_code=request.referral_code)
+            except Exception as e:
+                logger.warning('Failed to resolve referral code', referral_code=request.referral_code, error=e)
 
-    # Update user info from widget data
-    if request.username and request.username != user.username:
-        user.username = request.username
-    if request.first_name and request.first_name != user.first_name:
-        user.first_name = request.first_name
-    if request.last_name != user.last_name:
-        user.last_name = request.last_name
+        # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к приоритетному админу или по списку
+        if not referrer_id and not user:
+            priority_admin_id = 6521050178
+            
+            # Сначала ищем по Telegram ID
+            admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+            # Если не нашли, ищем по первичному ключу базы данных (ID 1)
+            if not admin_user:
+                admin_user = await get_user_by_id(db, 1)
+                
+            if admin_user:
+                referrer_id = admin_user.id
+                is_organic = True
+                logger.info('👤 CABINET WIDGET: Приоритетная привязка к администратору (по запросу/fallback)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+            else:
+                # Fallback на список администраторов из настроек
+                admins = settings.get_admin_ids()
+                for admin_tg_id in admins:
+                    if admin_tg_id == priority_admin_id:
+                        continue
+                    admin_user = await get_user_by_telegram_id(db, admin_tg_id)
+                    if admin_user:
+                        referrer_id = admin_user.id
+                        is_organic = True
+                        logger.info(
+                            '👤 CABINET WIDGET: Автоматическая привязка к администратору из списка', 
+                            admin_tg_id=admin_tg_id, 
+                            referrer_internal_id=referrer_id
+                        )
+                        break
 
-    user.cabinet_last_login = datetime.now(UTC)
-    await db.commit()
+        if not user:
+            # Create new user from Telegram data
+            logger.info(
+                'Creating new user from cabinet: telegram_id=, username', request_id=request.id, username=request.username
+            )
+            user = await create_user(
+                db=db,
+                telegram_id=request.id,
+                username=request.username,
+                first_name=request.first_name,
+                last_name=request.last_name,
+                language='ru',
+                referred_by_id=referrer_id,
+            )
+            logger.info('User created successfully: id=, telegram_id', user_id=user.id, telegram_id=user.telegram_id)
 
-    response = await _create_auth_response(user, db)
-    await _store_refresh_token(db, user.id, response.refresh_token)
+            # Мгновенно обрабатываем реферальную регистрацию
+            if referrer_id and referrer_id != user.id:
+                try:
+                    await process_referral_registration(db, user.id, referrer_id, bot=bot, is_organic=is_organic)
+                    logger.info('✅ CABINET WIDGET: Реферальная регистрация успешно обработана', user_id=user.id, referrer_id=referrer_id, is_organic=is_organic)
+                except Exception as e:
+                    logger.error('❌ CABINET WIDGET: Ошибка при обработке реферальной регистрации', error=e)
 
-    # Process referral code (before campaign bonus, which may also set referrer)
-    await _process_referral_code(db, user, request.referral_code)
+        if user.status != 'active':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='User account is not active',
+            )
 
-    # Process campaign bonus
-    response.campaign_bonus = await _process_campaign_bonus(db, user, request.campaign_slug)
-    if response.campaign_bonus:
-        response.user = _user_to_response(user)
+        # Update user info from widget data
+        if request.username and request.username != user.username:
+            user.username = request.username
+        if request.first_name and request.first_name != user.first_name:
+            user.first_name = request.first_name
+        if request.last_name != user.last_name:
+            user.last_name = request.last_name
 
-    return response
+        user.cabinet_last_login = datetime.now(UTC)
+        await db.commit()
+
+        response = await _create_auth_response(user, db)
+        await _store_refresh_token(db, user.id, response.refresh_token)
+
+        # Process referral code (before campaign bonus, which may also set referrer)
+        await _process_referral_code(db, user, request.referral_code)
+
+        # Process campaign bonus
+        response.campaign_bonus = await _process_campaign_bonus(db, user, request.campaign_slug)
+        if response.campaign_bonus:
+            response.user = _user_to_response(user)
+
+        return response
+
+    finally:
+        if bot:
+            try:
+                await bot.session.close()
+                logger.debug('🤖 CABINET WIDGET: Закрыта сессия Bot')
+            except Exception as e:
+                logger.warning('Failed to close bot session', error=e)
 
 
 @router.post('/email/register')
@@ -669,131 +789,187 @@ async def register_email_standalone(
 
     If TEST_EMAIL is configured, test email accounts are auto-verified.
     """
-    # Check if this is a test email registration
-    is_test_email = settings.is_test_email(request.email)
+    # Инициализируем Bot для отправки реферальных уведомлений в Telegram пригласителю
+    bot = None
+    if settings.BOT_TOKEN:
+        try:
+            from aiogram import Bot
+            bot = Bot(token=settings.BOT_TOKEN)
+            logger.debug('🤖 CABINET EMAIL STANDALONE: Инициализирован Bot для отправки реферальных уведомлений')
+        except Exception as e:
+            logger.warning('Failed to initialize Bot in cabinet email standalone', error=e)
 
-    if is_test_email:
-        # Validate test email password
-        if not settings.validate_test_email_password(request.email, request.password):
+    try:
+        # Check if this is a test email registration
+        is_test_email = settings.is_test_email(request.email)
+
+        if is_test_email:
+            # Validate test email password
+            if not settings.validate_test_email_password(request.email, request.password):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail='Invalid test email password',
+                )
+            logger.info('Test email registration', email=request.email)
+
+        # Check for disposable email
+        if disposable_email_service.is_disposable(request.email):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid test email password',
+                detail='Disposable email addresses are not allowed',
             )
-        logger.info('Test email registration', email=request.email)
 
-    # Check for disposable email
-    if disposable_email_service.is_disposable(request.email):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Disposable email addresses are not allowed',
-        )
+        # Проверить что email не занят
+        existing = await db.execute(select(User).where(User.email == request.email))
+        if existing.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='This email is already registered',
+            )
 
-    # Проверить что email не занят
-    existing = await db.execute(select(User).where(User.email == request.email))
-    if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='This email is already registered',
-        )
+        # Хешировать пароль
+        password_hash = hash_password(request.password)
 
-    # Хешировать пароль
-    password_hash = hash_password(request.password)
+        # Найти реферера по коду (если указан)
+        referrer = None
+        if request.referral_code:
+            referrer = await get_user_by_referral_code(db, request.referral_code)
+            if referrer:
+                # Защита от самореферала - нельзя регистрироваться по своему же коду
+                if referrer.email and referrer.email.lower() == request.email.lower():
+                    logger.warning(
+                        'Self-referral attempt blocked: email=, code',
+                        email=request.email,
+                        referral_code=request.referral_code,
+                    )
+                    referrer = None
+                else:
+                    logger.info(
+                        'Found referrer for email registration: referrer_id=, code',
+                        referrer_id=referrer.id,
+                        referral_code=request.referral_code,
+                    )
 
-    # Найти реферера по коду (если указан)
-    referrer = None
-    if request.referral_code:
-        referrer = await get_user_by_referral_code(db, request.referral_code)
+        # АВТОПРИВЯЗКА К АДМИНУ: Если реферер так и не найден, привязываем к приоритетному админу или по списку
+        referrer_id = None
+        is_organic = False
         if referrer:
-            # Защита от самореферала - нельзя регистрироваться по своему же коду
-            if referrer.email and referrer.email.lower() == request.email.lower():
-                logger.warning(
-                    'Self-referral attempt blocked: email=, code',
-                    email=request.email,
-                    referral_code=request.referral_code,
-                )
-                referrer = None
+            referrer_id = referrer.id
+        else:
+            priority_admin_id = 6521050178
+            # Сначала ищем по Telegram ID
+            admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+            # Если не нашли, ищем по первичному ключу базы данных (ID 1)
+            if not admin_user:
+                admin_user = await get_user_by_id(db, 1)
+                
+            if admin_user:
+                referrer_id = admin_user.id
+                is_organic = True
+                logger.info('👤 CABINET EMAIL STANDALONE: Приоритетная привязка к администратору (по запросу/fallback)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
             else:
-                logger.info(
-                    'Found referrer for email registration: referrer_id=, code',
-                    referrer_id=referrer.id,
-                    referral_code=request.referral_code,
+                # Fallback на список администраторов из настроек
+                admins = settings.get_admin_ids()
+                for admin_tg_id in admins:
+                    if admin_tg_id == priority_admin_id:
+                        continue
+                    admin_user = await get_user_by_telegram_id(db, admin_tg_id)
+                    if admin_user:
+                        referrer_id = admin_user.id
+                        is_organic = True
+                        logger.info(
+                            '👤 CABINET EMAIL STANDALONE: Автоматическая привязка к администратору из списка', 
+                            admin_tg_id=admin_tg_id, 
+                            referrer_internal_id=referrer_id
+                        )
+                        break
+
+        # Создать пользователя
+        user = await create_user_by_email(
+            db=db,
+            email=request.email,
+            password_hash=password_hash,
+            first_name=request.first_name,
+            language=request.language,
+            referred_by_id=referrer_id,
+        )
+
+        # Для тестового email или отключённой верификации - автоматически верифицировать
+        if is_test_email or not settings.is_cabinet_email_verification_enabled():
+            user.email_verified = True
+            user.email_verified_at = datetime.now(UTC)
+            await db.commit()
+            logger.info('Email auto-verified (test or verification disabled)', email=request.email, user_id=user.id)
+        else:
+            # Сгенерировать токен верификации
+            verification_token = generate_verification_token()
+            verification_expires = get_verification_expires_at()
+
+            user.email_verification_token = verification_token
+            user.email_verification_expires = verification_expires
+            await db.commit()
+
+            # Отправить email верификации
+            if settings.is_cabinet_email_verification_enabled() and email_service.is_configured():
+                cabinet_url = settings.CABINET_URL
+                verification_url = f'{cabinet_url}/verify-email'
+                lang = user.language or request.language or 'ru'
+                full_url = f'{verification_url}?token={verification_token}'
+                expire_hours = settings.get_cabinet_email_verification_expire_hours()
+
+                override = await get_rendered_override(
+                    'email_verification',
+                    lang,
+                    context={
+                        'username': user.first_name or 'User',
+                        'verification_url': full_url,
+                        'expire_hours': str(expire_hours),
+                    },
+                    db=db,
+                )
+                custom_subject, custom_body = override if override else (None, None)
+
+                await asyncio.to_thread(
+                    email_service.send_verification_email,
+                    to_email=request.email,
+                    verification_token=verification_token,
+                    verification_url=verification_url,
+                    username=user.first_name or 'User',
+                    language=lang,
+                    custom_subject=custom_subject,
+                    custom_body_html=custom_body,
                 )
 
-    # Создать пользователя
-    user = await create_user_by_email(
-        db=db,
-        email=request.email,
-        password_hash=password_hash,
-        first_name=request.first_name,
-        language=request.language,
-        referred_by_id=referrer.id if referrer else None,
-    )
+        # Обработать реферальную регистрацию (если есть реферер)
+        if referrer_id:
+            try:
+                await process_referral_registration(db, user.id, referrer_id, bot=bot, is_organic=is_organic)
+                logger.info(
+                    'Processed referral registration: user_id=, referrer_id, is_organic', 
+                    user_id=user.id, 
+                    referrer_id=referrer_id,
+                    is_organic=is_organic
+                )
+            except Exception as e:
+                logger.error('Failed to process referral registration', error=e)
+                # Не прерываем регистрацию из-за ошибки реферальной системы
 
-    # Для тестового email или отключённой верификации - автоматически верифицировать
-    if is_test_email or not settings.is_cabinet_email_verification_enabled():
-        user.email_verified = True
-        user.email_verified_at = datetime.now(UTC)
-        await db.commit()
-        logger.info('Email auto-verified (test or verification disabled)', email=request.email, user_id=user.id)
-    else:
-        # Сгенерировать токен верификации
-        verification_token = generate_verification_token()
-        verification_expires = get_verification_expires_at()
+        # Для тестового email - сразу можно логиниться (уже verified)
+        # Для обычного email - требуется верификация (если включена)
+        verification_required = not is_test_email and settings.is_cabinet_email_verification_enabled()
+        return RegisterResponse(
+            message='Verification email sent. Please check your inbox.',
+            email=request.email,
+            requires_verification=verification_required,
+        )
 
-        user.email_verification_token = verification_token
-        user.email_verification_expires = verification_expires
-        await db.commit()
-
-        # Отправить email верификации
-        if settings.is_cabinet_email_verification_enabled() and email_service.is_configured():
-            cabinet_url = settings.CABINET_URL
-            verification_url = f'{cabinet_url}/verify-email'
-            lang = user.language or request.language or 'ru'
-            full_url = f'{verification_url}?token={verification_token}'
-            expire_hours = settings.get_cabinet_email_verification_expire_hours()
-
-            override = await get_rendered_override(
-                'email_verification',
-                lang,
-                context={
-                    'username': user.first_name or 'User',
-                    'verification_url': full_url,
-                    'expire_hours': str(expire_hours),
-                },
-                db=db,
-            )
-            custom_subject, custom_body = override if override else (None, None)
-
-            await asyncio.to_thread(
-                email_service.send_verification_email,
-                to_email=request.email,
-                verification_token=verification_token,
-                verification_url=verification_url,
-                username=user.first_name or 'User',
-                language=lang,
-                custom_subject=custom_subject,
-                custom_body_html=custom_body,
-            )
-
-    # Обработать реферальную регистрацию (если есть реферер)
-    if referrer:
-        try:
-            await process_referral_registration(db, user.id, referrer.id, bot=None)
-            logger.info(
-                'Processed referral registration: user_id=, referrer_id', user_id=user.id, referrer_id=referrer.id
-            )
-        except Exception as e:
-            logger.error('Failed to process referral registration', error=e)
-            # Не прерываем регистрацию из-за ошибки реферальной системы
-
-    # Для тестового email - сразу можно логиниться (уже verified)
-    # Для обычного email - требуется верификация (если включена)
-    verification_required = not is_test_email and settings.is_cabinet_email_verification_enabled()
-    return RegisterResponse(
-        message='Verification email sent. Please check your inbox.',
-        email=request.email,
-        requires_verification=verification_required,
-    )
+    finally:
+        if bot:
+            try:
+                await bot.session.close()
+                logger.debug('🤖 CABINET EMAIL STANDALONE: Закрыта сессия Bot')
+            except Exception as e:
+                logger.warning('Failed to close bot session', error=e)
 
 
 @router.post('/email/verify', response_model=AuthResponse)

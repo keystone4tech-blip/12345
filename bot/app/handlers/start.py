@@ -18,6 +18,7 @@ from app.database.crud.campaign import (
 from app.database.crud.subscription import decrement_subscription_server_counts
 from app.database.crud.user import (
     create_user,
+    get_user_by_id,
     get_user_by_referral_code,
     get_user_by_telegram_id,
 )
@@ -1277,11 +1278,16 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
         # Приоритетный ID администратора по запросу пользователя
         priority_admin_id = 6521050178
         
+        # Сначала ищем по Telegram ID
         admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+        # Если не нашли, ищем по первичному ключу базы данных (ID 1)
+        if not admin_user:
+            admin_user = await get_user_by_id(db, 1)
+            
         if admin_user:
             referrer_id = admin_user.id
             is_organic = True
-            logger.info('👤 Приоритетная привязка к администратору (по запросу)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+            logger.info('👤 Приоритетная привязка к администратору (по запросу/fallback)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
         else:
             # Fallback на список администраторов из настроек
             admins = settings.get_admin_ids()
@@ -1678,11 +1684,16 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
         # Приоритетный ID администратора по запросу пользователя
         priority_admin_id = 6521050178
         
+        # Сначала ищем по Telegram ID
         admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+        # Если не нашли, ищем по первичному ключу базы данных (ID 1)
+        if not admin_user:
+            admin_user = await get_user_by_id(db, 1)
+            
         if admin_user:
             referrer_id = admin_user.id
             is_organic = True
-            logger.info('👤 Приоритетная привязка к администратору (по запросу)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+            logger.info('👤 Приоритетная привязка к администратору (по запросу/fallback)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
         else:
             # Fallback на список администраторов из настроек
             admins = settings.get_admin_ids()
@@ -2348,11 +2359,16 @@ async def required_sub_channel_check(
                         # Приоритетный ID администратора по запросу пользователя
                         priority_admin_id = 6521050178
                         
+                        # Сначала ищем по Telegram ID
                         admin_user = await get_user_by_telegram_id(db, priority_admin_id)
+                        # Если не нашли, ищем по первичному ключу базы данных (ID 1)
+                        if not admin_user:
+                            admin_user = await get_user_by_id(db, 1)
+                            
                         if admin_user:
                             referrer_id = admin_user.id
                             is_organic = True
-                            logger.info('👤 CHANNEL CHECK: Приоритетная привязка к администратору (по запросу)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
+                            logger.info('👤 CHANNEL CHECK: Приоритетная привязка к администратору (по запросу/fallback)', admin_tg_id=priority_admin_id, referrer_internal_id=referrer_id)
                         else:
                             # Fallback на список администраторов из настроек
                             admins = settings.get_admin_ids()
