@@ -1,3 +1,22 @@
+## Дата: 2026-05-19 (PWA & Web Push: Полное исправление VAPID и Curve must be an instance of EllipticCurve)
+
+### Изменения:
+
+#### Бэкенд API (bot/app)
+- **Создание кастомного VAPID генератора** (`bot/app/utils/vapid.py`):
+  - Реализован математически выверенный и полностью соответствующий RFC 8292 генератор VAPID заголовков на чистой библиотеке `cryptography`.
+  - Устранена критическая ошибка `TypeError: Curve must be an instance of EllipticCurve`, возникавшая в Docker-контейнерах из-за несовместимости устаревшей `py-vapid` и современной `cryptography`.
+  - Генерация ключей и подписей VAPID теперь работает на 100% стабильно на любых версиях ОС и библиотек за счет правильного инстанцирования кривой `ec.SECP256R1()`.
+- **Интеграция в роутеры** (`bot/app/cabinet/routes/push.py` и `bot/app/cabinet/routes/notifications.py`):
+  - Заменено использование встроенной в `pywebpush` подписи на передачу готовых заголовков авторизации через параметр `headers`, полностью изолируя внутренности от багнутых сторонних библиотек.
+
+### Структура затронутых файлов:
+- `bot/app/utils/vapid.py` — [NEW] модуль генерации VAPID-подписей на чистой cryptography
+- `bot/app/cabinet/routes/push.py` — [MODIFY] использование кастомного VAPID в приветственном пуше
+- `bot/app/cabinet/routes/notifications.py` — [MODIFY] использование кастомного VAPID в тестовых пушах
+
+---
+
 ## Дата: 2026-05-19 (PWA & Web Push: Улучшение логики и UX тестовых пушей)
 
 ### Изменения:

@@ -116,6 +116,9 @@ async def subscribe_push(
         }
 
         try:
+            from app.utils.vapid import generate_vapid_headers
+            vapid_headers = generate_vapid_headers(endpoint)
+
             webpush(
                 subscription_info={
                     "endpoint": endpoint,
@@ -125,10 +128,7 @@ async def subscribe_push(
                     }
                 },
                 data=json.dumps(payload),
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                vapid_claims={
-                    "sub": settings.VAPID_CLAIM_EMAIL
-                }
+                headers=vapid_headers
             )
             logger.info("Sent welcome push notification to user", user_id=user.id)
         except WebPushException as e:

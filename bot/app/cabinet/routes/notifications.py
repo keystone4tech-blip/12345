@@ -170,6 +170,9 @@ async def send_test_notification(
     for sub in subscriptions:
         try:
             logger.info("Попытка отправки тестового пуша", user_id=user.id, subscription_id=sub.id)
+            from app.utils.vapid import generate_vapid_headers
+            vapid_headers = generate_vapid_headers(sub.endpoint)
+            
             # Отправляем пуш-пакет через службу push-уведомлений браузера с использованием VAPID
             webpush(
                 subscription_info={
@@ -180,10 +183,7 @@ async def send_test_notification(
                     }
                 },
                 data=json.dumps(payload),
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                vapid_claims={
-                    "sub": settings.VAPID_CLAIM_EMAIL
-                }
+                headers=vapid_headers
             )
             push_sent = True
             logger.info("Тестовый пуш успешно отправлен в push-сервис", user_id=user.id, subscription_id=sub.id)
