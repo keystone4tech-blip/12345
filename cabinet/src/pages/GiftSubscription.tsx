@@ -1546,16 +1546,16 @@ function MyGiftsTabContent() {
     <div className="space-y-6">
       {/* Active gifts (awaiting activation) */}
       {hasActive && (
-        <div>
+        <div className="bento-card">
           <button
             onClick={() => setIsActiveOpen(!isActiveOpen)}
-            className="flex w-full items-center justify-between text-left mb-3"
+            className="flex w-full items-center justify-between text-left"
           >
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-dark-400">
+            <h2 className="text-lg font-semibold text-dark-100">
               {t('gift.activeGiftsTitle')}
             </h2>
             <ChevronDownIcon
-              className={`h-4 w-4 text-dark-400 transition-transform duration-200 ${isActiveOpen ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isActiveOpen ? 'rotate-180' : ''}`}
             />
           </button>
           <AnimatePresence>
@@ -1567,7 +1567,7 @@ function MyGiftsTabContent() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-3 mb-4">
+                <div className="mt-4 space-y-3">
                   {activeGifts.map((gift) => (
                     <SentGiftCard key={gift.token} gift={gift} />
                   ))}
@@ -1580,16 +1580,16 @@ function MyGiftsTabContent() {
 
       {/* Activated gifts */}
       {hasActivated && (
-        <div>
+        <div className="bento-card">
           <button
             onClick={() => setIsActivatedOpen(!isActivatedOpen)}
-            className="flex w-full items-center justify-between text-left mb-3"
+            className="flex w-full items-center justify-between text-left"
           >
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-dark-400">
+            <h2 className="text-lg font-semibold text-dark-100">
               {t('gift.activatedGiftsTitle')}
             </h2>
             <ChevronDownIcon
-              className={`h-4 w-4 text-dark-400 transition-transform duration-200 ${isActivatedOpen ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isActivatedOpen ? 'rotate-180' : ''}`}
             />
           </button>
           <AnimatePresence>
@@ -1601,7 +1601,7 @@ function MyGiftsTabContent() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-3 mb-4">
+                <div className="mt-4 space-y-3">
                   {activatedGifts.map((gift) => (
                     <SentGiftCard key={gift.token} gift={gift} />
                   ))}
@@ -1614,16 +1614,16 @@ function MyGiftsTabContent() {
 
       {/* Received gifts */}
       {hasReceived && (
-        <div>
+        <div className="bento-card">
           <button
             onClick={() => setIsReceivedOpen(!isReceivedOpen)}
-            className="flex w-full items-center justify-between text-left mb-3"
+            className="flex w-full items-center justify-between text-left"
           >
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-dark-400">
+            <h2 className="text-lg font-semibold text-dark-100">
               {t('gift.receivedGiftsTitle')}
             </h2>
             <ChevronDownIcon
-              className={`h-4 w-4 text-dark-400 transition-transform duration-200 ${isReceivedOpen ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isReceivedOpen ? 'rotate-180' : ''}`}
             />
           </button>
           <AnimatePresence>
@@ -1635,7 +1635,7 @@ function MyGiftsTabContent() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-3 mb-4">
+                <div className="mt-4 space-y-3">
                   {receivedGifts!.map((gift) => (
                     <ReceivedGiftCard key={gift.token} gift={gift} />
                   ))}
