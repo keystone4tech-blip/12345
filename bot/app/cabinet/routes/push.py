@@ -100,6 +100,42 @@ async def subscribe_push(
             logger.info("Registered new push subscription", user_id=user.id, endpoint=endpoint[:30])
 
         await db.commit()
+
+        # Отправляем мгновенное приветственное push-уведомление при успешном включении
+        from pywebpush import webpush, WebPushException
+        import json
+
+        payload = {
+            "title": "MozhnoVPN — Уведомления включены!",
+            "body": "Поздравляем! 🎉 Вы успешно включили push-уведомления. Теперь вы будете оперативно получать важные сообщения об окончании подписки, предупреждениях о трафике и акциях.",
+            "icon": "/icons/icon-192x192.png",
+            "badge": "/icons/icon-192x192.png",
+            "data": {
+                "url": "/profile"
+            }
+        }
+
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": endpoint,
+                    "keys": {
+                        "p256dh": p256dh,
+                        "auth": auth
+                    }
+                },
+                data=json.dumps(payload),
+                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                vapid_claims={
+                    "sub": settings.VAPID_CLAIM_EMAIL
+                }
+            )
+            logger.info("Sent welcome push notification to user", user_id=user.id)
+        except WebPushException as e:
+            logger.warning("Failed to send welcome push notification", error=str(e), user_id=user.id)
+        except Exception as e:
+            logger.error("Unexpected error during welcome push notification", error=str(e), user_id=user.id)
+
         return {"success": True, "message": "Successfully subscribed to push notifications."}
 
     except Exception as e:

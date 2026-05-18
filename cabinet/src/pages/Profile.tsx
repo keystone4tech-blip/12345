@@ -67,6 +67,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const queryClient = useQueryClient();
 
   const [error, setError] = useState<string | null>(null);
@@ -311,6 +312,7 @@ export default function Profile() {
   const {
     isSupported: isPushSupported,
     isSubscribed: isPushSubscribed,
+    permission: pushPermission,
     loading: pushLoading,
     error: pushError,
     subscribe: subscribePush,
@@ -318,9 +320,17 @@ export default function Profile() {
   } = usePWAPush();
 
   const [testPushLoading, setTestPushLoading] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
 
   const handleSubscribePush = async () => {
-    await subscribePush();
+    if (pushPermission === 'denied') {
+      setShowPermissionModal(true);
+      return;
+    }
+    const success = await subscribePush();
+    if (!success && Notification.permission === 'denied') {
+      setShowPermissionModal(true);
+    }
   };
 
   const handleUnsubscribePush = async () => {
@@ -869,10 +879,10 @@ export default function Profile() {
               </div>
             )}
 
-            {isPushSubscribed && (
+            {isPushSubscribed && isAdmin && (
               <div className="flex items-center justify-between border-t border-dark-800/50 pt-4">
                 <span className="text-sm text-dark-400">
-                  Хотите проверить доставку уведомлений?
+                  Хотите проверить доставку уведомлений? (Администратор)
                 </span>
                 <Button
                   onClick={handleSendTestPush}
@@ -910,6 +920,57 @@ export default function Profile() {
       <motion.div variants={staggerItem}>
         <InstallPWABanner variant="card" />
       </motion.div>
+
+      {/* Модальное окно при блокировке пуш-уведомлений */}
+      <AnimatePresence>
+        {showPermissionModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPermissionModal(false)}
+              className="absolute inset-0 bg-dark-950/80 backdrop-blur-sm"
+            />
+            {/* Modal Body */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-md overflow-hidden rounded-2xl border border-dark-800/80 bg-dark-900 p-6 shadow-2xl z-10"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-500/10 text-warning-400">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-dark-100">
+                    Уведомления заблокированы
+                  </h3>
+                  <p className="mt-2 text-sm text-dark-300">
+                    Вы заблокировали показ уведомлений для нашего сайта в настройках вашего браузера.
+                  </p>
+                  <p className="mt-2 text-xs text-dark-400">
+                    Чтобы включить их, пожалуйста, нажмите на значок «замочка» или «настроек» в адресной строке вашего браузера и разрешите отправку уведомлений для этого сайта.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={() => setShowPermissionModal(false)}
+                  variant="primary"
+                  size="sm"
+                >
+                  Хорошо, понял
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
