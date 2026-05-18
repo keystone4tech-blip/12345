@@ -1637,8 +1637,7 @@ export default function GiftSubscription() {
   ];
 
   return (
-    <div className="min-h-dvh">
-      <div className="mx-auto max-w-lg px-4 py-6">
+    <div className="mx-auto max-w-lg">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1702,6 +1701,5 @@ export default function GiftSubscription() {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
   );
 }
