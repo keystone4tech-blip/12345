@@ -20,6 +20,7 @@ from app.database.models import (
     Tariff
 )
 from ..dependencies import get_cabinet_db, require_permission
+from app.utils.formatters import strip_telegram_tags
 
 logger = structlog.get_logger(__name__)
 
@@ -471,7 +472,7 @@ async def get_scoped_graph(
     
     for user_id, user in users_nodes.items():
         sub = user_subscriptions.get(user_id)
-        sub_name = sub.tariff.name if sub and sub.tariff else ("Пробный" if sub and sub.is_trial else None)
+        sub_name = strip_telegram_tags(sub.tariff.name) if sub and sub.tariff else ("Пробный" if sub and sub.is_trial else None)
         sub_status = _determine_subscription_status(sub)
         sub_end_iso = sub.end_date.isoformat() if sub and sub.end_date else None
         
@@ -655,7 +656,7 @@ async def get_user_detail(
     sub_res = await db.execute(sub_q)
     sub = sub_res.scalar_one_or_none()
     
-    sub_name = sub.tariff.name if sub and sub.tariff else ("Пробный" if sub and sub.is_trial else None)
+    sub_name = strip_telegram_tags(sub.tariff.name) if sub and sub.tariff else ("Пробный" if sub and sub.is_trial else None)
     sub_status = _determine_subscription_status(sub)
     sub_end_iso = sub.end_date.isoformat() if sub and sub.end_date else None
     
@@ -832,7 +833,7 @@ async def search_network(
     users_nodes_list = []
     for user in users:
         sub = user_subscriptions.get(user.id)
-        sub_name = sub.tariff.name if sub and sub.tariff else ("Пробный" if sub and sub.is_trial else None)
+        sub_name = strip_telegram_tags(sub.tariff.name) if sub and sub.tariff else ("Пробный" if sub and sub.is_trial else None)
         sub_status = _determine_subscription_status(sub)
         sub_end_iso = sub.end_date.isoformat() if sub and sub.end_date else None
         

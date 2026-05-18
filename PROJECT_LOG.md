@@ -1,3 +1,28 @@
+## Дата: 2026-05-18 (Исправление отображения Telegram HTML-тегов эмодзи в Личном Кабинете)
+
+### Изменения:
+
+#### Интеграция автоматической очистки названий тарифов и подписок на уровне Pydantic-схем
+- Добавлен автоматический слой очистки полей в схемах бэкенда с помощью `@field_validator` и функции `strip_telegram_tags` (которая удаляет HTML-теги вроде `<tg-emoji>` и оставляет чистые эмодзи):
+  - [subscription.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/schemas/subscription.py) (схема `SubscriptionData`, поле `tariff_name`)
+  - [tariffs.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/schemas/tariffs.py) (схемы `TariffListItem`, `TariffDetailResponse`, `TariffStatsResponse`, поля `name` и `description`)
+  - [users.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/schemas/users.py) (схемы `UserSubscriptionInfo`, `UserAvailableTariffItem`, `UserAvailableTariffsResponse`, поля `tariff_name`, `name`, `description`, `current_tariff_name`)
+  - [gift.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/schemas/gift.py) (схемы `GiftTariff`, `GiftPurchaseStatus`, `PendingGift`, `SentGift`, `ReceivedGift`, `ActivateGiftResponse`, поля `name`, `description`, `tariff_name`)
+
+#### Дополнительный слой явной очистки в бэкенд-роутерах Cabinet API
+- В файле [subscription.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/routes/subscription.py):
+  - Сделана безусловной очистка в функции `_subscription_to_response`.
+  - Очищены значения `tariff_name` и сообщение об успешной активации в эндпоинте `/renew`.
+  - Добавлена очистка для `current_tariff_name` и `new_tariff_name` в эндпоинте `/switch-preview`.
+- В файле [admin_referral_network.py](file:///c:/Users/Keystone-Tech/Desktop/сервис рекламы с впн/bot/app/cabinet/routes/admin_referral_network.py):
+  - Добавлен импорт `strip_telegram_tags`.
+  - Очищены все собираемые значения `sub_name` на реферальном графе (в scoped-графе, карточке пользователя и живом поиске).
+
+#### Тестирование и верификация:
+- Успешно проверена локальная компиляция и корректность асинхронных импортов измененных модулей.
+
+---
+
 ## Дата: 2026-05-18 (Реализация бэкенд API для страницы «Реферальная сеть» в Личном Кабинете)
 
 ### Изменения:

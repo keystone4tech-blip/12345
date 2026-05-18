@@ -1,7 +1,8 @@
 """Gift system schemas for cabinet."""
 
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from app.utils.formatters import strip_telegram_tags
 
 
 class GiftTariffPeriod(BaseModel):
@@ -21,6 +22,14 @@ class GiftTariff(BaseModel):
     traffic_limit_gb: int
     device_limit: int
     periods: list[GiftTariffPeriod]
+
+    @field_validator('name', 'description', mode='before')
+    @classmethod
+    def clean_tariff_fields(cls, v: str | None) -> str | None:
+        """Clean tariff fields from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
 
 class GiftPaymentMethodSubOption(BaseModel):
@@ -83,6 +92,14 @@ class GiftPurchaseStatus(BaseModel):
     period_days: int | None = None
     warning: str | None = None
 
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
+
 
 class PendingGift(BaseModel):
     """Info about a gift waiting to be activated."""
@@ -92,6 +109,14 @@ class PendingGift(BaseModel):
     gift_message: str | None = None
     sender_display: str | None = None
     created_at: datetime | None = None
+
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
 
 class SentGift(BaseModel):
@@ -106,6 +131,14 @@ class SentGift(BaseModel):
     activated_by_username: str | None = None
     created_at: datetime | None = None
 
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
+
 
 class ReceivedGift(BaseModel):
     """Info about a gift received by the user."""
@@ -118,12 +151,28 @@ class ReceivedGift(BaseModel):
     gift_message: str | None = None
     created_at: datetime | None = None
 
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
+
 
 class ActivateGiftResponse(BaseModel):
     """Response after activating a gift code."""
     status: str
     tariff_name: str | None = None
     period_days: int | None = None
+
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
 
 class ActivateGiftRequest(BaseModel):

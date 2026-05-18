@@ -4,7 +4,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from app.utils.formatters import strip_telegram_tags
 
 
 class UserStatusEnum(str, Enum):
@@ -68,6 +69,14 @@ class UserSubscriptionInfo(BaseModel):
     days_remaining: int = 0
     purchased_traffic_gb: int = 0
     traffic_purchases: list[TrafficPurchaseItem] = []
+
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
 
 class UserPromoGroupInfo(BaseModel):
@@ -494,6 +503,14 @@ class UserAvailableTariffItem(BaseModel):
     id: int
     name: str
     description: str | None = None
+
+    @field_validator('name', 'description', mode='before')
+    @classmethod
+    def clean_tariff_fields(cls, v: str | None) -> str | None:
+        """Clean tariff fields from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
     is_active: bool = True
     is_trial_available: bool = False
     traffic_limit_gb: int = 0
@@ -538,6 +555,14 @@ class UserAvailableTariffsResponse(BaseModel):
     # Current subscription tariff
     current_tariff_id: int | None = None
     current_tariff_name: str | None = None
+
+    @field_validator('current_tariff_name', mode='before')
+    @classmethod
+    def clean_current_tariff_name(cls, v: str | None) -> str | None:
+        """Clean current tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
 
 # === Panel Sync ===

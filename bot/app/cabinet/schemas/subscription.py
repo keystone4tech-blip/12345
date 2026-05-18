@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from app.utils.formatters import strip_telegram_tags
 
 
 class ServerInfo(BaseModel):
@@ -57,6 +58,14 @@ class SubscriptionData(BaseModel):
     tariff_id: int | None = None
     tariff_name: str | None = None
     traffic_reset_mode: str | None = None
+
+    @field_validator('tariff_name', mode='before')
+    @classmethod
+    def clean_tariff_name(cls, v: str | None) -> str | None:
+        """Clean tariff name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
     class Config:
         from_attributes = True

@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from app.utils.formatters import strip_telegram_tags
 
 
 class PeriodPrice(BaseModel):
@@ -62,6 +63,14 @@ class TariffListItem(BaseModel):
     subscriptions_count: int
     created_at: datetime
 
+    @field_validator('name', 'description', mode='before')
+    @classmethod
+    def clean_tariff_fields(cls, v: str | None) -> str | None:
+        """Clean tariff fields from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
+
     class Config:
         from_attributes = True
 
@@ -114,6 +123,14 @@ class TariffDetailResponse(BaseModel):
     traffic_reset_mode: str | None = None  # DAY, WEEK, MONTH, NO_RESET, None = глобальная настройка
     created_at: datetime
     updated_at: datetime | None = None
+
+    @field_validator('name', 'description', mode='before')
+    @classmethod
+    def clean_tariff_fields(cls, v: str | None) -> str | None:
+        """Clean tariff fields from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
 
     class Config:
         from_attributes = True
@@ -222,6 +239,14 @@ class TariffStatsResponse(BaseModel):
     id: int
     name: str
     subscriptions_count: int
+
+    @field_validator('name', mode='before')
+    @classmethod
+    def clean_name(cls, v: str | None) -> str | None:
+        """Clean name from Telegram HTML tags."""
+        if v:
+            return strip_telegram_tags(v)
+        return v
     active_subscriptions: int
     trial_subscriptions: int
     revenue_kopeks: int

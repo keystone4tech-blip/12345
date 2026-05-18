@@ -199,12 +199,13 @@ def _subscription_to_response(
         if not tariff_name:  # Only set if not passed as parameter
             tariff_name = getattr(subscription.tariff, 'name', None)
         
-        # Clean tariff name from Telegram HTML tags
-        if tariff_name:
-            tariff_name = strip_telegram_tags(tariff_name)
         traffic_reset_mode = (
             getattr(subscription.tariff, 'traffic_reset_mode', None) or settings.DEFAULT_TRAFFIC_RESET_STRATEGY
         )
+
+    # Clean tariff name from Telegram HTML tags unconditionally
+    if tariff_name:
+        tariff_name = strip_telegram_tags(tariff_name)
 
     # Calculate next daily charge time (24 hours after last charge)
     next_daily_charge_at = None
@@ -2118,12 +2119,13 @@ async def purchase_tariff(
 
         await db.refresh(user)
 
+        cleaned_tariff_name = strip_telegram_tags(tariff.name)
         response = {
             'success': True,
-            'message': f"Тариф '{tariff.name}' успешно активирован",
+            'message': f"Тариф '{cleaned_tariff_name}' успешно активирован",
             'subscription': _subscription_to_response(subscription),
             'tariff_id': tariff.id,
-            'tariff_name': tariff.name,
+            'tariff_name': cleaned_tariff_name,
             'charged_amount': price_kopeks,
             'charged_label': settings.format_price(price_kopeks),
             'balance_kopeks': user.balance_kopeks,
@@ -2169,7 +2171,7 @@ async def purchase_tariff(
                         'new_expires_at': end_date_str,  # for SUBSCRIPTION_RENEWED
                         'traffic_limit_gb': subscription.traffic_limit_gb,
                         'device_limit': subscription.device_limit,
-                        'tariff_name': tariff.name,
+                        'tariff_name': cleaned_tariff_name,
                     },
                     bot=None,
                 )
@@ -3924,9 +3926,9 @@ async def preview_tariff_switch(
     response = {
         'can_switch': has_enough,
         'current_tariff_id': current_tariff.id if current_tariff else None,
-        'current_tariff_name': current_tariff.name if current_tariff else None,
+        'current_tariff_name': strip_telegram_tags(current_tariff.name) if current_tariff else None,
         'new_tariff_id': new_tariff.id,
-        'new_tariff_name': new_tariff.name,
+        'new_tariff_name': strip_telegram_tags(new_tariff.name),
         'remaining_days': remaining_days,
         'upgrade_cost_kopeks': upgrade_cost,
         'upgrade_cost_label': settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Бесплатно',
