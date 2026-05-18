@@ -453,15 +453,13 @@ async def send_gift_to_user(
                     f"Вы можете прямо сейчас активировать её в личном кабинете!"
                 )
                 
-                cabinet_url = getattr(settings, 'CABINET_URL', 'https://lk.mozhnovpn.tech')
-                # Добавляем код подарка в URL, чтобы на фронтенде он мог автозаполниться
-                activation_url = f"{cabinet_url}/gift?tab=activate&code={gift.token}"
-                
+                # Настраиваем клавиатуру с кнопкой мгновенной активации подарка прямо внутри бота (по callback)
+                # Это позволяет пользователю активировать подарок в один клик без перехода на веб-сайт
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     [
                         InlineKeyboardButton(
                             text="🎁 Активировать подарок",
-                            url=activation_url
+                            callback_data=f"gift_accept:{gift.token}"
                         )
                     ]
                 ])

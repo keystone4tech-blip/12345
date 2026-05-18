@@ -393,18 +393,15 @@ async def gift_accept(
     texts = get_texts(user_lang)
     
     if result['success']:
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [get_dynamic_connect_button(texts, result.get('subscription_url'))],
-                [InlineKeyboardButton(text=texts.t('BACK_TO_MAIN_MENU_BUTTON', '⬅️ В главное меню'), callback_data="back_to_menu")],
-            ]
-        )
-        
+        # 1. Сначала пытаемся безопасно удалить исходное сообщение о полученном подарке
         try:
+            logger.info("Удаляем исходное сообщение с предложением подарка", message_id=callback.message.message_id)
             await callback.message.delete()
-        except Exception:
-            pass
+        except Exception as delete_error:
+            logger.warning("Не удалось удалить исходное сообщение с предложением подарка", error=delete_error)
             
+        # 2. Отправляем сообщение об успешной активации (БЕЗ встроенной клавиатуры, так как следом идет Главное меню)
+        # Также используем премиальный Telegram-эффект ❤️ (ID: 5159385139981059251) для визуальной красоты
         await callback.message.answer(
             texts.t('GIFT_ACTIVATED_SUCCESS', 
                 "🎁 <b>Подарок успешно активирован!</b>\n\n"
@@ -414,10 +411,37 @@ async def gift_accept(
                 tariff_name=result['tariff_name'],
                 period_days=result['period']
             ),
-            reply_markup=keyboard,
             parse_mode='HTML',
-            message_effect_id='5159385139981059251' # Эффект ❤️
+            message_effect_id='5159385139981059251'
         )
+        
+        # 3. Делаем небольшую паузу в 1 секунду для повышения плавности визуального восприятия
+        await asyncio.sleep(1)
+        
+        # 4. Вызываем Главное меню новым отдельным сообщением
+        # Для этого подменяем callback.message на экземпляр InaccessibleMessage,
+        # благодаря чему метод show_main_menu автоматически отправит новое сообщение с разметкой
+        # вместо попытки редактирования удаленного/существующего сообщения.
+        from app.handlers.menu import show_main_menu
+        from aiogram.types import InaccessibleMessage
+        import datetime
+        import asyncio
+        
+        logger.info("Формируем фиктивный CallbackQuery с InaccessibleMessage для отправки Главного меню")
+        new_callback = types.CallbackQuery(
+            id=callback.id,
+            from_user=callback.from_user,
+            chat_instance=callback.chat_instance,
+            message=InaccessibleMessage(
+                chat=callback.message.chat,
+                message_id=0,
+                date=datetime.datetime.now(datetime.UTC)
+            ),
+            data=callback.data
+        )
+        
+        # Запускаем отправку Главного меню
+        await show_main_menu(new_callback, db_user, db, skip_callback_answer=True)
     else:
         error = result.get('error')
         if error == 'invalid_token':
