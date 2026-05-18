@@ -172,24 +172,81 @@ class EmailChangeResponse(BaseModel):
 
 
 class LinkedProvider(BaseModel):
-    """Information about a linked social/auth provider."""
+    """Информация о привязанном способе авторизации (Telegram, Email, OAuth)."""
 
-    name: str = Field(..., description='Provider name (telegram, email, google, etc.)')
-    linked: bool = Field(..., description='Whether this provider is linked to the account')
-    id: str | int | None = Field(None, description='Provider-specific user ID')
-    username: str | None = Field(None, description='Username on the provider')
+    provider: str = Field(..., description="Имя провайдера (telegram, email, google, yandex, discord, vk)")
+    linked: bool = Field(..., description="Привязан ли данный провайдер к аккаунту")
+    identifier: str | None = Field(None, description="Идентификатор провайдера (email, username или id)")
 
 
 class LinkedProvidersResponse(BaseModel):
-    """Response containing all linked and available providers."""
+    """Ответ со списком всех привязанных и доступных провайдеров авторизации."""
 
     providers: list[LinkedProvider]
 
 
 class LinkCallbackResponse(BaseModel):
-    """Generic response for account linking/unlinking actions."""
+    """Ответ на запрос привязки или отвязки аккаунта провайдера."""
 
     success: bool
-    message: str
-    requires_merge: bool = False
-    merge_token: str | None = None
+    message: str | None = Field(None, description="Сообщение о результате операции")
+    merge_required: bool = Field(False, description="Флаг необходимости слияния аккаунтов")
+    merge_token: str | None = Field(None, description="Временный токен для слияния аккаунтов")
+
+
+class ServerCompleteResponse(LinkCallbackResponse):
+    """Ответ для подтверждения привязки со стороны внешнего браузера."""
+
+    provider: str = Field(..., description="Имя провайдера авторизации")
+
+
+# --- Схемы Слияния Аккаунтов (Account Merge) ---
+
+class MergeSubscriptionPreview(BaseModel):
+    """Превью информации о подписке перед слиянием аккаунтов."""
+
+    status: str = Field(..., description="Статус подписки")
+    is_trial: bool = Field(..., description="Является ли подписка пробной")
+    end_date: str | None = Field(None, description="Дата окончания подписки (ISO string)")
+    traffic_limit_gb: float = Field(..., description="Лимит трафика в ГБ")
+    traffic_used_gb: float = Field(..., description="Использованный трафик в ГБ")
+    device_limit: int = Field(..., description="Лимит устройств")
+    tariff_name: str | None = Field(None, description="Название текущего тарифа")
+    autopay_enabled: bool = Field(..., description="Включено ли автопродление")
+
+
+class MergeAccountPreview(BaseModel):
+    """Превью информации об аккаунте пользователя перед слиянием."""
+
+    id: int = Field(..., description="ID пользователя в системе")
+    username: str | None = Field(None, description="Имя пользователя в Telegram")
+    first_name: str | None = Field(None, description="Имя пользователя")
+    email: str | None = Field(None, description="Электронная почта")
+    auth_methods: list[str] = Field(..., description="Активные методы авторизации (telegram, email и т.д.)")
+    balance_kopeks: int = Field(..., description="Баланс аккаунта в копейках")
+    subscription: MergeSubscriptionPreview | None = Field(None, description="Информация о подписке")
+    created_at: str | None = Field(None, description="Дата создания аккаунта (ISO string)")
+
+
+class MergePreviewResponse(BaseModel):
+    """Ответ с детальной информацией о первичном и вторичном аккаунтах для сравнения при слиянии."""
+
+    primary: MergeAccountPreview = Field(..., description="Основной (текущий авторизованный) аккаунт")
+    secondary: MergeAccountPreview = Field(..., description="Вторичный (привязываемый конфликтующий) аккаунт")
+    expires_in_seconds: int = Field(..., description="Время жизни токена слияния в секундах")
+
+
+class MergeRequest(BaseModel):
+    """Запрос на подтверждение слияния аккаунтов."""
+
+    keep_subscription_from: int = Field(..., description="ID пользователя, чью подписку нужно сохранить")
+
+
+class MergeResponse(BaseModel):
+    """Ответ на успешное слияние аккаунтов."""
+
+    success: bool = Field(..., description="Флаг успешности операции")
+    access_token: str | None = Field(None, description="Новый JWT access токен")
+    refresh_token: str | None = Field(None, description="Новый JWT refresh токен")
+    user: UserResponse | None = Field(None, description="Данные объединенного пользователя")
+

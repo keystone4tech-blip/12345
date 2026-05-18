@@ -701,12 +701,40 @@ async def register_email(
         )
 
     # Check if email already exists
-    existing_user = await db.execute(select(User).where(User.email == request.email))
-    if existing_user.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='This email is already registered',
-        )
+    existing_user_res = await db.execute(select(User).where(User.email == request.email))
+    existing_user = existing_user_res.scalar_one_or_none()
+    if existing_user:
+        # Если почта уже зарегистрирована, проверяем пароль для слияния
+        if existing_user.password_hash and verify_password(request.password, existing_user.password_hash):
+            if existing_user.id == user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail='This email is already linked to your account',
+                )
+            
+            # Создаем merge token через MergeService
+            from app.services.merge_service import MergeService
+            merge_service = MergeService()
+            merge_token = await merge_service.create_merge_token(primary_id=user.id, secondary_id=existing_user.id)
+            
+            logger.info(
+                '🔄 CABINET LINK: Конфликт привязки Email разрешен через токен слияния',
+                user_id=user.id,
+                existing_user_id=existing_user.id,
+                email=request.email
+            )
+            return {
+                'message': 'Email already registered. Account merge required.',
+                'email': request.email,
+                'merge_required': True,
+                'merge_token': merge_token
+            }
+        else:
+            # Если пароль не подошел или не задан
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='This email is already registered. Invalid password.',
+            )
 
     # Check if user already has email
     if user.email and user.email_verified:
@@ -1599,3 +1627,606 @@ async def get_email_change_status(
         'new_email': user.email_change_new,
         'expires_at': user.email_change_expires.isoformat() if user.email_change_expires else None,
     }
+
+
+# --- РАБОТА С ПРИВЯЗАННЫМИ АККАУНТАМИ И СЛИЯНИЕМ ---
+
+from app.cabinet.schemas.auth import (
+    LinkedProvider,
+    LinkedProvidersResponse,
+    LinkCallbackResponse,
+    ServerCompleteResponse,
+    MergeSubscriptionPreview,
+    MergeAccountPreview,
+    MergePreviewResponse,
+    MergeRequest,
+    MergeResponse
+)
+
+@router.get('/account/linked-providers', response_model=LinkedProvidersResponse)
+async def get_linked_providers(
+    user: User = Depends(get_current_cabinet_user),
+):
+    """
+    Получить список всех способов входа для текущего пользователя.
+    """
+    providers = []
+    
+    # Telegram
+    providers.append(
+        LinkedProvider(
+            provider='telegram',
+            linked=user.telegram_id is not None,
+            identifier=user.username or str(user.telegram_id) if user.telegram_id is not None else None
+        )
+    )
+    
+    # Email
+    providers.append(
+        LinkedProvider(
+            provider='email',
+            linked=user.email is not None and user.email_verified,
+            identifier=user.email if user.email is not None and user.email_verified else None
+        )
+    )
+    
+    # Google
+    providers.append(
+        LinkedProvider(
+            provider='google',
+            linked=user.google_id is not None,
+            identifier=str(user.google_id) if user.google_id is not None else None
+        )
+    )
+    
+    # Yandex
+    providers.append(
+        LinkedProvider(
+            provider='yandex',
+            linked=user.yandex_id is not None,
+            identifier=str(user.yandex_id) if user.yandex_id is not None else None
+        )
+    )
+    
+    # Discord
+    providers.append(
+        LinkedProvider(
+            provider='discord',
+            linked=user.discord_id is not None,
+            identifier=str(user.discord_id) if user.discord_id is not None else None
+        )
+    )
+    
+    # VK
+    providers.append(
+        LinkedProvider(
+            provider='vk',
+            linked=user.vk_id is not None,
+            identifier=str(user.vk_id) if user.vk_id is not None else None
+        )
+    )
+    
+    logger.info('👤 CABINET: Запрошен список привязанных провайдеров', user_id=user.id)
+    return LinkedProvidersResponse(providers=providers)
+
+
+@router.get('/account/link/{provider}/init')
+async def link_provider_init(
+    provider: str,
+    user: User = Depends(get_current_cabinet_user),
+):
+    """
+    Инициализировать привязку OAuth аккаунта.
+    Генерирует ссылку для авторизации во внешней системе.
+    """
+    from app.cabinet.auth.oauth_providers import get_provider, generate_oauth_state
+    from app.utils.cache import cache, cache_key
+
+    oauth_provider = get_provider(provider)
+    if not oauth_provider:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'OAuth провайдер "{provider}" не поддерживается или отключен',
+        )
+
+    # Генерируем state и сохраняем информацию об инициаторе (user_id) в Redis
+    state = await generate_oauth_state(provider)
+    
+    # Дополнительно связываем state с текущим пользователем для безопасной привязки
+    await cache.set(
+        cache_key('oauth_link_user', state),
+        {"user_id": user.id, "provider": provider},
+        expire=600  # 10 минут
+    )
+
+    authorize_url = oauth_provider.get_authorization_url(state)
+    logger.info('🔗 CABINET LINK: Инициализирована привязка OAuth', provider=provider, user_id=user.id, state=state)
+    
+    return {"authorize_url": authorize_url, "state": state}
+
+
+@router.post('/account/link/{provider}/callback', response_model=LinkCallbackResponse)
+async def link_provider_callback(
+    provider: str,
+    request: dict,  # принимаем code, state, device_id
+    user: User = Depends(get_current_cabinet_user),
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Обработать ответ от OAuth провайдера для привязки к аккаунту в браузере.
+    """
+    code = request.get('code')
+    state = request.get('state')
+    
+    if not code or not state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Некорректные параметры обратного вызова (code/state)'
+        )
+
+    from app.cabinet.auth.oauth_providers import get_provider, validate_oauth_state
+    from app.utils.cache import cache, cache_key
+    from app.database.crud.user import get_user_by_oauth_provider, set_user_oauth_provider_id
+    from app.services.merge_service import MergeService
+
+    # 1. Валидируем CSRF state
+    if not await validate_oauth_state(state, provider):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Недействительное или истекшее состояние OAuth (CSRF state)',
+        )
+
+    # 2. Проверяем, что этот state был сгенерирован именно этим пользователем
+    link_key = cache_key('oauth_link_user', state)
+    link_user_data = await cache.get(link_key)
+    if not link_user_data or link_user_data.get('user_id') != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Несанкционированная привязка аккаунта',
+        )
+    await cache.delete(link_key)
+
+    # 3. Получаем инстанс провайдера
+    oauth_provider = get_provider(provider)
+    if not oauth_provider:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'OAuth провайдер "{provider}" недоступен',
+        )
+
+    # 4. Обмениваем код на токены и запрашиваем информацию о пользователе
+    try:
+        token_data = await oauth_provider.exchange_code(code)
+        user_info = await oauth_provider.get_user_info(token_data)
+    except Exception as exc:
+        logger.error('❌ CABINET LINK: Ошибка обмена кода OAuth', provider=provider, exc=exc)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Не удалось авторизоваться в стороннем сервисе',
+        ) from exc
+
+    # 5. Ищем, не привязан ли этот OAuth-аккаунт к кому-то другому
+    existing_user = await get_user_by_oauth_provider(db, provider, user_info.provider_id)
+    if existing_user:
+        if existing_user.id == user.id:
+            logger.info('🔗 CABINET LINK: Провайдер уже привязан к текущему пользователю', provider=provider, user_id=user.id)
+            return LinkCallbackResponse(success=True, message='Этот аккаунт уже привязан')
+
+        # Запускаем флоу слияния
+        merge_service = MergeService()
+        merge_token = await merge_service.create_merge_token(primary_id=user.id, secondary_id=existing_user.id)
+        
+        logger.info(
+            '🔄 CABINET LINK: OAuth-аккаунт привязан к другому пользователю, требуется слияние',
+            provider=provider,
+            primary_id=user.id,
+            secondary_id=existing_user.id
+        )
+        return LinkCallbackResponse(
+            success=False,
+            message='Этот аккаунт уже зарегистрирован в системе. Требуется слияние профилей.',
+            merge_required=True,
+            merge_token=merge_token
+        )
+
+    # 6. Если аккаунт свободен — привязываем к текущему пользователю
+    await set_user_oauth_provider_id(db, user, provider, user_info.provider_id)
+    
+    # Если у пользователя не был подтвержден email, но OAuth вернул верифицированную почту — сохраняем ее
+    if user_info.email and user_info.email_verified and not user.email:
+        user.email = user_info.email
+        user.email_verified = True
+        user.email_verified_at = datetime.now(UTC)
+        logger.info('📧 CABINET LINK: Email пользователя автоматически привязан и верифицирован через OAuth', user_id=user.id, email=user.email)
+
+    await db.commit()
+    logger.info('✅ CABINET LINK: Провайдер успешно привязан', provider=provider, user_id=user.id)
+    return LinkCallbackResponse(success=True, message='Аккаунт успешно привязан')
+
+
+@router.post('/account/link/telegram', response_model=LinkCallbackResponse)
+async def link_telegram(
+    request: dict,  # может принимать init_data или виджет
+    user: User = Depends(get_current_cabinet_user),
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Привязать Telegram-аккаунт к текущему пользователю.
+    Поддерживает как Telegram WebApp initData, так и Telegram Login Widget.
+    """
+    from app.cabinet.routes.auth import validate_telegram_init_data, validate_telegram_login_widget
+    from app.database.crud.user import get_user_by_telegram_id
+    from app.services.merge_service import MergeService
+
+    telegram_id = None
+    tg_username = None
+    tg_first_name = None
+    tg_last_name = None
+
+    # Вариант 1: Telegram WebApp initData
+    if 'init_data' in request:
+        try:
+            tg_user = validate_telegram_init_data(request['init_data'])
+            telegram_id = tg_user.id
+            tg_username = tg_user.username
+            tg_first_name = tg_user.first_name
+            tg_last_name = tg_user.last_name
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    # Вариант 2: Telegram Login Widget
+    elif 'hash' in request and 'id' in request:
+        if not validate_telegram_login_widget(request):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Недействительная подпись виджета Telegram')
+        telegram_id = request['id']
+        tg_username = request.get('username')
+        tg_first_name = request.get('first_name')
+        tg_last_name = request.get('last_name')
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Некорректные параметры привязки Telegram')
+
+    # Ищем, не привязан ли этот Telegram к кому-то другому
+    existing_user = await get_user_by_telegram_id(db, telegram_id)
+    if existing_user:
+        if existing_user.id == user.id:
+            logger.info('🔗 CABINET LINK: Telegram уже привязан к текущему пользователю', user_id=user.id)
+            return LinkCallbackResponse(success=True, message='Telegram уже привязан')
+
+        # Запускаем флоу слияния
+        merge_service = MergeService()
+        merge_token = await merge_service.create_merge_token(primary_id=user.id, secondary_id=existing_user.id)
+        
+        logger.info(
+            '🔄 CABINET LINK: Telegram привязан к другому пользователю, требуется слияние',
+            primary_id=user.id,
+            secondary_id=existing_user.id
+        )
+        return LinkCallbackResponse(
+            success=False,
+            message='Этот аккаунт Telegram уже зарегистрирован в системе. Требуется слияние.',
+            merge_required=True,
+            merge_token=merge_token
+        )
+
+    # Привязываем Telegram к текущему пользователю
+    user.telegram_id = telegram_id
+    if tg_username:
+        user.username = tg_username
+    if tg_first_name:
+        user.first_name = tg_first_name
+    if tg_last_name:
+        user.last_name = tg_last_name
+
+    await db.commit()
+    logger.info('✅ CABINET LINK: Telegram успешно привязан к аккаунту', user_id=user.id, telegram_id=telegram_id)
+    return LinkCallbackResponse(success=True, message='Telegram успешно привязан')
+
+
+@router.post('/account/link/server-complete', response_model=ServerCompleteResponse)
+async def link_server_complete(
+    request: dict,  # code, state, device_id
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Завершить привязку OAuth со стороны внешнего браузера (для Mini App).
+    Не требует JWT в заголовках, так как авторизация происходит по state token.
+    """
+    code = request.get('code')
+    state = request.get('state')
+    
+    if not code or not state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Некорректные параметры (code/state)'
+        )
+
+    from app.cabinet.auth.oauth_providers import get_provider, validate_oauth_state
+    from app.utils.cache import cache, cache_key
+    from app.database.crud.user import get_user_by_oauth_provider, set_user_oauth_provider_id, get_user_by_id
+    from app.services.merge_service import MergeService
+
+    # 1. Проверяем привязку сессии к инициатору в Redis
+    link_key = cache_key('oauth_link_user', state)
+    link_user_data = await cache.get(link_key)
+    if not link_user_data:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Истекшая или недействительная сессия привязки аккаунта',
+        )
+    
+    user_id = link_user_data['user_id']
+    provider = link_user_data['provider']
+    
+    # Загружаем текущего пользователя
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
+
+    # 2. Валидируем CSRF state
+    if not await validate_oauth_state(state, provider):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Недействительное состояние OAuth (state)',
+        )
+    await cache.delete(link_key)
+
+    # 3. Получаем инстанс провайдера
+    oauth_provider = get_provider(provider)
+    if not oauth_provider:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Провайдер недоступен')
+
+    # 4. Обмениваем код
+    try:
+        token_data = await oauth_provider.exchange_code(code)
+        user_info = await oauth_provider.get_user_info(token_data)
+    except Exception as exc:
+        logger.error('❌ CABINET LINK SERVER: Ошибка обмена кода', provider=provider, exc=exc)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Ошибка авторизации в стороннем сервисе')
+
+    # 5. Ищем, не занят ли аккаунт
+    existing_user = await get_user_by_oauth_provider(db, provider, user_info.provider_id)
+    if existing_user:
+        if existing_user.id == user.id:
+            return ServerCompleteResponse(success=True, provider=provider, message='Уже привязан')
+
+        merge_service = MergeService()
+        merge_token = await merge_service.create_merge_token(primary_id=user.id, secondary_id=existing_user.id)
+        
+        logger.info(
+            '🔄 CABINET LINK SERVER: Требуется слияние для внешнего браузера',
+            primary_id=user.id,
+            secondary_id=existing_user.id
+        )
+        return ServerCompleteResponse(
+            success=False,
+            provider=provider,
+            merge_required=True,
+            merge_token=merge_token
+        )
+
+    # 6. Привязываем аккаунт
+    await set_user_oauth_provider_id(db, user, provider, user_info.provider_id)
+    if user_info.email and user_info.email_verified and not user.email:
+        user.email = user_info.email
+        user.email_verified = True
+        user.email_verified_at = datetime.now(UTC)
+
+    await db.commit()
+    logger.info('✅ CABINET LINK SERVER: Успешная привязка внешнего браузера', provider=provider, user_id=user.id)
+    return ServerCompleteResponse(success=True, provider=provider, message='Аккаунт успешно привязан')
+
+
+@router.post('/account/unlink/{provider}')
+async def unlink_provider(
+    provider: str,
+    user: User = Depends(get_current_cabinet_user),
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Отвязать способ авторизации от аккаунта.
+    Запрещает отвязывать единственный способ входа, чтобы не заблокировать пользователя.
+    """
+    # Считаем количество привязанных методов
+    linked_methods = []
+    if user.telegram_id is not None:
+        linked_methods.append('telegram')
+    if user.email is not None and user.email_verified:
+        linked_methods.append('email')
+    if user.google_id is not None:
+        linked_methods.append('google')
+    if user.yandex_id is not None:
+        linked_methods.append('yandex')
+    if user.discord_id is not None:
+        linked_methods.append('discord')
+    if user.vk_id is not None:
+        linked_methods.append('vk')
+
+    if provider not in linked_methods:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Этот провайдер не привязан к вашей учетной записи',
+        )
+
+    if len(linked_methods) <= 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Нельзя отвязать единственный способ входа в аккаунт',
+        )
+
+    # Производим отвязку
+    if provider == 'telegram':
+        user.telegram_id = None
+    elif provider == 'email':
+        user.email = None
+        user.email_verified = False
+        user.email_verified_at = None
+        user.password_hash = None
+    elif provider == 'google':
+        user.google_id = None
+    elif provider == 'yandex':
+        user.yandex_id = None
+    elif provider == 'discord':
+        user.discord_id = None
+    elif provider == 'vk':
+        user.vk_id = None
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'Неизвестный провайдер "{provider}"',
+        )
+
+    # Если мы удаляем основной метод входа, меняем auth_type
+    if user.auth_type == provider:
+        remaining = [m for m in linked_methods if m != provider]
+        user.auth_type = remaining[0]
+
+    await db.commit()
+    logger.info('🗑️ CABINET UNLINK: Способ входа успешно отвязан', provider=provider, user_id=user.id)
+    return {"success": True, "message": "Способ входа успешно отвязан"}
+
+
+# --- ЭНДПОИНТЫ СЛИЯНИЯ ПРОФИЛЕЙ (ACCOUNT MERGE) ---
+
+@router.get('/merge/{mergeToken}', response_model=MergePreviewResponse)
+async def get_merge_preview(
+    mergeToken: str,
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Получить превью информации об объединяемых аккаунтах.
+    """
+    from app.services.merge_service import MergeService
+    from app.database.crud.user import get_user_by_id
+    from app.utils.cache import cache, cache_key
+
+    merge_service = MergeService()
+    merge_data = await merge_service.get_merge_data(mergeToken)
+    
+    if not merge_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Токен слияния не найден или его время жизни истекло',
+        )
+
+    primary_id = merge_data['primary_id']
+    secondary_id = merge_data['secondary_id']
+
+    primary_user = await get_user_by_id(db, primary_id)
+    secondary_user = await get_user_by_id(db, secondary_id)
+
+    if not primary_user or not secondary_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Один или оба аккаунта для слияния не найдены в системе',
+        )
+
+    # Вспомогательная функция для построения превью аккаунта
+    async def build_preview(user_obj: User) -> MergeAccountPreview:
+        # Методы входа
+        methods = []
+        if user_obj.telegram_id is not None:
+            methods.append('telegram')
+        if user_obj.email is not None and user_obj.email_verified:
+            methods.append('email')
+        if user_obj.google_id is not None:
+            methods.append('google')
+        if user_obj.yandex_id is not None:
+            methods.append('yandex')
+        if user_obj.discord_id is not None:
+            methods.append('discord')
+        if user_obj.vk_id is not None:
+            methods.append('vk')
+
+        # Подписка
+        sub_preview = None
+        from app.database.models import Subscription
+        sub = (await db.execute(select(Subscription).where(Subscription.user_id == user_obj.id))).scalar_one_or_none()
+        
+        if sub:
+            from app.database.models import Tariff
+            tariff_name = "Индивидуальный"
+            if sub.tariff_id:
+                t_res = await db.execute(select(Tariff).where(Tariff.id == sub.tariff_id))
+                t_obj = t_res.scalar_one_or_none()
+                if t_obj:
+                    tariff_name = t_obj.name
+
+            sub_preview = MergeSubscriptionPreview(
+                status=sub.status,
+                is_trial=sub.is_trial,
+                end_date=sub.end_date.isoformat() if sub.end_date else None,
+                traffic_limit_gb=sub.traffic_limit_gb,
+                traffic_used_gb=sub.traffic_used_gb,
+                device_limit=sub.device_limit,
+                tariff_name=tariff_name,
+                autopay_enabled=sub.autopay_enabled
+            )
+
+        return MergeAccountPreview(
+            id=user_obj.id,
+            username=user_obj.username,
+            first_name=user_obj.first_name,
+            email=user_obj.email if user_obj.email_verified else None,
+            auth_methods=methods,
+            balance_kopeks=user_obj.balance_kopeks,
+            subscription=sub_preview,
+            created_at=user_obj.created_at.isoformat() if user_obj.created_at else None
+        )
+
+    primary_preview = await build_preview(primary_user)
+    secondary_preview = await build_preview(secondary_user)
+
+    # Вычисляем оставшееся время жизни токена
+    client = merge_service._get_redis_client()
+    expires_in = 900
+    if client:
+        try:
+            expires_in = await client.ttl(f"merge_token:{mergeToken}")
+            if expires_in < 0:
+                expires_in = 0
+        except Exception:
+            pass
+
+    return MergePreviewResponse(
+        primary=primary_preview,
+        secondary=secondary_preview,
+        expires_in_seconds=expires_in
+    )
+
+
+@router.post('/merge/{mergeToken}', response_model=MergeResponse)
+async def execute_merge(
+    mergeToken: str,
+    request: MergeRequest,
+    db: AsyncSession = Depends(get_cabinet_db),
+):
+    """
+    Выполнить окончательное слияние двух учетных записей.
+    """
+    from app.services.merge_service import MergeService
+    from app.cabinet.routes.auth import _user_to_response, _store_refresh_token, _create_auth_response
+
+    merge_service = MergeService()
+    try:
+        # Выполняем слияние в БД
+        merged_user = await merge_service.execute_merge_accounts(
+            db=db,
+            token=mergeToken,
+            keep_subscription_from_user_id=request.keep_subscription_from
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error("❌ CABINET MERGE: Критическая ошибка слияния аккаунтов", error=e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Внутренняя ошибка сервера при слиянии")
+
+    # Генерируем новые JWT для объединенного пользователя
+    auth_response = await _create_auth_response(merged_user, db)
+    await _store_refresh_token(db, merged_user.id, auth_response.refresh_token, device_info='merged_account')
+
+    return MergeResponse(
+        success=True,
+        access_token=auth_response.access_token,
+        refresh_token=auth_response.refresh_token,
+        user=_user_to_response(merged_user)
+    )
+
