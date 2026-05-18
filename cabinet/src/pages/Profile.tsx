@@ -70,8 +70,14 @@ export default function Profile() {
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const queryClient = useQueryClient();
 
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  // Локальные состояния для карточки Email-авторизации
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(null);
+
+  // Локальные состояния для тестового пуш-уведомления
+  const [testPushError, setTestPushError] = useState<string | null>(null);
+  const [testPushSuccess, setTestPushSuccess] = useState<string | null>(null);
+
   const [copied, setCopied] = useState(false);
 
   // Inline email change flow
@@ -148,13 +154,13 @@ export default function Profile() {
   const resendVerificationMutation = useMutation({
     mutationFn: authApi.resendVerification,
     onSuccess: () => {
-      setSuccess(t('profile.verificationResent'));
-      setError(null);
+      setVerificationSuccess(t('profile.verificationResent'));
+      setVerificationError(null);
       setVerificationResendCooldown(UI.RESEND_COOLDOWN_SEC);
     },
     onError: (err: { response?: { data?: { detail?: string } } }) => {
-      setError(err.response?.data?.detail || t('common.error'));
-      setSuccess(null);
+      setVerificationError(err.response?.data?.detail || t('common.error'));
+      setVerificationSuccess(null);
     },
   });
 
@@ -328,25 +334,34 @@ export default function Profile() {
       return;
     }
     const success = await subscribePush();
-    if (!success && Notification.permission === 'denied') {
+    if (success) {
+      // Пользователь явно подписался — удаляем флаг явного отключения
+      localStorage.removeItem('pwa-push-explicitly-disabled');
+    } else if (Notification.permission === 'denied') {
       setShowPermissionModal(true);
     }
   };
 
   const handleUnsubscribePush = async () => {
-    await unsubscribePush();
+    const success = await unsubscribePush();
+    if (success) {
+      // Пользователь явно отписался — устанавливаем флаг явного отключения,
+      // чтобы исключить автоматическую повторную подписку при монтировании AppShell.
+      localStorage.setItem('pwa-push-explicitly-disabled', 'true');
+    }
   };
 
   const handleSendTestPush = async () => {
     setTestPushLoading(true);
     try {
       await notificationsApi.sendTestNotification();
-      setSuccess('Тестовое push-уведомление успешно отправлено!');
-      setError(null);
+      setTestPushSuccess('Тестовое push-уведомление успешно отправлено!');
+      setTestPushError(null);
     } catch (err: any) {
       console.error(err);
-      setError('Не удалось отправить тестовое уведомление. Проверьте разрешения.');
-      setSuccess(null);
+      const errMsg = err.response?.data?.detail || 'Не удалось отправить тестовое уведомление. Проверьте разрешения.';
+      setTestPushError(errMsg);
+      setTestPushSuccess(null);
     } finally {
       setTestPushLoading(false);
     }
@@ -667,16 +682,16 @@ export default function Profile() {
               </div>
             )}
 
-            {(error || success) && user?.email && (
+            {(verificationError || verificationSuccess) && user?.email && (
               <div className="mt-4">
-                {error && (
+                {verificationError && (
                   <div className="rounded-linear border border-error-500/30 bg-error-500/10 p-4 text-sm text-error-400">
-                    {error}
+                    {verificationError}
                   </div>
                 )}
-                {success && (
+                {verificationSuccess && (
                   <div className="rounded-linear border border-success-500/30 bg-success-500/10 p-4 text-sm text-success-400">
-                    {success}
+                    {verificationSuccess}
                   </div>
                 )}
               </div>
@@ -876,6 +891,18 @@ export default function Profile() {
             {pushError && (
               <div className="mb-4 rounded-linear border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400">
                 {pushError}
+              </div>
+            )}
+
+            {testPushError && (
+              <div className="mb-4 rounded-linear border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400">
+                {testPushError}
+              </div>
+            )}
+
+            {testPushSuccess && (
+              <div className="mb-4 rounded-linear border border-success-500/30 bg-success-500/10 p-3 text-sm text-success-400">
+                {testPushSuccess}
               </div>
             )}
 

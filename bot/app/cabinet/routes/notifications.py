@@ -125,65 +125,92 @@ async def send_test_notification(
     user: User = Depends(get_current_cabinet_user),
     db: AsyncSession = Depends(get_cabinet_db),
 ):
-    """Send a test notification to the user."""
-    # Попытка отправить Web Push уведомление, если есть активные подписки
+    """Отправка тестового push-уведомления пользователю."""
+    # Переменная для отслеживания успешной отправки хотя бы одного пуша
     push_sent = False
+    # Список ошибок при отправке
     push_errors = []
     
     from sqlalchemy import select
     from app.database.models import PushSubscription
+    from fastapi import HTTPException
     
+    # Логируем начало запроса тестового пуша
+    logger.info("Запрос тестового пуш-уведомления", user_id=user.id)
+    
+    # Выбираем все активные подписки данного пользователя из базы данных
     stmt = select(PushSubscription).where(PushSubscription.user_id == user.id)
     result = await db.execute(stmt)
     subscriptions = result.scalars().all()
     
-    if subscriptions:
-        from pywebpush import webpush, WebPushException
-        import json
-        from app.config import settings
+    # Если подписок не найдено, сразу возвращаем ошибку 400 с подробным описанием
+    if not subscriptions:
+        logger.warning("Отмена отправки тест-пуша: у пользователя нет активных подписок", user_id=user.id)
+        raise HTTPException(
+            status_code=400,
+            detail="Не найдено активных подписок на push-уведомления для вашего аккаунта на этом устройстве. Пожалуйста, включите переключатель push-уведомлений ниже перед отправкой теста."
+        )
         
-        payload = {
-            "title": "MozhnoVPN — Тест",
-            "body": "Ваши пуш-уведомления успешно настроены и работают! 🎉",
-            "icon": "/icons/icon-192x192.png",
-            "badge": "/icons/icon-192x192.png",
-            "data": {
-                "url": "/profile"
-            }
+    from pywebpush import webpush, WebPushException
+    import json
+    from app.config import settings
+    
+    # Формируем полезную нагрузку (payload) пуш-уведомления
+    payload = {
+        "title": "MozhnoVPN — Тест",
+        "body": "Ваши пуш-уведомления успешно настроены и работают! 🎉",
+        "icon": "/icons/icon-192x192.png",
+        "badge": "/icons/icon-192x192.png",
+        "data": {
+            "url": "/profile"
         }
-        
-        for sub in subscriptions:
-            try:
-                # Отправляем пуш-пакет через службу push-уведомлений браузера
-                webpush(
-                    subscription_info={
-                        "endpoint": sub.endpoint,
-                        "keys": {
-                            "p256dh": sub.p256dh,
-                            "auth": sub.auth
-                        }
-                    },
-                    data=json.dumps(payload),
-                    vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                    vapid_claims={
-                        "sub": settings.VAPID_CLAIM_EMAIL
+    }
+    
+    # Проходим по всем зарегистрированным подпискам пользователя
+    for sub in subscriptions:
+        try:
+            logger.info("Попытка отправки тестового пуша", user_id=user.id, subscription_id=sub.id)
+            # Отправляем пуш-пакет через службу push-уведомлений браузера с использованием VAPID
+            webpush(
+                subscription_info={
+                    "endpoint": sub.endpoint,
+                    "keys": {
+                        "p256dh": sub.p256dh,
+                        "auth": sub.auth
                     }
-                )
-                push_sent = True
-            except WebPushException as e:
-                # Если подписка устарела (браузер выдал 410 Gone) — удаляем её
-                logger.warning("Failed to send web push", error=str(e), subscription_id=sub.id)
-                push_errors.append(str(e))
-                if getattr(e, 'response', None) is not None and e.response.status_code == 410:
-                    await db.delete(sub)
-                    await db.commit()
-            except Exception as e:
-                logger.error("Unexpected error during web push", error=str(e))
-                push_errors.append(str(e))
+                },
+                data=json.dumps(payload),
+                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                vapid_claims={
+                    "sub": settings.VAPID_CLAIM_EMAIL
+                }
+            )
+            push_sent = True
+            logger.info("Тестовый пуш успешно отправлен в push-сервис", user_id=user.id, subscription_id=sub.id)
+        except WebPushException as e:
+            # Если подписка устарела или удалена на стороне браузера (410 Gone) — удаляем её из базы данных
+            logger.warning("Ошибка отправки web push", error=str(e), subscription_id=sub.id)
+            push_errors.append(str(e))
+            if getattr(e, 'response', None) is not None and e.response.status_code == 410:
+                logger.info("Удаление устаревшей подписки на пуши из БД", subscription_id=sub.id)
+                await db.delete(sub)
+                await db.commit()
+        except Exception as e:
+            # Логируем другие непредвиденные ошибки
+            logger.error("Непредвиденная ошибка во время отправки web push", error=str(e))
+            push_errors.append(str(e))
+
+    # Если ни один пуш не был успешно отправлен, возвращаем ошибку 400
+    if not push_sent:
+        logger.error("Не удалось доставить тестовый пуш ни на одно устройство", user_id=user.id, errors=push_errors)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Не удалось отправить тестовое push-уведомление. Ошибки: {', '.join(push_errors)}"
+        )
 
     return {
         'success': True,
-        'message': 'Test notification request received. You will receive a test message shortly.',
+        'message': 'Тестовое уведомление успешно отправлено на ваши устройства.',
         'push_sent': push_sent,
         'push_subscriptions_count': len(subscriptions),
         'push_errors': push_errors

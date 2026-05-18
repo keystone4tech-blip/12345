@@ -218,12 +218,14 @@ export function AppShell({ children }: AppShellProps) {
   } = usePWAPush();
 
   useEffect(() => {
-    // Автоматически пытаемся подписать пользователя при монтировании личного кабинета,
-    // чтобы пуши были включены по умолчанию на всех поддерживаемых устройствах.
-    if (isPushSupported && !isPushSubscribed && pushPermission !== 'denied') {
-      console.log('[Web Push] Attempting auto-subscription on layout mount...');
+    // Автоматически пытаемся переподписать пользователя только если права уже выданы
+    // и пользователь явно не отключал уведомления на этом устройстве.
+    const isExplicitlyDisabled = localStorage.getItem('pwa-push-explicitly-disabled') === 'true';
+
+    if (isPushSupported && !isPushSubscribed && pushPermission === 'granted' && !isExplicitlyDisabled) {
+      console.log('[Web Push] Восстановление активной подписки при монтировании...');
       subscribePush().catch((err) => {
-        console.warn('[Web Push] Auto-subscription skipped or rejected:', err);
+        console.warn('[Web Push] Не удалось восстановить подписку автоматически:', err);
       });
     }
   }, [isPushSupported, isPushSubscribed, pushPermission, subscribePush]);
