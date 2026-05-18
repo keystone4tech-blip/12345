@@ -25,6 +25,7 @@ import { SubscriptionIcon, GiftIcon } from '@/components/icons';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppHeader } from './AppHeader';
 import { BackgroundRenderer } from '@/components/backgrounds/BackgroundRenderer';
+import { InstallPWABanner } from '@/components/InstallPWABanner';
 
 // Desktop nav icons
 const HomeIcon = ({ className }: { className?: string }) => (
@@ -446,7 +447,12 @@ export function AppShell({ children }: AppShellProps) {
       <div className="lg:hidden" style={{ height: headerHeight }} />
 
       {/* Main content */}
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">
+        <div className="mb-4">
+          <InstallPWABanner variant="global" />
+        </div>
+        {children}
+      </main>
 
       {/* Mobile Bottom Navigation */}
       {/* Передаем состояние доступности подарков (giftEnabled) в мобильный нижний бар навигации */}

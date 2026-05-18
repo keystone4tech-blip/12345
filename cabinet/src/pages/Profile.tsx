@@ -806,12 +806,7 @@ export default function Profile() {
 
       {/* PWA Install Section */}
       <motion.div variants={staggerItem}>
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold text-dark-100">
-            {t('pwa.sectionTitle')}
-          </h2>
-          <InstallPWABanner variant="card" />
-        </Card>
+        <InstallPWABanner variant="card" />
       </motion.div>
     </motion.div>
   );
