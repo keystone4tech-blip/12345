@@ -23,6 +23,7 @@ import TelegramLoginButton from '../components/TelegramLoginButton';
 import OAuthProviderIcon from '../components/OAuthProviderIcon';
 import { saveOAuthState } from '../utils/oauth';
 import { getPendingReferralCode } from '../utils/referral';
+import { InstallPWABanner } from '../components/InstallPWABanner';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -788,6 +789,9 @@ export default function Login() {
             )}
           </div>
         )}
+
+        {/* PWA Install Banner — compact variant for login page */}
+        <InstallPWABanner variant="compact" />
       </div>
     </div>
   );

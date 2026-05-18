@@ -4695,5 +4695,20 @@
         "linkUrlPrompt": "URL:"
       }
     }
+  },
+  "pwa": {
+    "sectionTitle": "Application",
+    "installTitle": "Install the app",
+    "installDesc": "Add the cabinet to your home screen for quick access without the browser",
+    "installButton": "Install",
+    "installed": "App installed",
+    "installedDesc": "The cabinet is running as an app on your device",
+    "ios": {
+      "step1": "Tap the Share button",
+      "step2": "Select 'Add to Home Screen'",
+      "step3": "Tap 'Add'",
+      "compactHint": "Tap",
+      "step2Short": "Add to Home Screen"
+    }
   }
 }

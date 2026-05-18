@@ -19,6 +19,7 @@ import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { Switch } from '@/components/primitives/Switch';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
+import { InstallPWABanner } from '@/components/InstallPWABanner';
 
 // Icons
 const CopyIcon = () => (
@@ -800,6 +801,16 @@ export default function Profile() {
           ) : (
             <p className="text-dark-400">{t('profile.notifications.unavailable')}</p>
           )}
+        </Card>
+      </motion.div>
+
+      {/* PWA Install Section */}
+      <motion.div variants={staggerItem}>
+        <Card>
+          <h2 className="mb-4 text-lg font-semibold text-dark-100">
+            {t('pwa.sectionTitle')}
+          </h2>
+          <InstallPWABanner variant="card" />
         </Card>
       </motion.div>
     </motion.div>
