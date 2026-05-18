@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +10,7 @@ import { partnerApi } from '../api/partners';
 import { withdrawalApi } from '../api/withdrawals';
 import { CampaignCard } from '../components/partner/CampaignCard';
 import { useCurrency } from '../hooks/useCurrency';
+import { ChevronDownIcon } from '../components/icons';
 
 const LinkIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -96,6 +98,10 @@ export default function Referral() {
   const queryClient = useQueryClient();
   const [copiedLink, setCopiedLink] = useState<'cabinet' | 'bot' | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [isReferralsOpen, setIsReferralsOpen] = useState(false);
+  const [isEarningsOpen, setIsEarningsOpen] = useState(false);
+  const [isWithdrawalHistoryOpen, setIsWithdrawalHistoryOpen] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -404,81 +410,123 @@ export default function Referral() {
 
       {/* Referrals List */}
       <div className="bento-card">
-        <h2 className="mb-4 text-lg font-semibold text-dark-100">{t('referral.yourReferrals')}</h2>
-        {referralList?.items && referralList.items.length > 0 ? (
-          <div className="space-y-3">
-            {referralList.items.map((ref) => (
-              <div
-                key={ref.id}
-                className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
-              >
-                <div>
-                  <div className="font-medium text-dark-100">
-                    {ref.first_name || ref.username || t('referral.anonymousUser', { id: ref.id })}
+        <button
+          onClick={() => setIsReferralsOpen(!isReferralsOpen)}
+          className="flex w-full items-center justify-between text-left"
+        >
+          <h2 className="text-lg font-semibold text-dark-100">{t('referral.yourReferrals')}</h2>
+          <ChevronDownIcon
+            className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isReferralsOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+        <AnimatePresence>
+          {isReferralsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4">
+                {referralList?.items && referralList.items.length > 0 ? (
+                  <div className="space-y-3">
+                    {referralList.items.map((ref) => (
+                      <div
+                        key={ref.id}
+                        className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
+                      >
+                        <div>
+                          <div className="font-medium text-dark-100">
+                            {ref.first_name || ref.username || t('referral.anonymousUser', { id: ref.id })}
+                          </div>
+                          <div className="mt-0.5 text-xs text-dark-500">
+                            {new Date(ref.created_at).toLocaleDateString(i18n.language)}
+                          </div>
+                        </div>
+                        {ref.has_paid ? (
+                          <span className="badge-success">{t('referral.status.paid')}</span>
+                        ) : (
+                          <span className="badge-neutral">{t('referral.status.pending')}</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="mt-0.5 text-xs text-dark-500">
-                    {new Date(ref.created_at).toLocaleDateString(i18n.language)}
-                  </div>
-                </div>
-                {ref.has_paid ? (
-                  <span className="badge-success">{t('referral.status.paid')}</span>
                 ) : (
-                  <span className="badge-neutral">{t('referral.status.pending')}</span>
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
+                      <svg
+                        className="h-8 w-8 text-dark-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="text-dark-400">{t('referral.noReferrals')}</div>
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
-              <svg
-                className="h-8 w-8 text-dark-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-                />
-              </svg>
-            </div>
-            <div className="text-dark-400">{t('referral.noReferrals')}</div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Earnings History */}
       {earnings?.items && earnings.items.length > 0 && (
         <div className="bento-card">
-          <h2 className="mb-4 text-lg font-semibold text-dark-100">
-            {t('referral.earningsHistory')}
-          </h2>
-          <div className="space-y-3">
-            {earnings.items.map((earning) => (
-              <div
-                key={earning.id}
-                className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
+          <button
+            onClick={() => setIsEarningsOpen(!isEarningsOpen)}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <h2 className="text-lg font-semibold text-dark-100">
+              {t('referral.earningsHistory')}
+            </h2>
+            <ChevronDownIcon
+              className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isEarningsOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          <AnimatePresence>
+            {isEarningsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                <div>
-                  <div className="text-dark-100">
-                    {earning.referral_first_name ||
-                      earning.referral_username ||
-                      t('referral.anonymousReferral')}
-                  </div>
-                  <div className="mt-0.5 text-xs text-dark-500">
-                    {t(`referral.reasons.${earning.reason}`, earning.reason)} •{' '}
-                    {new Date(earning.created_at).toLocaleDateString(i18n.language)}
-                  </div>
+                <div className="mt-4 space-y-3">
+                  {earnings.items.map((earning) => (
+                    <div
+                      key={earning.id}
+                      className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
+                    >
+                      <div>
+                        <div className="text-dark-100">
+                          {earning.referral_first_name ||
+                            earning.referral_username ||
+                            t('referral.anonymousReferral')}
+                        </div>
+                        <div className="mt-0.5 text-xs text-dark-500">
+                          {t(`referral.reasons.${earning.reason}`, earning.reason)} •{' '}
+                          {new Date(earning.created_at).toLocaleDateString(i18n.language)}
+                        </div>
+                      </div>
+                      <div className="font-semibold text-success-400">
+                        {formatPositive(earning.amount_rubles)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="font-semibold text-success-400">
-                  {formatPositive(earning.amount_rubles)}
-                </div>
-              </div>
-            ))}
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -702,57 +750,79 @@ export default function Referral() {
 
           {/* Withdrawal History */}
           <div className="bento-card">
-            <h2 className="mb-4 text-lg font-semibold text-dark-100">
-              {t('referral.withdrawal.history')}
-            </h2>
-            {withdrawalHistory?.items && withdrawalHistory.items.length > 0 ? (
-              <div className="space-y-3">
-                {withdrawalHistory.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-dark-100">
-                          {formatWithCurrency(item.amount_rubles)}
-                        </span>
-                        <span className={getWithdrawalStatusBadge(item.status)}>
-                          {t(`referral.withdrawal.status.${item.status}`, item.status)}
-                        </span>
+            <button
+              onClick={() => setIsWithdrawalHistoryOpen(!isWithdrawalHistoryOpen)}
+              className="flex w-full items-center justify-between text-left"
+            >
+              <h2 className="text-lg font-semibold text-dark-100">
+                {t('referral.withdrawal.history')}
+              </h2>
+              <ChevronDownIcon
+                className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isWithdrawalHistoryOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            <AnimatePresence>
+              {isWithdrawalHistoryOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4">
+                    {withdrawalHistory?.items && withdrawalHistory.items.length > 0 ? (
+                      <div className="space-y-3">
+                        {withdrawalHistory.items.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-dark-100">
+                                  {formatWithCurrency(item.amount_rubles)}
+                                </span>
+                                <span className={getWithdrawalStatusBadge(item.status)}>
+                                  {t(`referral.withdrawal.status.${item.status}`, item.status)}
+                                </span>
+                              </div>
+                              <div className="mt-0.5 text-xs text-dark-500">
+                                {new Date(item.created_at).toLocaleDateString(i18n.language)}
+                                {item.payment_details && (
+                                  <span className="ml-1">
+                                    &bull;{' '}
+                                    {item.payment_details.length > 40
+                                      ? `${item.payment_details.slice(0, 40)}...`
+                                      : item.payment_details}
+                                  </span>
+                                )}
+                              </div>
+                              {item.admin_comment && (
+                                <div className="mt-1 text-xs text-dark-400">{item.admin_comment}</div>
+                              )}
+                            </div>
+                            {item.status === 'pending' && (
+                              <button
+                                onClick={() => cancelWithdrawalMutation.mutate(item.id)}
+                                disabled={cancelWithdrawalMutation.isPending}
+                                className="ml-3 shrink-0 text-sm text-error-400 transition-colors hover:text-error-300"
+                              >
+                                {t('common.cancel')}
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div className="mt-0.5 text-xs text-dark-500">
-                        {new Date(item.created_at).toLocaleDateString(i18n.language)}
-                        {item.payment_details && (
-                          <span className="ml-1">
-                            &bull;{' '}
-                            {item.payment_details.length > 40
-                              ? `${item.payment_details.slice(0, 40)}...`
-                              : item.payment_details}
-                          </span>
-                        )}
+                    ) : (
+                      <div className="py-8 text-center">
+                        <div className="text-dark-400">{t('referral.withdrawal.noHistory')}</div>
                       </div>
-                      {item.admin_comment && (
-                        <div className="mt-1 text-xs text-dark-400">{item.admin_comment}</div>
-                      )}
-                    </div>
-                    {item.status === 'pending' && (
-                      <button
-                        onClick={() => cancelWithdrawalMutation.mutate(item.id)}
-                        disabled={cancelWithdrawalMutation.isPending}
-                        className="ml-3 shrink-0 text-sm text-error-400 transition-colors hover:text-error-300"
-                      >
-                        {t('common.cancel')}
-                      </button>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <div className="text-dark-400">{t('referral.withdrawal.noHistory')}</div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}

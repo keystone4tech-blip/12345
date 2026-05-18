@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDownIcon } from '../components/icons';
 import { giftApi } from '../api/gift';
 import type {
   GiftConfig,
@@ -1472,6 +1473,10 @@ function ReceivedGiftCard({ gift }: { gift: ReceivedGift }) {
 function MyGiftsTabContent() {
   const { t } = useTranslation();
 
+  const [isActiveOpen, setIsActiveOpen] = useState(false);
+  const [isActivatedOpen, setIsActivatedOpen] = useState(false);
+  const [isReceivedOpen, setIsReceivedOpen] = useState(false);
+
   const {
     data: sentGifts,
     isLoading: sentLoading,
@@ -1542,42 +1547,102 @@ function MyGiftsTabContent() {
       {/* Active gifts (awaiting activation) */}
       {hasActive && (
         <div>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
-            {t('gift.activeGiftsTitle')}
-          </h2>
-          <div className="space-y-3">
-            {activeGifts.map((gift) => (
-              <SentGiftCard key={gift.token} gift={gift} />
-            ))}
-          </div>
+          <button
+            onClick={() => setIsActiveOpen(!isActiveOpen)}
+            className="flex w-full items-center justify-between text-left mb-3"
+          >
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-dark-400">
+              {t('gift.activeGiftsTitle')}
+            </h2>
+            <ChevronDownIcon
+              className={`h-4 w-4 text-dark-400 transition-transform duration-200 ${isActiveOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          <AnimatePresence>
+            {isActiveOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-3 mb-4">
+                  {activeGifts.map((gift) => (
+                    <SentGiftCard key={gift.token} gift={gift} />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
       {/* Activated gifts */}
       {hasActivated && (
         <div>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
-            {t('gift.activatedGiftsTitle')}
-          </h2>
-          <div className="space-y-3">
-            {activatedGifts.map((gift) => (
-              <SentGiftCard key={gift.token} gift={gift} />
-            ))}
-          </div>
+          <button
+            onClick={() => setIsActivatedOpen(!isActivatedOpen)}
+            className="flex w-full items-center justify-between text-left mb-3"
+          >
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-dark-400">
+              {t('gift.activatedGiftsTitle')}
+            </h2>
+            <ChevronDownIcon
+              className={`h-4 w-4 text-dark-400 transition-transform duration-200 ${isActivatedOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          <AnimatePresence>
+            {isActivatedOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-3 mb-4">
+                  {activatedGifts.map((gift) => (
+                    <SentGiftCard key={gift.token} gift={gift} />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
       {/* Received gifts */}
       {hasReceived && (
         <div>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
-            {t('gift.receivedGiftsTitle')}
-          </h2>
-          <div className="space-y-3">
-            {receivedGifts!.map((gift) => (
-              <ReceivedGiftCard key={gift.token} gift={gift} />
-            ))}
-          </div>
+          <button
+            onClick={() => setIsReceivedOpen(!isReceivedOpen)}
+            className="flex w-full items-center justify-between text-left mb-3"
+          >
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-dark-400">
+              {t('gift.receivedGiftsTitle')}
+            </h2>
+            <ChevronDownIcon
+              className={`h-4 w-4 text-dark-400 transition-transform duration-200 ${isReceivedOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          <AnimatePresence>
+            {isReceivedOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-3 mb-4">
+                  {receivedGifts!.map((gift) => (
+                    <ReceivedGiftCard key={gift.token} gift={gift} />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>
