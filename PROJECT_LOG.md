@@ -511,3 +511,24 @@
 - Изменен файл `cabinet/src/components/layout/AppShell/MobileBottomNav.tsx`.
 ### Заметки:
 - Для вмещения всех кнопок использован truncate для текста, уменьшен шрифт текста до 10px, а также убраны паддинги между элементами (min-w-0).
+
+## Дата: 2026-05-18 (PWA)
+### Изменения:
+- **PWA (Progressive Web App)**: Реализована возможность установки веб-кабинета как приложения на телефон/планшет/десктоп.
+- Установлен `vite-plugin-pwa` для автоматической генерации Service Worker (Workbox) и manifest.webmanifest.
+- Созданы иконки приложения (192x192, 512x512, apple-touch-icon) в `cabinet/public/icons/`.
+- Обновлен `index.html` с мета-тегами Apple (apple-touch-icon, apple-mobile-web-app-title).
+- Создан хук `usePWAInstall.ts` — определяет установлено ли приложение, перехватывает событие beforeinstallprompt.
+- Создан компонент `InstallPWABanner.tsx` — баннер с предложением установить приложение (поддержка iOS-инструкции и Android/Desktop промпта).
+- Добавлена секция «Приложение» в `Profile.tsx` (показывает статус установки или кнопку «Установить»).
+- Добавлен компактный баннер на страницу входа `Login.tsx`.
+- Добавлены переводы для `ru.json` и `en.json` (секция pwa).
+### Новые файлы:
+- `cabinet/src/hooks/usePWAInstall.ts`  
+- `cabinet/src/components/InstallPWABanner.tsx`  
+- `cabinet/public/icons/icon-192x192.png`  
+- `cabinet/public/icons/icon-512x512.png`  
+- `cabinet/public/icons/apple-touch-icon.png`  
+### Заметки:
+- Push-уведомления требуют доработки бэкенда (VAPID-ключи, эндпоинты подписки, pywebpush). Реализация планируется отдельно.
+- Workbox кеширует статику (JS, CSS, шрифты Google) для офлайн-доступа.
