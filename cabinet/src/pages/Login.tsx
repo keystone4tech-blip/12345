@@ -337,9 +337,6 @@ export default function Login() {
       </div>
 
       <div className="relative w-full max-w-md space-y-5">
-        {/* PWA Install Banner — compact/global variant at the very top */}
-        <InstallPWABanner variant="compact" />
-
         {/* Logo & branding */}
         <div className="text-center">
           <div className="relative mx-auto mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-dark-700/50 bg-dark-800/80 shadow-md">
@@ -383,6 +380,9 @@ export default function Login() {
             </div>
           )}
         </div>
+
+        {/* PWA Install Banner — compact/global variant under the logo and name */}
+        <InstallPWABanner variant="compact" />
 
         {/* Check Email Screen */}
         {registeredEmail ? (
