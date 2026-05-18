@@ -503,3 +503,11 @@
 ### Структура:
 - Изменен файл `cabinet/src/components/layout/AppShell/MobileBottomNav.tsx`.
 - Изменен файл `cabinet/src/pages/GiftSubscription.tsx`.
+
+## Дата: 2026-05-18
+### Изменения:
+- Убран горизонтальный скролл в нижнем дашборде (MobileBottomNav.tsx). Все 7 кнопок теперь вмещаются в один ряд на экране.
+### Структура:
+- Изменен файл `cabinet/src/components/layout/AppShell/MobileBottomNav.tsx`.
+### Заметки:
+- Для вмещения всех кнопок использован truncate для текста, уменьшен шрифт текста до 10px, а также убраны паддинги между элементами (min-w-0).
