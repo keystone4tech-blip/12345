@@ -159,25 +159,16 @@ export function InstallPWABanner({ variant = 'card' }: InstallPWABannerProps) {
     }
   }
 
-  // 2. Вне телеграма, когда нет поддержки установки (и не iOS)
-  if (!canInstall && !isIOS) {
-    if (variant === 'card') {
-      return (
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold text-dark-100">{t('pwa.sectionTitle')}</h2>
-          <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
-            <p className="text-sm text-dark-400">
-              Установка приложения не поддерживается вашим текущим браузером. Пожалуйста, используйте Safari на iOS или Chrome на Android/PC.
-            </p>
-          </div>
-        </Card>
-      );
-    }
-    return null;
-  }
-
-  // 3. Поддерживается установка (iOS или Android/PC)
+  // === ОПРЕДЕЛЕНИЕ МАНУАЛЬНОГО РЕЖИМА УСТАНОВКИ ===
+  const userAgent = window.navigator.userAgent.toLowerCase();
   
+  // Детекция Chromium-браузеров (Chrome, Edge, Samsung Internet, etc.)
+  const isChromium = /chrome|crios|crmo|edge|edg/i.test(userAgent) && !/otherview|opr|opera|firefox|iceweasel/i.test(userAgent);
+  // Детекция Firefox
+  const isFirefox = /firefox|iceweasel/i.test(userAgent);
+  // Детекция Android
+  const isAndroid = /android/i.test(userAgent);
+
   // Контент для iOS инструкции
   const iosContent = (
     <div className={`flex ${variant === 'card' ? 'items-start' : 'items-center'} gap-3`}>
@@ -204,7 +195,85 @@ export function InstallPWABanner({ variant = 'card' }: InstallPWABannerProps) {
     </div>
   );
 
-  // Контент для Android/PC (кнопка)
+  // Контент для ручной установки Chrome/Chromium
+  const chromiumManualContent = (
+    <div className={`flex ${variant === 'card' ? 'items-start' : 'items-center'} gap-3`}>
+      <div className={`${variant === 'card' ? 'mt-0.5' : 'shrink-0'} text-accent-400`}><PhoneIcon /></div>
+      <div className="min-w-0 flex-1">
+        <p className={`${variant === 'card' ? 'font-medium text-dark-100' : 'text-sm font-medium text-dark-200'}`}>
+          Установка через меню Chrome
+        </p>
+        {variant === 'card' ? (
+          <>
+            <p className="mt-1 text-sm text-dark-400">
+              Если кнопка установки не отображается (например, после недавнего удаления), вы можете установить приложение вручную:
+            </p>
+            <div className="mt-3 space-y-2 text-sm text-dark-300 pl-4 border-l border-dark-700/50">
+              {isAndroid ? (
+                <>
+                  <p>1. Нажмите на три точки <span className="font-bold text-accent-400">(⋮)</span> в верхнем правом углу Chrome.</p>
+                  <p>2. Выберите <span className="font-semibold text-dark-100">«Добавить на главный экран»</span> или <span className="font-semibold text-dark-100">«Установить приложение»</span>.</p>
+                </>
+              ) : (
+                <>
+                  <p>1. Нажмите на значок установки (плюс в круге/квадрате) в правой части адресной строки Chrome.</p>
+                  <p>2. Либо нажмите на три точки <span className="font-bold text-accent-400">(⋮)</span> в правом верхнем углу и выберите <span className="font-semibold text-dark-100">«Установить»</span>.</p>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="mt-0.5 text-xs text-dark-400">
+            Нажмите на меню Chrome <span className="font-bold text-accent-400">(⋮)</span> → <span className="font-semibold">{isAndroid ? '«Добавить на гл. экран»' : '«Установить»'}</span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  // Контент для ручной установки Firefox
+  const firefoxManualContent = (
+    <div className={`flex ${variant === 'card' ? 'items-start' : 'items-center'} gap-3`}>
+      <div className={`${variant === 'card' ? 'mt-0.5' : 'shrink-0'} text-accent-400`}><PhoneIcon /></div>
+      <div className="min-w-0 flex-1">
+        <p className={`${variant === 'card' ? 'font-medium text-dark-100' : 'text-sm font-medium text-dark-200'}`}>
+          Установка в Firefox
+        </p>
+        {variant === 'card' ? (
+          <>
+            <p className="mt-1 text-sm text-dark-400">
+              Вы можете установить приложение вручную через настройки Firefox:
+            </p>
+            <div className="mt-3 space-y-2 text-sm text-dark-300 pl-4 border-l border-dark-700/50">
+              <p>1. Нажмите на меню из трех точек <span className="font-bold text-accent-400">(⋮)</span> в углу экрана Firefox.</p>
+              <p>2. Выберите пункт <span className="font-semibold text-dark-100">«Установить»</span> или <span className="font-semibold text-dark-100">«Добавить на главный экран»</span>.</p>
+            </div>
+          </>
+        ) : (
+          <p className="mt-0.5 text-xs text-dark-400">
+            Нажмите на меню Firefox <span className="font-bold text-accent-400">(⋮)</span> → <span className="font-semibold">«Установить»</span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  // Контент для других браузеров (generic)
+  const genericManualContent = (
+    <div className="flex items-start gap-3">
+      <div className="text-accent-400 shrink-0 mt-0.5"><PhoneIcon /></div>
+      <div className="min-w-0 flex-1">
+        <p className="font-medium text-dark-100">
+          Установка приложения
+        </p>
+        <p className="mt-1 text-sm text-dark-400">
+          Вы можете запустить кабинет как приложение! Откройте меню настроек вашего браузера и выберите <span className="font-semibold text-dark-100">«Добавить на главный экран»</span> или <span className="font-semibold text-dark-100">«Установить»</span> для быстрого доступа.
+        </p>
+      </div>
+    </div>
+  );
+
+  // Контент для Android/PC (нативная кнопка)
   const androidContent = (
     <>
       <div className="flex items-center gap-3 min-w-0">
@@ -230,16 +299,37 @@ export function InstallPWABanner({ variant = 'card' }: InstallPWABannerProps) {
     </>
   );
 
-  // Рендер вариантов
+  // Выбор контента на основе доступности нативного промпта и типа браузера
+  const renderPWAContent = () => {
+    if (canInstall) {
+      return androidContent;
+    }
+    // Если нативного промпта нет, используем ручные инструкции
+    if (isIOS) return iosContent;
+    if (isChromium) return chromiumManualContent;
+    if (isFirefox) return firefoxManualContent;
+    return genericManualContent;
+  };
+
+  // Решение о показе баннера в ручном режиме (для компактных вариантов)
+  // Показываем компактный баннер ручной установки только на iOS, Chrome/Chromium и Firefox
+  const canShowCompact = canInstall || isIOS || isChromium || isFirefox;
+
+  // Регуляция рендеринга для карточки профиля
   if (variant === 'card') {
     return (
       <Card>
         <h2 className="mb-4 text-lg font-semibold text-dark-100">{t('pwa.sectionTitle')}</h2>
-        <div className={`rounded-xl border border-accent-500/20 bg-accent-500/5 p-4 ${!isIOS ? 'flex flex-col sm:flex-row sm:items-center justify-between gap-3' : ''}`}>
-          {isIOS ? iosContent : androidContent}
+        <div className={`rounded-xl border border-accent-500/20 bg-accent-500/5 p-4 ${canInstall && !isIOS ? 'flex flex-col sm:flex-row sm:items-center justify-between gap-3' : ''}`}>
+          {renderPWAContent()}
         </div>
       </Card>
     );
+  }
+
+  // Если ручная установка в компактном баннере нецелесообразна для данного браузера — скрываем
+  if (!canShowCompact) {
+    return null;
   }
 
   return (
@@ -256,7 +346,7 @@ export function InstallPWABanner({ variant = 'card' }: InstallPWABannerProps) {
         }
       >
         <div className={`flex items-center ${variant === 'global' ? 'max-w-6xl mx-auto' : 'pr-6'}`}>
-          {isIOS ? iosContent : androidContent}
+          {renderPWAContent()}
           
           <button
             onClick={dismissInstall}
