@@ -7,7 +7,7 @@ import { usePlatform } from '@/platform';
 
 // Icons
 // Импортируем иконку подарков GiftIcon из локального набора иконок
-import { HomeIcon, SubscriptionIcon, WalletIcon, UsersIcon, ChatIcon, WheelIcon, GiftIcon } from './icons';
+import { HomeIcon, SubscriptionIcon, WalletIcon, UsersIcon, ChatIcon, WheelIcon, GiftIcon, UserIcon } from './icons';
 
 interface MobileBottomNavProps {
   isKeyboardOpen: boolean;
@@ -37,7 +37,8 @@ export function MobileBottomNav({
     { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
     { path: '/balance', label: t('nav.balance'), icon: WalletIcon },
     ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),
-    ...(giftEnabled ? [{ path: '/gift', label: t('nav.gift'), icon: GiftIcon }] : []), // Кнопка "Подарки" между Рефералами и Поддержкой
+    ...(giftEnabled ? [{ path: '/gift', label: t('nav.gift'), icon: GiftIcon }] : []), // Кнопка "Подарки"
+    { path: '/profile', label: t('nav.profile'), icon: UserIcon },
     ...(wheelEnabled
       ? [{ path: '/wheel', label: t('nav.wheel'), icon: WheelIcon }]
       : [{ path: '/support', label: t('nav.support'), icon: ChatIcon }]),
