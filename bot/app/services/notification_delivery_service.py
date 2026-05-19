@@ -125,6 +125,205 @@ class NotificationDeliveryService:
             self._ws_manager = cabinet_ws_manager
         return self._ws_manager
 
+    def _is_notification_enabled(self, user: User, notification_type: NotificationType, context: dict[str, Any]) -> bool:
+        """
+        Проверяет, включен ли данный тип уведомлений в настройках пользователя.
+        Все подробные настройки извлекаются из JSON-поля notification_settings модели User.
+        """
+        # Извлекаем настройки уведомлений из JSON-поля пользователя (по умолчанию пустой словарь)
+        settings_data = getattr(user, 'notification_settings', None) or {}
+        
+        # 1. Проверка для уведомления об истечении подписки
+        if notification_type == NotificationType.SUBSCRIPTION_EXPIRING:
+            enabled = settings_data.get('subscription_expiry_enabled', True) # По умолчанию True
+            logger.debug("Проверка настройки: уведомление об истечении подписки", user_id=user.id, enabled=enabled)
+            return enabled
+            
+        # 2. Проверка для уведомления о низком балансе
+        if notification_type == NotificationType.BALANCE_LOW:
+            enabled = settings_data.get('balance_low_enabled', True) # По умолчанию True
+            if not enabled:
+                logger.debug("Проверка настройки: уведомление о низком балансе отключено", user_id=user.id)
+                return False
+            # Проверяем порог списания (лимит)
+            threshold = settings_data.get('balance_low_threshold', 100) # По умолчанию 100 копеек (1 рубль)
+            balance = context.get('new_balance_kopeks', user.balance_kopeks)
+            is_low = balance <= threshold
+            logger.debug("Проверка настройки: порог баланса", user_id=user.id, threshold=threshold, balance=balance, is_low=is_low)
+            return is_low
+
+        # 3. Проверка для массовых объявлений и новостей (Broadcast)
+        if notification_type == NotificationType.BROADCAST:
+            is_promo = context.get('is_promo', False) # Является ли акцией/промо-предложением
+            if is_promo:
+                enabled = settings_data.get('promo_offers_enabled', True)
+                logger.debug("Проверка настройки: промо-акции", user_id=user.id, enabled=enabled)
+                return enabled
+            enabled = settings_data.get('news_enabled', True)
+            logger.debug("Проверка настройки: новости сервиса", user_id=user.id, enabled=enabled)
+            return enabled
+            
+        # По умолчанию все остальные важные типы уведомлений (активация подписки, начисления рефералов) всегда включены
+        return True
+
+    async def _send_webpush_notification(
+        self,
+        user: User,
+        notification_type: NotificationType,
+        context: dict[str, Any],
+        telegram_message: str | None = None,
+    ) -> bool:
+        """
+        Отправляет Web Push уведомления на все зарегистрированные PWA-устройства пользователя.
+        Связывает системные уведомления бэкенда с установленным PWA-приложением на телефоне/ПК.
+        """
+        from sqlalchemy import select
+        from app.database.models import PushSubscription
+        from app.database.database import db_manager
+        from pywebpush import webpush, WebPushException
+        from app.utils.vapid import generate_vapid_headers
+        import json
+        import re
+
+        logger.info("Попытка отправки Web Push уведомления", user_id=user.id, notification_type=notification_type.value)
+
+        # 1. Получаем все активные подписки пользователя из базы данных
+        try:
+            async with db_manager.session(read_only=True) as db:
+                stmt = select(PushSubscription).where(PushSubscription.user_id == user.id)
+                result = await db.execute(stmt)
+                subscriptions = result.scalars().all()
+        except Exception as db_err:
+            logger.error("Ошибка при запросе подписок из БД", user_id=user.id, error=str(db_err))
+            return False
+
+        if not subscriptions:
+            logger.debug("У пользователя нет активных подписок на Web Push (приложение PWA не настроено/не установлено)", user_id=user.id)
+            return False
+
+        # 2. Формируем тело (body) уведомления.
+        # Если передан готовый текст для Telegram (telegram_message), очищаем его от HTML-тегов и используем
+        body = ""
+        if telegram_message:
+            # Очищаем HTML-теги с помощью регулярного выражения для красивого отображения в нативном пуше
+            body = re.sub(r'<[^>]+>', '', telegram_message)
+            # Убираем множественные пустые строки и пробелы
+            body = re.sub(r'\n+', '\n', body).strip()
+
+        # Если тело пустое (например, telegram_message отсутствует), формируем стандартные качественные тексты по типу уведомления
+        if not body:
+            if notification_type == NotificationType.BALANCE_TOPUP:
+                body = f"Ваш баланс успешно пополнен на {context.get('formatted_amount', 'сумму')}! 🎉"
+            elif notification_type == NotificationType.BALANCE_CHANGE:
+                body = f"Баланс изменен на {context.get('formatted_amount', 'сумму')}."
+            elif notification_type == NotificationType.SUBSCRIPTION_EXPIRING:
+                body = f"Ваша подписка истекает через {context.get('days_left', 'несколько')} дн. Рекомендуем продлить! 💎"
+            elif notification_type == NotificationType.SUBSCRIPTION_EXPIRED:
+                body = "Срок действия вашей подписки истек. VPN-доступ приостановлен. ⚠️"
+            elif notification_type == NotificationType.SUBSCRIPTION_ACTIVATED:
+                body = "Ваша VPN подписка успешно активирована! Приятного использования. 🚀"
+            elif notification_type == NotificationType.SUBSCRIPTION_RENEWED:
+                body = "Ваша подписка успешно продлена! 💎"
+            elif notification_type == NotificationType.REFERRAL_BONUS:
+                body = f"Вам начислен реферальный бонус {context.get('formatted_bonus', '')} за покупку реферала {context.get('referral_name', '')}! 👥"
+            elif notification_type == NotificationType.REFERRAL_REGISTERED:
+                body = f"Новый реферал успешно зарегистрирован по вашей реферальной ссылке! 👥"
+            elif notification_type == NotificationType.AUTOPAY_SUCCESS:
+                body = f"Автоплатеж успешно выполнен на сумму {context.get('formatted_amount', '')}! Подписка продлена. 💎"
+            elif notification_type == NotificationType.AUTOPAY_FAILED:
+                body = f"Не удалось выполнить автоплатеж. Причина: {context.get('reason', 'ошибка транзакции')}."
+            elif notification_type == NotificationType.DAILY_DEBIT:
+                body = f"Ежедневное списание по подписке выполнено: {context.get('formatted_amount', '')}."
+            elif notification_type == NotificationType.BAN_NOTIFICATION:
+                body = f"Ваш аккаунт заблокирован. Причина: {context.get('reason', '')}."
+            elif notification_type == NotificationType.UNBAN_NOTIFICATION:
+                body = "Ваш аккаунт успешно разблокирован! 🚀"
+            elif notification_type == NotificationType.BROADCAST:
+                body = context.get('message', 'Новое уведомление от нашего сервиса.')
+            else:
+                body = "У вас новое важное уведомление в личном кабинете MozhnoVPN."
+
+        # 3. Задаем красивые и интуитивно понятные заголовки пушей в зависимости от типа
+        title = "MozhnoVPN"
+        url = "/profile" # Дефолтный путь перехода по клику на пуш
+
+        if 'balance' in notification_type.value:
+            title = "MozhnoVPN — Баланс 💳"
+            url = "/profile"
+        elif 'subscription' in notification_type.value or 'autopay' in notification_type.value or 'daily' in notification_type.value:
+            title = "MozhnoVPN — Подписка 💎"
+            url = "/connection"
+        elif 'referral' in notification_type.value or 'partner' in notification_type.value or 'withdrawal' in notification_type.value:
+            title = "MozhnoVPN — Рефералы 👥"
+            url = "/referral"
+        elif 'broadcast' in notification_type.value:
+            title = "MozhnoVPN — Объявление 📢"
+            url = "/"
+
+        # Полезная нагрузка (payload) пуша
+        payload = {
+            "title": title,
+            "body": body,
+            "icon": "/icons/icon-192x192.png",
+            "badge": "/icons/icon-192x192.png",
+            "data": {
+                "url": url
+            }
+        }
+
+        logger.info(
+            "Подготовка пакетов Web Push для отправки", 
+            user_id=user.id, 
+            type=notification_type.value, 
+            payload=payload,
+            subscriptions_count=len(subscriptions)
+        )
+
+        push_sent_count = 0
+        for sub in subscriptions:
+            try:
+                # Генерируем VAPID-заголовки авторизации (используем безопасную генерацию без багов py-vapid)
+                vapid_headers = generate_vapid_headers(sub.endpoint)
+                
+                if not vapid_headers:
+                    logger.warning("Пропуск отправки на устройство: не удалось сгенерировать VAPID-заголовок", subscription_id=sub.id)
+                    continue
+
+                # Вызываем pywebpush для шифрования пакета и отправки на пуш-сервер (Google/Apple/Mozilla)
+                webpush(
+                    subscription_info={
+                        "endpoint": sub.endpoint,
+                        "keys": {
+                            "p256dh": sub.p256dh,
+                            "auth": sub.auth
+                        }
+                    },
+                    data=json.dumps(payload),
+                    headers=vapid_headers
+                )
+                push_sent_count += 1
+                logger.info("Web Push успешно доставлен на устройство пользователя", user_id=user.id, subscription_id=sub.id)
+            except WebPushException as e:
+                # Если пуш-служба вернула ошибку 410 (Gone) — это значит, что подписка устарела или удалена на устройстве.
+                # Мы должны незамедлительно очистить ее из базы данных, чтобы не слать лишние запросы.
+                logger.warning("Ошибка отправки Web Push (подписка недействительна)", error=str(e), subscription_id=sub.id)
+                if getattr(e, 'response', None) is not None and e.response.status_code == 410:
+                    try:
+                        async with db_manager.session() as db_write:
+                            # Находим и удаляем подписку по первичному ключу в отдельной транзакции записи
+                            stmt_del = select(PushSubscription).where(PushSubscription.id == sub.id)
+                            res_del = await db_write.execute(stmt_del)
+                            sub_to_del = res_del.scalar_one_or_none()
+                            if sub_to_del:
+                                await db_write.delete(sub_to_del)
+                        logger.info("Успешно удалена устаревшая подписка из базы данных", subscription_id=sub.id)
+                    except Exception as del_err:
+                        logger.error("Не удалось удалить недействительную подписку из БД", error=str(del_err), subscription_id=sub.id)
+            except Exception as e:
+                logger.error("Непредвиденная ошибка при отправке Web Push на устройство", error=str(e), subscription_id=sub.id)
+
+        return push_sent_count > 0
+
     async def send_notification(
         self,
         user: User,
@@ -135,26 +334,42 @@ class NotificationDeliveryService:
         telegram_markup: Any | None = None,
     ) -> bool:
         """
-        Send notification to user through appropriate channel.
-
-        Args:
-            user: User to notify
-            notification_type: Type of notification
-            context: Context data for message formatting
-            bot: Telegram bot instance (required for Telegram users)
-            telegram_message: Pre-formatted Telegram message (optional)
-            telegram_markup: Telegram keyboard markup (optional)
-
-        Returns:
-            True if notification was sent successfully through at least one channel
+        Отправляет уведомление пользователю по всем доступным каналам доставки.
+        Автоматически интегрирует отправку Web Push (PWA) параллельно со стандартными каналами.
         """
+        # 1. Проверяем, активен ли статус пользователя
         if user.status in (UserStatus.BLOCKED.value, UserStatus.DELETED.value):
-            logger.debug('Пропускаем уведомление для неактивного пользователя', user_id=user.id, status=user.status)
+            logger.debug('Пропускаем уведомление для заблокированного/удаленного пользователя', user_id=user.id, status=user.status)
             return False
 
+        # 2. Проверяем настройки уведомлений пользователя (включен ли данный тип)
+        if not self._is_notification_enabled(user, notification_type, context):
+            logger.info(
+                'Уведомление отключено в настройках пользователя, пропускаем отправку по всем каналам',
+                user_id=user.id,
+                notification_type=notification_type.value,
+            )
+            return False
+
+        sent_successfully = False
+
+        # 3. Отправка Web Push (всегда отправляется на зарегистрированные PWA устройства пользователя!)
+        webpush_sent = False
+        try:
+            webpush_sent = await self._send_webpush_notification(
+                user=user,
+                notification_type=notification_type,
+                context=context,
+                telegram_message=telegram_message,
+            )
+            if webpush_sent:
+                sent_successfully = True
+        except Exception as e:
+            logger.exception("Ошибка при отправке Web Push в фоновом режиме", user_id=user.id, error=e)
+
+        # 4. Отправка через Telegram Bot (если у пользователя привязан Telegram аккаунт)
         if user.telegram_id:
-            # User has Telegram - send via bot
-            return await self._send_telegram_notification(
+            telegram_sent = await self._send_telegram_notification(
                 user=user,
                 notification_type=notification_type,
                 context=context,
@@ -162,8 +377,20 @@ class NotificationDeliveryService:
                 message=telegram_message,
                 markup=telegram_markup,
             )
+            if telegram_sent:
+                sent_successfully = True
+            
+            logger.info(
+                "Уведомление доставлено для Telegram пользователя",
+                user_id=user.id,
+                notification_type=notification_type.value,
+                telegram_sent=telegram_sent,
+                webpush_sent=webpush_sent,
+            )
+            return sent_successfully
+
+        # 5. Отправка для email-only пользователей (через Email и WebSocket)
         if user.email and user.email_verified:
-            # Email-only user - send via email and WebSocket
             results = await asyncio.gather(
                 self._send_email_notification(user, notification_type, context),
                 self._send_websocket_notification(user, notification_type, context),
@@ -174,22 +401,24 @@ class NotificationDeliveryService:
             ws_sent = results[1] is True
 
             if email_sent or ws_sent:
-                logger.info(
-                    'Уведомление отправлено email-пользователю (email ws=)',
-                    notification_type_value=notification_type.value,
-                    user_id=user.id,
-                    email_sent=email_sent,
-                    ws_sent=ws_sent,
-                )
-                return True
-            logger.warning(
-                'Не удалось отправить уведомление email-пользователю',
+                sent_successfully = True
+
+            logger.info(
+                'Уведомление отправлено email-пользователю',
                 notification_type_value=notification_type.value,
                 user_id=user.id,
+                email_sent=email_sent,
+                ws_sent=ws_sent,
+                webpush_sent=webpush_sent,
             )
-            return False
-        logger.debug('Пользователь не имеет telegram_id или verified email, пропускаем уведомление', user_id=user.id)
-        return False
+            return sent_successfully
+
+        logger.debug(
+            'Пользователь не имеет telegram_id или подтвержденного email, но статус Web Push доставки получен', 
+            user_id=user.id, 
+            webpush_sent=webpush_sent
+        )
+        return sent_successfully
 
     async def _send_telegram_notification(
         self,
