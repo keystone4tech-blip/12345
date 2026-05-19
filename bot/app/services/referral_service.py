@@ -31,43 +31,67 @@ async def send_referral_notification(
     message_effect_id: str | None = None,
 ):
     """
-    Отправляет реферальное уведомление в Telegram или по email.
+    Отправляет реферальное уведомление по всем каналам доставки (Telegram, Web Push, Email).
 
     Args:
         bot: Telegram Bot instance
-        telegram_id: Telegram user ID (может быть None для email-пользователей)
+        telegram_id: Telegram user ID
         message: Текст уведомления
-        user: User object (для email-only пользователей)
+        user: User object (если есть)
         bonus_kopeks: Сумма бонуса в копейках
         referral_name: Имя реферала
+        message_effect_id: ID эффекта для Telegram сообщения
     """
-    # Handle email-only users via notification delivery service
-    if telegram_id is None:
-        if user is not None:
-            success = await notification_delivery_service.notify_referral_bonus(
+    if not user:
+        if telegram_id:
+            try:
+                from app.database.crud.user import get_user_by_telegram_id
+                from app.database.session import async_session_maker
+                async with async_session_maker() as session:
+                    user = await get_user_by_telegram_id(session, telegram_id)
+            except Exception as e:
+                logger.error('Не удалось загрузить пользователя по telegram_id для реферального уведомления', telegram_id=telegram_id, error=e)
+        else:
+            logger.debug('Пропуск уведомления: пользователь без telegram_id и без User object')
+            return
+
+    if not user:
+        # Резервный вариант, если пользователя не нашли в БД, но есть telegram_id — отправляем напрямую в TG
+        if telegram_id:
+            try:
+                await bot.send_message(
+                    telegram_id,
+                    message,
+                    parse_mode='HTML',
+                    message_effect_id=message_effect_id,
+                )
+                logger.info('✅ Уведомление отправлено напрямую через Telegram (пользователь не найден в БД)', telegram_id=telegram_id)
+            except Exception as e:
+                logger.error('❌ Ошибка отправки уведомления напрямую пользователю', telegram_id=telegram_id, error=e)
+        return
+
+    # Отправляем через единую службу доставки (try-except гарантирует отсутствие прерываний!)
+    try:
+        if bonus_kopeks > 0:
+            await notification_delivery_service.notify_referral_bonus(
                 user=user,
                 bonus_kopeks=bonus_kopeks,
                 referral_name=referral_name,
+                bot=bot,
                 telegram_message=message,
+                message_effect_id=message_effect_id,
             )
-            if success:
-                logger.info('✅ Email уведомление о реферале отправлено пользователю', user_id=user.id)
-            else:
-                logger.warning('⚠️ Не удалось отправить email уведомление пользователю', user_id=user.id)
         else:
-            logger.debug('Пропуск уведомления: пользователь без telegram_id и без User object')
-        return
-
-    try:
-        await bot.send_message(
-            telegram_id,
-            message,
-            parse_mode='HTML',
-            message_effect_id=message_effect_id,
-        )
-        logger.info('✅ Уведомление отправлено пользователю', telegram_id=telegram_id)
+            await notification_delivery_service.notify_referral_registered(
+                user=user,
+                referral_name=referral_name,
+                bot=bot,
+                telegram_message=message,
+                message_effect_id=message_effect_id,
+            )
+        logger.info('✅ Реферальное уведомление успешно обработано через единую службу доставки', user_id=user.id)
     except Exception as e:
-        logger.error('❌ Ошибка отправки уведомления пользователю', telegram_id=telegram_id, error=e)
+        logger.exception('❌ Ошибка обработки реферального уведомления через службу доставки', user_id=user.id, error=e)
 
 
 async def process_referral_registration(db: AsyncSession, new_user_id: int, referrer_id: int, bot: Bot = None, is_organic: bool = False):

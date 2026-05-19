@@ -1,3 +1,56 @@
+## Дата: 2026-05-19 (Интеграция события GIFT_RECEIVED во все каналы доставки и публикация)
+
+### Изменения:
+
+#### Бэкенд API (bot/app)
+- **Создание и внедрение события `GIFT_RECEIVED`** (`bot/app/services/notification_delivery_service.py`):
+  - Добавлено новое событие `GIFT_RECEIVED = 'gift_received'` в перечисление `NotificationType`.
+  - Реализован асинхронный метод `notify_gift_received` для рассылки сообщений получателям подарков по всем доступным каналам одновременно.
+  - Добавлена логика генерации нативного Web Push текста для получателя в методе `_send_webpush_notification`.
+- **Создание HTML-шаблона письма о получении подарка** (`bot/app/cabinet/services/email_templates.py`):
+  - Метод `_gift_received_template` добавлен и зарегистрирован в словаре `template_map`.
+  - Шаблон верстки поддерживает русский и английский языки, красивое выделение информации о дарителе, тарифе и длительности подписки, а также кнопку бесшовного перехода в кабинет PWA.
+- **Интеграция единого доставщика в эндпоинт отправки подарков** (`bot/app/cabinet/routes/gift.py`):
+  - В роуте `POST /send-to-user` прямая отправка Telegram-сообщения заменена на вызов `notification_delivery_service.notify_gift_received`. Это открыло возможность автоматической и отказоустойчивой отправки Web Push, Email и WebSocket в дополнение к Telegram!
+
+#### Документация и справочники
+- **Создание справочника шаблонов писем** (`EMAIL_TEMPLATES.md`):
+  - В корне репозитория создан подробный справочник всех писем и пуш-сообщений платформы MozhnoVPN. Справочник содержит темы, описания условий отправки, используемые контекстные переменные и полные HTML/Push макеты для 25+ системных действий.
+
+### Структура затронутых файлов:
+- `bot/app/services/notification_delivery_service.py` — [MODIFY] добавление `GIFT_RECEIVED` в enum, реализация `notify_gift_received`, логика генерации Web Push тела.
+- `bot/app/cabinet/services/email_templates.py` — [MODIFY] добавление и регистрация `_gift_received_template`.
+- `bot/app/cabinet/routes/gift.py` — [MODIFY] интеграция `notify_gift_received` вместо прямого `bot.send_message`.
+- `EMAIL_TEMPLATES.md` — [NEW] справочник всех писем и пушей платформы.
+
+---
+
+## Дата: 2026-05-19 (Полная интеграция отказоустойчивых Web Push и Email во все системные события)
+
+### Изменения:
+
+#### Бэкенд API (bot/app)
+- **Унификация и неисключающая многоканальная доставка** (`bot/app/services/notification_delivery_service.py`):
+  - Метод `send_notification` переписан на параллельную и независимую доставку по всем доступным каналам: Telegram Bot, Web Push, Email и WebSocket. Устранен исключающий выбор «или Telegram, или Email».
+  - Каждый канал обернут в изолированный блок `try-except`, гарантируя 100% отказоустойчивость: сбои, тайм-ауты или недействительные подписки одного канала никак не влияют на работу остальных каналов и не могут привести к сбою бэкенда или откату БД.
+  - Добавлена поддержка `message_effect_id` (эффекты сообщений Telegram) в общую шину уведомлений и методы доставщика.
+  - Реализованы новые специализированные методы: `notify_referral_registered` (для новых рефералов) и `notify_gift_accepted` (для активации подарков).
+  - В `_send_webpush_notification` добавлена обработка нового типа `GIFT_ACCEPTED` (заголовок `"MozhnoVPN — Подарки 🎁"`, ссылка `"/connection"`).
+- **Интеграция начисления бонусов и регистраций рефералов** (`bot/app/services/referral_service.py`):
+  - Метод `send_referral_notification` полностью переписан с маршрутизацией через единую службу доставки `notification_delivery_service` (вместо прямых `bot.send_message`). Автоматически задействует Web Push, Telegram и Email для всех типов уведомлений о рефералах.
+- **Интеграция активации подарков** (`bot/app/services/gift_service.py`):
+  - В методе `activate_gift` прямая отправка `bot.send_message` заменена на единую шину `notification_delivery_service.notify_gift_accepted`. Объект дарителя (`gift.gifter`) безопасно извлекается до коммита транзакции, предотвращая ошибки `DetachedInstanceError`.
+- **Шаблоны Email-уведомлений о подарках** (`bot/app/cabinet/services/email_templates.py`):
+  - Зарегистрирован и добавлен новый красивый шаблон письма `_gift_accepted_template` (для русского и английского языков), сообщающий дарителю о том, что получатель активировал подарок.
+
+### Структура затронутых файлов:
+- `bot/app/services/notification_delivery_service.py` — [MODIFY] неисключающая многоканальная отправка с try-except, поддержка `message_effect_id`, `notify_referral_registered`, `notify_gift_accepted`, обработка Web Push.
+- `bot/app/services/referral_service.py` — [MODIFY] маршрутизация всех реферальных уведомлений через единого доставщика.
+- `bot/app/services/gift_service.py` — [MODIFY] замена отправки сообщений о подарках на единую шину доставки с безопасным извлечением gifter.
+- `bot/app/cabinet/services/email_templates.py` — [MODIFY] добавление email-шаблона для активации подарков.
+
+---
+
 ## Дата: 2026-05-19 (Интеграция Web Push во все системные события бэкенда)
 
 ### Изменения:

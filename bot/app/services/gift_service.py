@@ -142,9 +142,10 @@ class GiftService:
                 await sub_service.create_remnawave_user(db, subscription)
 
             # Извлекаем необходимые данные ДО коммита
-            gifter_tg_id = gift.gifter.telegram_id if gift.gifter else None
+            gifter = gift.gifter
             recipient_name = user.full_name or f"ID {user.id}"
             tariff_name = tariff.name
+            period_days = gift.period_days
 
             # Отмечаем подарок как использованный
             gift.is_used = True
@@ -156,17 +157,24 @@ class GiftService:
             
             await db.commit()
 
-            # Уведомляем дарителя
-            if gifter_tg_id and bot:
+            # Уведомляем дарителя через единую службу доставки
+            if gifter:
                 try:
-                    await bot.send_message(
-                        chat_id=gifter_tg_id,
-                        text=f"✅ <b>Ваш подарок успешно получен!</b>\n\nПользователь {recipient_name} активировал подаренный вами тариф {tariff_name}.",
-                        parse_mode='HTML',
-                        message_effect_id='5107584321108051014' # Эффект "Лайк" 👍
+                    from app.services.notification_delivery_service import notification_delivery_service
+                    
+                    gift_msg = f"✅ <b>Ваш подарок успешно получен!</b>\n\nПользователь {recipient_name} активировал подаренный вами тариф {tariff_name}."
+                    
+                    await notification_delivery_service.notify_gift_accepted(
+                        user=gifter,
+                        recipient_name=recipient_name,
+                        tariff_name=tariff_name,
+                        period_days=period_days,
+                        bot=bot,
+                        telegram_message=gift_msg,
+                        message_effect_id='5107584321108051014'  # Эффект "Лайк" 👍
                     )
                 except Exception as e:
-                    logger.error("Ошибка уведомления дарителя", gifter_tg_id=gifter_tg_id, error=e)
+                    logger.error("Ошибка уведомления дарителя через службу доставки", gifter_id=gifter.id, error=e)
 
             logger.info("🎁 Подарок успешно активирован", token=token, user_id=user.id)
             return {

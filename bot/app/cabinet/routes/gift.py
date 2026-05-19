@@ -433,55 +433,41 @@ async def send_gift_to_user(
     await db.commit()
     logger.info("Gift recipient updated successfully", gift_id=gift.id, recipient_id=recipient.id)
 
-    # 7. Отправка уведомления получателю в Telegram через бот (если привязан telegram_id)
-    if recipient.telegram_id:
-        bot = getattr(req.app.state, 'bot', None)
-        if bot:
-            try:
-                from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-                
-                # Формируем красивое сообщение с кнопкой
-                gifter_name = user.full_name or (f"@{user.username}" if user.username else "Пользователь")
-                
-                tariff = await get_tariff_by_id(db, gift.tariff_id)
-                tariff_name = strip_telegram_tags(tariff.name) if tariff else "VPN подписка"
-                
-                text = (
-                    f"🎁 <b>Вам прислали подарок!</b>\n\n"
-                    f"Пользователь {gifter_name} отправил вам подарок: "
-                    f"подписку на тариф <b>{tariff_name}</b> на <b>{gift.period_days} дней</b>.\n\n"
-                    f"Вы можете прямо сейчас активировать её в личном кабинете!"
-                )
-                
-                # Настраиваем клавиатуру с кнопкой мгновенной активации подарка прямо внутри бота (по callback)
-                # Это позволяет пользователю активировать подарок в один клик без перехода на веб-сайт
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="🎁 Активировать подарок",
-                            callback_data=f"gift_accept:{gift.token}"
-                        )
-                    ]
-                ])
-                
-                await bot.send_message(
-                    chat_id=recipient.telegram_id,
-                    text=text,
-                    reply_markup=keyboard,
-                    parse_mode="HTML"
-                )
-                logger.info("Telegram notification sent to recipient", recipient_id=recipient.id, telegram_id=recipient.telegram_id)
-            except Exception as e:
-                # Ошибка отправки сообщения в TG не должна приводить к падению API
-                logger.warning(
-                    "Failed to send Telegram notification to gift recipient",
-                    recipient_id=recipient.id,
-                    error=str(e)
-                )
-        else:
-            logger.warning("Bot instance is not found in app state, skipping notification")
-    else:
-        logger.info("Recipient does not have a linked Telegram account, skipping notification", recipient_id=recipient.id)
+    # 7. Отправка уведомлений получателю по всем каналам доставки (Telegram, Email, Web Push, WS) с помощью единого доставщика
+    gifter_name = user.full_name or (f"@{user.username}" if user.username else "Пользователь")
+    tariff = await get_tariff_by_id(db, gift.tariff_id)
+    tariff_name = strip_telegram_tags(tariff.name) if tariff else "VPN подписка"
+    
+    # Формируем красивое сообщение для Telegram с кнопкой активации по callback
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="🎁 Активировать подарок",
+                callback_data=f"gift_accept:{gift.token}"
+            )
+        ]
+    ])
+    
+    telegram_text = (
+        f"🎁 <b>Вам прислали подарок!</b>\n\n"
+        f"Пользователь {gifter_name} отправил вам подарок: "
+        f"подписку на тариф <b>{tariff_name}</b> на <b>{gift.period_days} дней</b>.\n\n"
+        f"Вы можете прямо сейчас активировать её в личном кабинете!"
+    )
+    
+    bot = getattr(req.app.state, 'bot', None)
+    
+    from app.services.notification_delivery_service import notification_delivery_service
+    await notification_delivery_service.notify_gift_received(
+        user=recipient,
+        gifter_name=gifter_name,
+        tariff_name=tariff_name,
+        period_days=gift.period_days,
+        bot=bot,
+        telegram_message=telegram_text,
+        telegram_markup=keyboard,
+    )
 
     return SendGiftToUserResponse(
         status="ok",

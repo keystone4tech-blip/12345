@@ -54,6 +54,8 @@ class EmailNotificationTemplates:
             NotificationType.WARNING_NOTIFICATION: self._warning_template,
             NotificationType.REFERRAL_BONUS: self._referral_bonus_template,
             NotificationType.REFERRAL_REGISTERED: self._referral_registered_template,
+            NotificationType.GIFT_ACCEPTED: self._gift_accepted_template,
+            NotificationType.GIFT_RECEIVED: self._gift_received_template,
             NotificationType.PARTNER_APPLICATION_APPROVED: self._partner_approved_template,
             NotificationType.PARTNER_APPLICATION_REJECTED: self._partner_rejected_template,
             NotificationType.WITHDRAWAL_APPROVED: self._withdrawal_approved_template,
@@ -885,6 +887,76 @@ class EmailNotificationTemplates:
                     <p>A new user registered using your link{f': <strong>{referral_name}</strong>' if referral_name else ''}.</p>
                 </div>
                 <p>You will receive bonuses from their top-ups!</p>
+                {self._get_cabinet_button(language)}
+            """,
+        }
+
+        return {
+            'subject': subjects.get(language, subjects['ru']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+        }
+
+    def _gift_accepted_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
+        """Template for gift accepted/activated notification."""
+        recipient_name = html.escape(context.get('recipient_name', ''))
+        tariff_name = html.escape(context.get('tariff_name', ''))
+        period_days = context.get('period_days', 0)
+
+        subjects = {
+            'ru': 'Ваш подарок успешно активирован! 🎁',
+            'en': 'Your gift has been activated! 🎁',
+        }
+
+        bodies = {
+            'ru': f"""
+                <h2>Ваш подарок активирован!</h2>
+                <div class="highlight success">
+                    <p>Пользователь <strong>{recipient_name}</strong> успешно активировал подаренный вами тариф <strong>{tariff_name}</strong> на {period_days} дн.!</p>
+                </div>
+                <p>Спасибо, что делитесь безопасным и быстрым интернетом со своими близкими!</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'en': f"""
+                <h2>Your Gift has been Activated!</h2>
+                <div class="highlight success">
+                    <p>User <strong>{recipient_name}</strong> has successfully activated the tariff <strong>{tariff_name}</strong> ({period_days} days) you gifted!</p>
+                </div>
+                <p>Thank you for sharing secure and fast internet with your loved ones!</p>
+                {self._get_cabinet_button(language)}
+            """,
+        }
+
+        return {
+            'subject': subjects.get(language, subjects['ru']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+        }
+
+    def _gift_received_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
+        """Template for gift received/sent notification."""
+        gifter_name = html.escape(context.get('gifter_name', ''))
+        tariff_name = html.escape(context.get('tariff_name', ''))
+        period_days = context.get('period_days', 0)
+
+        subjects = {
+            'ru': '🎁 Вам прислали подарок!',
+            'en': '🎁 You have received a gift!',
+        }
+
+        bodies = {
+            'ru': f"""
+                <h2>Вам прислали подарок!</h2>
+                <div class="highlight info">
+                    <p>Пользователь <strong>{gifter_name}</strong> отправил вам подарок: подписку на тариф <strong>{tariff_name}</strong> на <strong>{period_days} дней</strong>.</p>
+                </div>
+                <p>Вы можете активировать этот подарок прямо сейчас в вашем Личном Кабинете PWA или в Telegram-боте!</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'en': f"""
+                <h2>You have Received a Gift!</h2>
+                <div class="highlight info">
+                    <p>User <strong>{gifter_name}</strong> has sent you a gift: subscription to the tariff <strong>{tariff_name}</strong> for <strong>{period_days} days</strong>.</p>
+                </div>
+                <p>You can activate this gift right now in your PWA Personal Cabinet or in the Telegram Bot!</p>
                 {self._get_cabinet_button(language)}
             """,
         }

@@ -53,6 +53,10 @@ class NotificationType(Enum):
     REFERRAL_BONUS = 'referral_bonus'
     REFERRAL_REGISTERED = 'referral_registered'
 
+    # Gift notifications
+    GIFT_ACCEPTED = 'gift_accepted'
+    GIFT_RECEIVED = 'gift_received'
+
     # Partner notifications
     PARTNER_APPLICATION_APPROVED = 'partner_application_approved'
     PARTNER_APPLICATION_REJECTED = 'partner_application_rejected'
@@ -228,6 +232,10 @@ class NotificationDeliveryService:
                 body = f"Вам начислен реферальный бонус {context.get('formatted_bonus', '')} за покупку реферала {context.get('referral_name', '')}! 👥"
             elif notification_type == NotificationType.REFERRAL_REGISTERED:
                 body = f"Новый реферал успешно зарегистрирован по вашей реферальной ссылке! 👥"
+            elif notification_type == NotificationType.GIFT_ACCEPTED:
+                body = f"Ваш подарок успешно активирован! Пользователь {context.get('recipient_name', '')} активировал подаренный вами тариф {context.get('tariff_name', '')}. 🎁"
+            elif notification_type == NotificationType.GIFT_RECEIVED:
+                body = f"Вам прислали подарок! Пользователь {context.get('gifter_name', '')} отправил вам тариф {context.get('tariff_name', '')} на {context.get('period_days', '')} дн. 🎁"
             elif notification_type == NotificationType.AUTOPAY_SUCCESS:
                 body = f"Автоплатеж успешно выполнен на сумму {context.get('formatted_amount', '')}! Подписка продлена. 💎"
             elif notification_type == NotificationType.AUTOPAY_FAILED:
@@ -253,9 +261,9 @@ class NotificationDeliveryService:
         elif 'subscription' in notification_type.value or 'autopay' in notification_type.value or 'daily' in notification_type.value:
             title = "MozhnoVPN — Подписка 💎"
             url = "/connection"
-        elif 'referral' in notification_type.value or 'partner' in notification_type.value or 'withdrawal' in notification_type.value:
-            title = "MozhnoVPN — Рефералы 👥"
-            url = "/referral"
+        elif 'referral' in notification_type.value or 'partner' in notification_type.value or 'withdrawal' in notification_type.value or 'gift' in notification_type.value:
+            title = "MozhnoVPN — Подарки 🎁" if 'gift' in notification_type.value else "MozhnoVPN — Рефералы 👥"
+            url = "/connection" if 'gift' in notification_type.value else "/referral"
         elif 'broadcast' in notification_type.value:
             title = "MozhnoVPN — Объявление 📢"
             url = "/"
@@ -332,10 +340,12 @@ class NotificationDeliveryService:
         bot: Bot | None = None,
         telegram_message: str | None = None,
         telegram_markup: Any | None = None,
+        message_effect_id: str | None = None,
     ) -> bool:
         """
         Отправляет уведомление пользователю по всем доступным каналам доставки.
         Автоматически интегрирует отправку Web Push (PWA) параллельно со стандартными каналами.
+        Все каналы имеют независимые try-except блоки во избежание взаимного влияния при ошибках.
         """
         # 1. Проверяем, активен ли статус пользователя
         if user.status in (UserStatus.BLOCKED.value, UserStatus.DELETED.value):
@@ -368,56 +378,52 @@ class NotificationDeliveryService:
             logger.exception("Ошибка при отправке Web Push в фоновом режиме", user_id=user.id, error=e)
 
         # 4. Отправка через Telegram Bot (если у пользователя привязан Telegram аккаунт)
+        telegram_sent = False
         if user.telegram_id:
-            telegram_sent = await self._send_telegram_notification(
-                user=user,
-                notification_type=notification_type,
-                context=context,
-                bot=bot,
-                message=telegram_message,
-                markup=telegram_markup,
-            )
-            if telegram_sent:
-                sent_successfully = True
-            
-            logger.info(
-                "Уведомление доставлено для Telegram пользователя",
-                user_id=user.id,
-                notification_type=notification_type.value,
-                telegram_sent=telegram_sent,
-                webpush_sent=webpush_sent,
-            )
-            return sent_successfully
+            try:
+                telegram_sent = await self._send_telegram_notification(
+                    user=user,
+                    notification_type=notification_type,
+                    context=context,
+                    bot=bot,
+                    message=telegram_message,
+                    markup=telegram_markup,
+                    message_effect_id=message_effect_id,
+                )
+                if telegram_sent:
+                    sent_successfully = True
+            except Exception as e:
+                logger.exception("Ошибка при отправке Telegram уведомления", user_id=user.id, error=e)
 
-        # 5. Отправка для email-only пользователей (через Email и WebSocket)
+        # 5. Отправка на Email (если у пользователя подключен и подтвержден Email)
+        email_sent = False
         if user.email and user.email_verified:
-            results = await asyncio.gather(
-                self._send_email_notification(user, notification_type, context),
-                self._send_websocket_notification(user, notification_type, context),
-                return_exceptions=True,
-            )
+            try:
+                email_sent = await self._send_email_notification(user, notification_type, context)
+                if email_sent:
+                    sent_successfully = True
+            except Exception as e:
+                logger.exception("Ошибка при отправке Email уведомления", user_id=user.id, error=e)
 
-            email_sent = results[0] is True
-            ws_sent = results[1] is True
-
-            if email_sent or ws_sent:
+        # 6. Отправка через WebSocket в личный кабинет
+        ws_sent = False
+        try:
+            ws_sent = await self._send_websocket_notification(user, notification_type, context)
+            if ws_sent:
                 sent_successfully = True
+        except Exception as e:
+            logger.debug('Ошибка отправки WebSocket уведомления', user_id=user.id, error=e)
 
-            logger.info(
-                'Уведомление отправлено email-пользователю',
-                notification_type_value=notification_type.value,
-                user_id=user.id,
-                email_sent=email_sent,
-                ws_sent=ws_sent,
-                webpush_sent=webpush_sent,
-            )
-            return sent_successfully
-
-        logger.debug(
-            'Пользователь не имеет telegram_id или подтвержденного email, но статус Web Push доставки получен', 
-            user_id=user.id, 
-            webpush_sent=webpush_sent
+        logger.info(
+            "Результат доставки уведомлений по всем каналам",
+            user_id=user.id,
+            notification_type=notification_type.value,
+            telegram_sent=telegram_sent,
+            webpush_sent=webpush_sent,
+            email_sent=email_sent,
+            ws_sent=ws_sent,
         )
+
         return sent_successfully
 
     async def _send_telegram_notification(
@@ -428,6 +434,7 @@ class NotificationDeliveryService:
         bot: Bot | None,
         message: str | None,
         markup: Any | None,
+        message_effect_id: str | None = None,
     ) -> bool:
         """Send notification via Telegram bot."""
         if not bot:
@@ -451,6 +458,7 @@ class NotificationDeliveryService:
                     text=message,
                     reply_markup=markup,
                     parse_mode='HTML',
+                    message_effect_id=message_effect_id,
                 ),
                 timeout=15.0,
             )
@@ -725,6 +733,7 @@ class NotificationDeliveryService:
         bot: Bot | None = None,
         telegram_message: str | None = None,
         telegram_markup: Any | None = None,
+        message_effect_id: str | None = None,
     ) -> bool:
         """Notify user about referral bonus."""
         context = {
@@ -741,6 +750,87 @@ class NotificationDeliveryService:
             bot=bot,
             telegram_message=telegram_message,
             telegram_markup=telegram_markup,
+            message_effect_id=message_effect_id,
+        )
+
+    async def notify_referral_registered(
+        self,
+        user: User,
+        referral_name: str,
+        bot: Bot | None = None,
+        telegram_message: str | None = None,
+        telegram_markup: Any | None = None,
+        message_effect_id: str | None = None,
+    ) -> bool:
+        """Notify user about new referral registration."""
+        context = {
+            'referral_name': referral_name,
+        }
+
+        return await self.send_notification(
+            user=user,
+            notification_type=NotificationType.REFERRAL_REGISTERED,
+            context=context,
+            bot=bot,
+            telegram_message=telegram_message,
+            telegram_markup=telegram_markup,
+            message_effect_id=message_effect_id,
+        )
+
+    async def notify_gift_accepted(
+        self,
+        user: User,
+        recipient_name: str,
+        tariff_name: str,
+        period_days: int,
+        bot: Bot | None = None,
+        telegram_message: str | None = None,
+        telegram_markup: Any | None = None,
+        message_effect_id: str | None = None,
+    ) -> bool:
+        """Notify user (gifter) that their gift has been accepted/activated."""
+        context = {
+            'recipient_name': recipient_name,
+            'tariff_name': tariff_name,
+            'period_days': period_days,
+        }
+
+        return await self.send_notification(
+            user=user,
+            notification_type=NotificationType.GIFT_ACCEPTED,
+            context=context,
+            bot=bot,
+            telegram_message=telegram_message,
+            telegram_markup=telegram_markup,
+            message_effect_id=message_effect_id,
+        )
+
+    async def notify_gift_received(
+        self,
+        user: User,
+        gifter_name: str,
+        tariff_name: str,
+        period_days: int,
+        bot: Bot | None = None,
+        telegram_message: str | None = None,
+        telegram_markup: Any | None = None,
+        message_effect_id: str | None = None,
+    ) -> bool:
+        """Notify user (recipient) that they have received a gift subscription."""
+        context = {
+            'gifter_name': gifter_name,
+            'tariff_name': tariff_name,
+            'period_days': period_days,
+        }
+
+        return await self.send_notification(
+            user=user,
+            notification_type=NotificationType.GIFT_RECEIVED,
+            context=context,
+            bot=bot,
+            telegram_message=telegram_message,
+            telegram_markup=telegram_markup,
+            message_effect_id=message_effect_id,
         )
 
     async def notify_partner_approved(
