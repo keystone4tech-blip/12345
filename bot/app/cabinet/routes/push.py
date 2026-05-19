@@ -79,6 +79,7 @@ async def subscribe_push(
         result = await db.execute(stmt)
         existing = result.scalar_one_or_none()
 
+        is_new = False
         if existing:
             # If it exists, update key info and transfer ownership to current user if needed
             existing.user_id = user.id
@@ -97,44 +98,46 @@ async def subscribe_push(
                 updated_at=datetime.now(UTC)
             )
             db.add(new_sub)
+            is_new = True
             logger.info("Registered new push subscription", user_id=user.id, endpoint=endpoint[:30])
 
         await db.commit()
 
-        # Отправляем мгновенное приветственное push-уведомление при успешном включении
-        from pywebpush import webpush, WebPushException
-        import json
+        # Отправляем мгновенное приветственное push-уведомление при успешном первом включении
+        if is_new:
+            from pywebpush import webpush, WebPushException
+            import json
 
-        payload = {
-            "title": "MozhnoVPN — Уведомления включены!",
-            "body": "Поздравляем! 🎉 Вы успешно включили push-уведомления. Теперь вы будете оперативно получать важные сообщения об окончании подписки, предупреждениях о трафике и акциях.",
-            "icon": "/icons/icon-192x192.png",
-            "badge": "/icons/icon-192x192.png",
-            "data": {
-                "url": "/profile"
+            payload = {
+                "title": "MozhnoVPN — Уведомления включены!",
+                "body": "Поздравляем! 🎉 Вы успешно включили push-уведомления. Теперь вы будете оперативно получать важные сообщения об окончании подписки, предупреждениях о трафике и акциях.",
+                "icon": "/icons/icon-192x192.png",
+                "badge": "/icons/icon-192x192.png",
+                "data": {
+                    "url": "/profile"
+                }
             }
-        }
 
-        try:
-            from app.utils.vapid import generate_vapid_headers
-            vapid_headers = generate_vapid_headers(endpoint)
+            try:
+                from app.utils.vapid import generate_vapid_headers
+                vapid_headers = generate_vapid_headers(endpoint)
 
-            webpush(
-                subscription_info={
-                    "endpoint": endpoint,
-                    "keys": {
-                        "p256dh": p256dh,
-                        "auth": auth
-                    }
-                },
-                data=json.dumps(payload),
-                headers=vapid_headers
-            )
-            logger.info("Sent welcome push notification to user", user_id=user.id)
-        except WebPushException as e:
-            logger.warning("Failed to send welcome push notification", error=str(e), user_id=user.id)
-        except Exception as e:
-            logger.error("Unexpected error during welcome push notification", error=str(e), user_id=user.id)
+                webpush(
+                    subscription_info={
+                        "endpoint": endpoint,
+                        "keys": {
+                            "p256dh": p256dh,
+                            "auth": auth
+                        }
+                    },
+                    data=json.dumps(payload),
+                    headers=vapid_headers
+                )
+                logger.info("Sent welcome push notification to user", user_id=user.id)
+            except WebPushException as e:
+                logger.warning("Failed to send welcome push notification", error=str(e), user_id=user.id)
+            except Exception as e:
+                logger.error("Unexpected error during welcome push notification", error=str(e), user_id=user.id)
 
         return {"success": True, "message": "Successfully subscribed to push notifications."}
 

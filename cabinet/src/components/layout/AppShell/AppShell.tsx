@@ -215,9 +215,13 @@ export function AppShell({ children }: AppShellProps) {
     isSubscribed: isPushSubscribed,
     permission: pushPermission,
     subscribe: subscribePush,
+    loading: pushLoading,
   } = usePWAPush();
 
   useEffect(() => {
+    // Ждем окончания первичной проверки подписки, чтобы не отправлять лишний запрос
+    if (pushLoading) return;
+
     // Автоматически пытаемся переподписать пользователя только если права уже выданы
     // и пользователь явно не отключал уведомления на этом устройстве.
     const isExplicitlyDisabled = localStorage.getItem('pwa-push-explicitly-disabled') === 'true';
@@ -228,7 +232,7 @@ export function AppShell({ children }: AppShellProps) {
         console.warn('[Web Push] Не удалось восстановить подписку автоматически:', err);
       });
     }
-  }, [isPushSupported, isPushSubscribed, pushPermission, subscribePush]);
+  }, [isPushSupported, isPushSubscribed, pushPermission, subscribePush, pushLoading]);
 
   // Theme toggle visibility
   const { data: enabledThemes } = useQuery({
