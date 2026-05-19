@@ -1,9 +1,7 @@
 import * as SwitchPrimitive from '@radix-ui/react-switch';
-import { motion } from 'framer-motion';
 import { forwardRef, type ComponentPropsWithoutRef } from 'react';
 import { cn } from '@/lib/utils';
 import { usePlatform } from '@/platform';
-import { springTransition } from '../../motion/transitions';
 
 export interface SwitchProps extends Omit<
   ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>,

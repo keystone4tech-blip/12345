@@ -72,23 +72,31 @@ export default function Connection() {
 
   const openDeepLink = useCallback(
     (deepLink: string) => {
-      let resolved = deepLink;
+      let resolved = deepLink; // Исходная глубокая ссылка
       if (hasTemplates(resolved)) {
-        resolved = resolveUrl(resolved);
+        resolved = resolveUrl(resolved); // Подставляем переменные в ссылку (например, URL подписки и имя пользователя)
       }
 
-      const finalUrl = `${window.location.origin}/miniapp/redirect.html?url=${encodeURIComponent(resolved)}&lang=${i18n.language || 'en'}`;
+      console.log('[Connection] Попытка открытия глубокой ссылки:', resolved); // Обязательное логирование для отладки
 
       if (isTelegramWebApp) {
+        // Если мы внутри Telegram WebApp, используем redirect.html для обхода ограничений ин-апп браузера
+        const finalUrl = `${window.location.origin}/miniapp/redirect.html?url=${encodeURIComponent(resolved)}&lang=${i18n.language || 'en'}`;
+        console.log('[Connection] Открытие в Telegram WebApp через редирект:', finalUrl);
         try {
           sdkOpenLink(finalUrl, { tryInstantView: false });
           return;
-        } catch {
-          // SDK not available, fallback
+        } catch (error) {
+          console.error('[Connection] Ошибка открытия ссылки через Telegram SDK:', error); // Логирование ошибок
         }
       }
 
-      window.location.href = finalUrl;
+      // Если мы вне Telegram WebApp (в системном браузере Chrome/Safari или внутри встроенного Webview приложения hApp),
+      // выполняем прямой переход по протоколу (например, happ://add/...).
+      // Это позволяет приложению hApp перехватить ссылку на нативном уровне, минуя промежуточный redirect.html,
+      // и полностью предотвращает ошибку сброса встроенного Webview на главную страницу кабинета.
+      console.log('[Connection] Прямой переход по протоколу:', resolved);
+      window.location.href = resolved;
     },
     [isTelegramWebApp, i18n.language, resolveUrl],
   );
