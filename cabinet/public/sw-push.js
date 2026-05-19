@@ -21,10 +21,13 @@ self.addEventListener('push', function(event) {
   const options = {
     body: data.body || '',
     icon: data.icon || '/icons/icon-192x192.png',
-    badge: data.badge || '/icons/icon-192x192.png',
     vibrate: data.vibrate || [100, 50, 100],
     data: data.data || { url: '/' }
   };
+
+  if (data.badge) {
+    options.badge = data.badge;
+  }
 
   event.waitUntil(
     self.registration.showNotification(title, options)

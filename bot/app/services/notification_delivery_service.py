@@ -273,7 +273,6 @@ class NotificationDeliveryService:
             "title": title,
             "body": body,
             "icon": "/icons/icon-192x192.png",
-            "badge": "/icons/icon-192x192.png",
             "data": {
                 "url": url
             }
