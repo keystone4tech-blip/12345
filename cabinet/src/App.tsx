@@ -23,6 +23,7 @@ function lazyWithRetry<T extends ComponentType<unknown>>(factory: () => Promise<
 import { useBlockingStore } from './store/blocking';
 import Layout from './components/layout/Layout';
 import PageLoader from './components/common/PageLoader';
+import UpdateAppBanner from './components/common/UpdateAppBanner';
 import {
   MaintenanceScreen,
   ChannelSubscriptionScreen,
@@ -227,6 +228,7 @@ function App() {
   return (
     <>
       <BlockingOverlay />
+      <UpdateAppBanner />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />

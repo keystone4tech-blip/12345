@@ -10,8 +10,8 @@ export default defineConfig({
     react(),
     // PWA-плагин: автоматически генерирует manifest.webmanifest и Service Worker (Workbox)
     VitePWA({
-      // Режим регистрации SW — автоматический (при загрузке страницы)
-      registerType: 'autoUpdate',
+      // Режим регистрации SW — prompt (запрос у пользователя)
+      registerType: 'prompt',
       // Включаем все ресурсы в прекеш
       includeAssets: ['icons/*.png'],
       // Настройки манифеста приложения
