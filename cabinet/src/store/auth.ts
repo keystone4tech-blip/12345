@@ -161,6 +161,18 @@ export const useAuthStore = create<AuthState>()(
               return;
             }
 
+            // --- Offline Support Cache ---
+            // If the device is offline, bypass API verification and use persisted state
+            if (!navigator.onLine) {
+              set({
+                accessToken,
+                refreshToken,
+                isAuthenticated: true,
+                isLoading: false,
+              });
+              return;
+            }
+
             if (!isTokenValid(accessToken)) {
               const newToken = await tokenRefreshManager.refreshAccessToken();
               if (newToken) {
@@ -196,7 +208,17 @@ export const useAuthStore = create<AuthState>()(
                 isAuthenticated: true,
                 isLoading: false,
               });
-            } catch {
+            } catch (err: any) {
+              // If it's a network error, keep the user logged in using cached data
+              if (!err.response || err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+                set({
+                  accessToken,
+                  refreshToken,
+                  isAuthenticated: true,
+                  isLoading: false,
+                });
+                return;
+              }
               const newToken = await tokenRefreshManager.refreshAccessToken();
               if (newToken) {
                 try {
@@ -209,7 +231,16 @@ export const useAuthStore = create<AuthState>()(
                     isAuthenticated: true,
                     isLoading: false,
                   });
-                } catch {
+                } catch (err: any) {
+                  if (!err.response || err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+                    set({
+                      accessToken: newToken,
+                      refreshToken,
+                      isAuthenticated: true,
+                      isLoading: false,
+                    });
+                    return;
+                  }
                   tokenStorage.clearTokens();
                   set({
                     accessToken: null,

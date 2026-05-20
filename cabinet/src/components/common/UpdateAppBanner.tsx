@@ -1,15 +1,13 @@
+// @ts-ignore
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { useTranslation } from 'react-i18next';
 
 export default function UpdateAppBanner() {
-  const { t } = useTranslation();
-  
   // hook from vite-plugin-pwa that handles the SW update lifecycle
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
+    onRegistered(r: any) {
       // Periodically check for updates every hour if the app stays open
       if (r) {
         setInterval(() => {
@@ -17,7 +15,7 @@ export default function UpdateAppBanner() {
         }, 60 * 60 * 1000);
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: any) {
       console.error('SW registration error', error);
     },
   });
