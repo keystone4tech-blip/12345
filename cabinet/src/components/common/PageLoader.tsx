@@ -2,17 +2,13 @@ interface PageLoaderProps {
   variant?: 'dark' | 'light';
 }
 
-export default function PageLoader(_props: PageLoaderProps) {
+export default function PageLoader({ variant = 'dark' }: PageLoaderProps) {
+  const spinnerColor = variant === 'dark' ? 'border-accent-500' : 'border-blue-500';
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0a0f1a]">
-      <video
-        src="/loader.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="h-full w-full object-contain"
-        style={{ pointerEvents: 'none' }}
+    <div className="flex min-h-screen items-center justify-center">
+      <div
+        className={`h-10 w-10 border-[3px] ${spinnerColor} animate-spin rounded-full border-t-transparent`}
       />
     </div>
   );
