@@ -134,7 +134,7 @@ async def get_referral_list(
             first_name=r.first_name,
             created_at=r.created_at,
             has_subscription=r.subscription is not None,
-            has_paid=r.has_had_paid_subscription,
+            has_paid=r.has_had_paid_subscription or r.has_made_first_topup,
         )
         for r in referrals
     ]

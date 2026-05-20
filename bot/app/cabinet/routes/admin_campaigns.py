@@ -366,7 +366,7 @@ async def get_campaign_registrations(
                 created_at=reg.created_at,
                 user_balance_kopeks=user.balance_kopeks or 0,
                 has_subscription=user.id in active_sub_user_ids,
-                has_paid=user.has_had_paid_subscription or False,
+                has_paid=user.has_had_paid_subscription or user.has_made_first_topup or False,
             )
         )
 
