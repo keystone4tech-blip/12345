@@ -488,7 +488,7 @@ async def handle_user_reviews_carousel(
         media_msg_id = int(parts[2]) if len(parts) > 2 and parts[2] and parts[2] != "0" else 0
 
         from sqlalchemy import select, func, desc
-        from app.database.models import UserReview
+        from app.database.models import UserReview, User
         
         count_stmt = select(func.count(UserReview.id)).where(UserReview.status == "APPROVED")
         total_reviews = await db.scalar(count_stmt)
@@ -514,76 +514,70 @@ async def handle_user_reviews_carousel(
             return
 
         from app.keyboards.inline import get_user_reviews_carousel_keyboard
-        from app.config import settings
+        import html
         
+        result = await db.execute(select(User).where(User.id == review_obj.user_id))
+        review_user = result.scalar_one_or_none()
+        
+        if media_msg_id > 0:
+            try:
+                await bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
+            except Exception:
+                pass
+                
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+
         new_media_msg_id = 0
-        review_text = f"👤 <b>Пользователь {review_obj.user_id}</b>\n"
+        if review_obj.review_content_id:
+            try:
+                if ':' in review_obj.review_content_id:
+                    from_chat_id, msg_id_str = review_obj.review_content_id.split(':')
+                    from_chat_id = int(from_chat_id)
+                    msg_id = int(msg_id_str)
+                else:
+                    from_chat_id = review_obj.user_id
+                    msg_id = int(review_obj.review_content_id)
+                    
+                copied_msg = await bot.copy_message(
+                    chat_id=callback.message.chat.id,
+                    from_chat_id=from_chat_id,
+                    message_id=msg_id
+                )
+                new_media_msg_id = copied_msg.message_id
+            except ValueError:
+                try:
+                    if review_obj.review_type == 'voice':
+                        sent_msg = await bot.send_voice(chat_id=callback.message.chat.id, voice=review_obj.review_content_id)
+                        new_media_msg_id = sent_msg.message_id
+                    elif review_obj.review_type == 'video_note':
+                        sent_msg = await bot.send_video_note(chat_id=callback.message.chat.id, video_note=review_obj.review_content_id)
+                        new_media_msg_id = sent_msg.message_id
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        user_name = html.escape(review_user.full_name) if review_user and review_user.full_name else 'Без имени'
+        if review_user and review_user.username:
+            user_name += f" (@{html.escape(review_user.username)})"
+            
+        review_text = f"👤 <b>{user_name}</b>\n"
         if review_obj.rating:
             review_text += f"Оценка: {'⭐' * review_obj.rating}\n"
         review_text += f"📅 {review_obj.created_at.strftime('%d.%m.%Y')}"
         
-        if review_obj.review_type in ["text", "none"]:
-            if review_obj.review_content_id:
-                review_text += f"\n\n{review_obj.review_content_id}"
-                
-            kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=db_user.language)
-            
-            if media_msg_id:
-                try:
-                    await bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
-                except Exception:
-                    pass
-            
-            try:
-                await callback.message.edit_text(review_text, reply_markup=kb, parse_mode="HTML")
-            except Exception:
-                await callback.message.answer(review_text, reply_markup=kb, parse_mode="HTML")
-                try:
-                    await callback.message.delete()
-                except Exception:
-                    pass
-        else:
-            try:
-                if media_msg_id:
-                    try:
-                        await bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
-                    except Exception:
-                        pass
-                
-                sent_msg = await bot.copy_message(
-                    chat_id=callback.message.chat.id,
-                    from_chat_id=review_obj.user_id,
-                    message_id=int(review_obj.review_content_id)
-                )
-                new_media_msg_id = sent_msg.message_id
-                
-                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=db_user.language)
-                
-                try:
-                    await callback.message.edit_text(review_text, reply_markup=kb, parse_mode="HTML")
-                except Exception:
-                    await callback.message.answer(review_text, reply_markup=kb, parse_mode="HTML")
-                    try:
-                        await callback.message.delete()
-                    except Exception:
-                        pass
-                        
-            except Exception as e:
-                logger.error("Failed to copy review media", error=e)
-                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=db_user.language)
-                try:
-                    await callback.message.edit_text(review_text + "\n\n[Медиа недоступно]", reply_markup=kb, parse_mode="HTML")
-                except Exception:
-                    await callback.message.answer(review_text + "\n\n[Медиа недоступно]", reply_markup=kb, parse_mode="HTML")
-                    try:
-                        await callback.message.delete()
-                    except Exception:
-                        pass
-
+        kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=db_user.language)
+        
+        await bot.send_message(chat_id=callback.message.chat.id, text=review_text, reply_markup=kb, parse_mode="HTML")
         await callback.answer()
         
     except Exception as e:
-        logger.error("Error in user reviews carousel", error=e)
+        import structlog
+        logger = structlog.get_logger(__name__)
+        logger.error("Error in user reviews carousel", error=str(e))
         await callback.answer("Произошла ошибка", show_alert=True)
 
 def register_handlers(dp: Dispatcher) -> None:
