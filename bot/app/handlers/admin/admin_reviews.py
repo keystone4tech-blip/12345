@@ -43,7 +43,10 @@ async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSess
         await callback.message.answer(text, reply_markup=get_admin_reviews_keyboard(db_user.language), parse_mode='HTML')
     else:
         await callback.message.edit_text(text, reply_markup=get_admin_reviews_keyboard(db_user.language), parse_mode='HTML')
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
 
 
 @router.callback_query(F.data.startswith('admin_reviews_list:'))
@@ -171,7 +174,10 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
 
     await callback.message.answer(text, reply_markup=markup, parse_mode='HTML')
         
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        pass
 
 
 @router.callback_query(F.data.startswith('admin_reviews_approve:'))
