@@ -48,9 +48,9 @@ async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSess
 
     markup = get_admin_reviews_keyboard(language=db_user.language, pending_count=pending_count, approved_count=approved_count)
     if send_new:
-        await callback.message.answer(text, reply_markup=markup, parse_mode='HTML')
+        await callback.bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=markup, parse_mode='HTML')
     else:
-        await callback.message.edit_text(text, reply_markup=markup, parse_mode='HTML')
+        await callback.bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id, text=text, reply_markup=markup, parse_mode='HTML')
     try:
         await callback.answer()
     except Exception:
@@ -75,13 +75,13 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     # Удаляем старые сообщения (если листаем)
     if old_media_msg_id > 0:
         try:
-            await callback.bot.delete_message(chat_id=callback.message.chat.id, message_id=old_media_msg_id)
+            await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=old_media_msg_id)
         except Exception:
             pass
             
     # Удаляем текущее сообщение (меню или старый отзыв), чтобы порядок сообщений был верным
     try:
-        await callback.message.delete()
+        await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
     except Exception:
         pass
 
@@ -138,7 +138,7 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
                 msg_id = int(review.review_content_id)
                 
             copied_msg = await callback.bot.copy_message(
-                chat_id=callback.message.chat.id,
+                chat_id=callback.from_user.id,
                 from_chat_id=from_chat_id,
                 message_id=msg_id
             )
@@ -147,10 +147,10 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
             # Легаси: если там сохранен file_id (строка с буквами)
             try:
                 if review.review_type == 'voice':
-                    sent_msg = await callback.bot.send_voice(chat_id=callback.message.chat.id, voice=review.review_content_id)
+                    sent_msg = await callback.bot.send_voice(chat_id=callback.from_user.id, voice=review.review_content_id)
                     new_media_msg_id = sent_msg.message_id
                 elif review.review_type == 'video_note':
-                    sent_msg = await callback.bot.send_video_note(chat_id=callback.message.chat.id, video_note=review.review_content_id)
+                    sent_msg = await callback.bot.send_video_note(chat_id=callback.from_user.id, video_note=review.review_content_id)
                     new_media_msg_id = sent_msg.message_id
             except Exception as le:
                 logger.warning('Failed to send legacy review media', error=str(le), review_id=review.id)
@@ -195,7 +195,7 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
         status=status
     )
 
-    await callback.message.answer(text, reply_markup=markup, parse_mode='HTML')
+    await callback.bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=markup, parse_mode='HTML')
         
     try:
         await callback.answer()
@@ -239,7 +239,7 @@ async def handle_admin_reviews_del_conf(callback: types.CallbackQuery, db: Async
     status = parts[4] if len(parts) > 4 else 'COMPLETED'
     
     markup = get_admin_review_del_confirm_keyboard(review_id, page, media_msg_id, db_user.language, status)
-    await callback.message.edit_reply_markup(reply_markup=markup)
+    await callback.bot.edit_message_reply_markup(chat_id=callback.from_user.id, message_id=callback.message.message_id, reply_markup=markup)
     try:
         await callback.answer('Подтвердите удаление', show_alert=False)
     except Exception:
@@ -284,7 +284,7 @@ async def handle_admin_reviews_exit(callback: types.CallbackQuery, db: AsyncSess
     
     if media_msg_id > 0:
         try:
-            await callback.bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
+            await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=media_msg_id)
         except Exception:
             pass
             
@@ -328,7 +328,7 @@ async def handle_notif_review_approve(callback: types.CallbackQuery, db: AsyncSe
     text += "\n\n✅ <b>Одобрено</b>"
     
     try:
-        await callback.message.edit_text(text, reply_markup=None, parse_mode='HTML')
+        await callback.bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id, text=text, reply_markup=None, parse_mode='HTML')
         await callback.answer('✅ Отзыв одобрен', show_alert=False)
     except Exception:
         await callback.answer('Уже обработано', show_alert=False)
@@ -347,7 +347,7 @@ async def handle_notif_review_del_conf(callback: types.CallbackQuery):
     ])
     
     try:
-        await callback.message.edit_reply_markup(reply_markup=markup)
+        await callback.bot.edit_message_reply_markup(chat_id=callback.from_user.id, message_id=callback.message.message_id, reply_markup=markup)
         await callback.answer('Подтвердите удаление', show_alert=False)
     except Exception:
         await callback.answer('Ошибка обновления', show_alert=False)
@@ -366,7 +366,7 @@ async def handle_notif_review_cancel(callback: types.CallbackQuery):
     ])
     
     try:
-        await callback.message.edit_reply_markup(reply_markup=markup)
+        await callback.bot.edit_message_reply_markup(chat_id=callback.from_user.id, message_id=callback.message.message_id, reply_markup=markup)
         await callback.answer()
     except Exception:
         pass
@@ -397,10 +397,10 @@ async def handle_notif_review_del_yes(callback: types.CallbackQuery, db: AsyncSe
     try:
         text = callback.message.html_text if callback.message.html_text else "Отзыв"
         text += "\n\n🗑 <b>Удалено из базы</b>"
-        await callback.message.edit_text(text, reply_markup=None, parse_mode='HTML')
+        await callback.bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id, text=text, reply_markup=None, parse_mode='HTML')
     except Exception:
         try:
-            await callback.message.delete()
+            await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
         except Exception:
             pass
 
