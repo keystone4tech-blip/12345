@@ -383,13 +383,6 @@ async def _finalize_review(
             
         if admin_chat_id:
             try:
-                # Отправляем инфо-сообщение
-                info_msg = await message.bot.send_message(
-                    chat_id=admin_chat_id,
-                    text=f"📥 <b>Новый отзыв в системе (бекап медиа)</b>\nПользователь ID: <code>{db_user.id}</code>",
-                    parse_mode='HTML'
-                )
-                
                 # Копируем само сообщение пользователя
                 copied_msg = await message.bot.copy_message(
                     chat_id=admin_chat_id,
@@ -399,6 +392,54 @@ async def _finalize_review(
                 
                 # Сохраняем связку chat_id:message_id
                 final_content_id = f"{admin_chat_id}:{copied_msg.message_id}"
+                
+                # Формируем текст уведомления
+                import html
+                stars = '⭐' * review.rating if review.rating else 'Нет оценки'
+                c_type = review_type or 'none'
+                
+                type_str = 'Отсутствует'
+                if c_type == 'text':
+                    type_str = '📝 Текст'
+                elif c_type == 'voice':
+                    type_str = '🎙 Голос'
+                elif c_type == 'video_note':
+                    type_str = '🎥 Видео'
+                    
+                user_name = html.escape(db_user.full_name) if db_user.full_name else 'Без имени'
+                if db_user.username:
+                    user_name += f" (@{html.escape(db_user.username)})"
+                    
+                date_str = review.created_at.strftime('%d.%m.%Y %H:%M') if review.created_at else 'Неизвестно'
+                
+                star_reward = review.star_reward_days or 0
+                content_reward = review.content_reward_days or 0
+                total_reward = star_reward + content_reward
+                
+                text = (
+                    f"📥 <b>Новый отзыв в системе</b>\n\n"
+                    f"👤 <b>{user_name}</b> (ID: <code>{db_user.telegram_id}</code>)\n"
+                    f"Оценка: {stars}\n"
+                    f"Контент: {type_str}\n"
+                    f"Награда: +{total_reward} дн.\n"
+                    f"📅 {date_str}"
+                )
+                
+                from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                    [
+                        InlineKeyboardButton(text='✅ Одобрить', callback_data=f'notif_review_approve:{review.id}'),
+                        InlineKeyboardButton(text='🗑 Удалить', callback_data=f'notif_review_del_conf:{review.id}')
+                    ]
+                ])
+                
+                await message.bot.send_message(
+                    chat_id=admin_chat_id,
+                    text=text,
+                    reply_markup=markup,
+                    parse_mode='HTML',
+                    reply_to_message_id=copied_msg.message_id
+                )
                 
             except Exception as e:
                 logger.error("Failed to backup review message to admin chat", error=str(e), user_id=db_user.id)

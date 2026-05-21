@@ -269,5 +269,96 @@ async def handle_admin_review_test(callback: types.CallbackQuery, db: AsyncSessi
         await callback.answer('❌ Ошибка при отправке тестового запроса.', show_alert=True)
 
 
+# =====================================================================
+# ОБРАБОТКА КНОПОК ИЗ ЧАТА УВЕДОМЛЕНИЙ АДМИНОВ
+# =====================================================================
+
+@router.callback_query(F.data.startswith('notif_review_approve:'))
+async def handle_notif_review_approve(callback: types.CallbackQuery, db: AsyncSession):
+    parts = callback.data.split(':')
+    review_id = int(parts[1])
+    
+    # Просто отмечаем в чате, что отзыв проверен
+    text = callback.message.html_text if callback.message.html_text else "Отзыв"
+    text += "\n\n✅ <b>Одобрено</b>"
+    
+    try:
+        await callback.message.edit_text(text, reply_markup=None, parse_mode='HTML')
+        await callback.answer('✅ Отзыв одобрен', show_alert=False)
+    except Exception:
+        await callback.answer('Уже обработано', show_alert=False)
+
+@router.callback_query(F.data.startswith('notif_review_del_conf:'))
+async def handle_notif_review_del_conf(callback: types.CallbackQuery):
+    parts = callback.data.split(':')
+    review_id = int(parts[1])
+    
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text='Да, удалить', callback_data=f'notif_review_del_yes:{review_id}'),
+            InlineKeyboardButton(text='Отмена', callback_data=f'notif_review_cancel:{review_id}')
+        ]
+    ])
+    
+    try:
+        await callback.message.edit_reply_markup(reply_markup=markup)
+        await callback.answer('Подтвердите удаление', show_alert=False)
+    except Exception:
+        await callback.answer('Ошибка обновления', show_alert=False)
+
+@router.callback_query(F.data.startswith('notif_review_cancel:'))
+async def handle_notif_review_cancel(callback: types.CallbackQuery):
+    parts = callback.data.split(':')
+    review_id = int(parts[1])
+    
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text='✅ Одобрить', callback_data=f'notif_review_approve:{review_id}'),
+            InlineKeyboardButton(text='🗑 Удалить', callback_data=f'notif_review_del_conf:{review_id}')
+        ]
+    ])
+    
+    try:
+        await callback.message.edit_reply_markup(reply_markup=markup)
+        await callback.answer()
+    except Exception:
+        pass
+
+@router.callback_query(F.data.startswith('notif_review_del_yes:'))
+async def handle_notif_review_del_yes(callback: types.CallbackQuery, db: AsyncSession):
+    parts = callback.data.split(':')
+    review_id = int(parts[1])
+    
+    result = await db.execute(select(UserReview).where(UserReview.id == review_id))
+    review = result.scalar_one_or_none()
+    
+    if review:
+        # Удаляем медиа-сообщение (оно привязано через reply к текущему, либо его ID сохранен в review_content_id)
+        if review.review_content_id and ':' in review.review_content_id:
+            try:
+                chat_id_str, msg_id_str = review.review_content_id.split(':')
+                await callback.bot.delete_message(chat_id=int(chat_id_str), message_id=int(msg_id_str))
+            except Exception:
+                pass
+                
+        await db.delete(review)
+        await db.commit()
+        await callback.answer('🗑 Отзыв удалён!', show_alert=False)
+    else:
+        await callback.answer('❌ Отзыв не найден!', show_alert=True)
+        
+    try:
+        text = callback.message.html_text if callback.message.html_text else "Отзыв"
+        text += "\n\n🗑 <b>Удалено из базы</b>"
+        await callback.message.edit_text(text, reply_markup=None, parse_mode='HTML')
+    except Exception:
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+
+
 def register_handlers(dp: Dispatcher):
     dp.include_router(router)
