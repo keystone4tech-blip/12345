@@ -179,6 +179,8 @@ class Texts:
             return self._get_value(key)
         except KeyError:
             if default is not None:
+                if settings.USE_PREMIUM_EMOJIS and isinstance(default, str):
+                    return replace_with_premium_emojis(default)
                 return default
             raise
 
