@@ -376,8 +376,10 @@ async def _finalize_review(
     if content_id:
         from app.config import settings
         admin_chat_id = settings.get_admin_notifications_chat_id()
-        if not admin_chat_id and settings.admin_ids:
-            admin_chat_id = settings.admin_ids[0]
+        
+        admin_ids = settings.get_admin_ids()
+        if not admin_chat_id and admin_ids:
+            admin_chat_id = admin_ids[0]
             
         if admin_chat_id:
             try:
