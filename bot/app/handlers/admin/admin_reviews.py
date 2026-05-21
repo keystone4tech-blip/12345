@@ -114,6 +114,17 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
                 message_id=int(review.review_content_id)
             )
             new_media_msg_id = copied_msg.message_id
+        except ValueError:
+            # Легаси: если там сохранен file_id (строка с буквами)
+            try:
+                if review.review_type == 'voice':
+                    sent_msg = await callback.bot.send_voice(chat_id=callback.message.chat.id, voice=review.review_content_id)
+                    new_media_msg_id = sent_msg.message_id
+                elif review.review_type == 'video_note':
+                    sent_msg = await callback.bot.send_video_note(chat_id=callback.message.chat.id, video_note=review.review_content_id)
+                    new_media_msg_id = sent_msg.message_id
+            except Exception as le:
+                logger.warning('Failed to send legacy review media', error=str(le), review_id=review.id)
         except Exception as e:
             logger.warning('Failed to copy review media', error=str(e), review_id=review.id)
 

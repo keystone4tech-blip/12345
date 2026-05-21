@@ -270,7 +270,7 @@ async def handle_text_review(
         state=state,
         message=message,
         review_type='text',
-        content_id=None,
+        content_id=str(message.message_id),
     )
 
 
@@ -282,16 +282,13 @@ async def handle_voice_review(
     state: FSMContext,
 ):
     """Обработка голосового отзыва от пользователя."""
-    # Получаем file_id голосового сообщения
-    voice_file_id = message.voice.file_id
-
     await _finalize_review(
         db=db,
         db_user=db_user,
         state=state,
         message=message,
         review_type='voice',
-        content_id=voice_file_id,
+        content_id=str(message.message_id),
     )
 
 
@@ -303,16 +300,13 @@ async def handle_video_note_review(
     state: FSMContext,
 ):
     """Обработка видео-кружка от пользователя."""
-    # Получаем file_id видео-кружка
-    video_file_id = message.video_note.file_id
-
     await _finalize_review(
         db=db,
         db_user=db_user,
         state=state,
         message=message,
         review_type='video_note',
-        content_id=video_file_id,
+        content_id=str(message.message_id),
     )
 
 
