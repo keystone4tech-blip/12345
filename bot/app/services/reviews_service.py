@@ -527,14 +527,25 @@ class ReviewsService:
         max_content_reward = settings.REVIEWS_REWARD_CONTENT_VIDEO
         max_total = max_star_reward + max_content_reward
 
-        text = (
-            '⭐ <b>Как вам наш сервис?</b>\n\n'
-            'Мы хотели бы узнать ваше мнение о качестве нашего VPN!\n\n'
-            f'🎁 За оценку вы получите <b>до +{max_star_reward} дн.</b> подписки\n'
-            f'📝 За развёрнутый отзыв — ещё <b>до +{max_content_reward} дн.</b>\n\n'
-            f'💎 Итого до <b>+{max_total} дней</b> бесплатно!\n\n'
-            'Выберите вашу оценку:'
-        )
+        name = user.first_name or user.full_name or "пользователь"
+        text_lines = [
+            f'👋 <b>Здравствуйте, {name}!</b>\n\n',
+            'Мы видим, что вы активно пользуетесь нашим сервисом, и хотели бы узнать ваше мнение о качестве нашего VPN!\n'
+        ]
+        
+        if max_total > 0:
+            text_lines.append('')
+            if max_star_reward > 0:
+                text_lines.append(f'🎁 За оценку вы можете получить <b>до +{max_star_reward} дн.</b> подписки')
+            if max_content_reward > 0:
+                text_lines.append(f'📝 За развёрнутый отзыв — ещё <b>до +{max_content_reward} дн.</b>')
+            text_lines.extend([
+                '',
+                f'💎 Итого до <b>+{max_total} дней</b> бесплатно!\n'
+            ])
+            
+        text_lines.append('Выберите вашу оценку:')
+        text = '\n'.join(text_lines)
 
         try:
             await self.bot.send_message(

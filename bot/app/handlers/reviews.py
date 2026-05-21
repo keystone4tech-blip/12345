@@ -87,18 +87,56 @@ async def handle_review_rating(
     voice_days = settings.REVIEWS_REWARD_CONTENT_VOICE
     video_days = settings.REVIEWS_REWARD_CONTENT_VIDEO
 
-    # Текст с предложением оставить развёрнутый отзыв
-    text = (
-        f'✅ <b>Спасибо за оценку {stars}!</b>\n\n'
-        f'За вашу оценку вы получите <b>+{star_days} дн.</b> подписки.\n\n'
-        '─────────────────────\n\n'
-        '📝 <b>Хотите получить ещё больше дней?</b>\n\n'
-        'Оставьте развёрнутый отзыв и получите дополнительные бонусные дни:\n\n'
-        f'📝 Текстовый отзыв → <b>+{text_days} дн.</b>\n'
-        f'🎙 Голосовое сообщение → <b>+{voice_days} дн.</b>\n'
-        f'🎥 Видео-кружок → <b>+{video_days} дн.</b>\n\n'
-        '<i>Просто отправьте текст, голосовое или видео-кружок прямо сейчас!</i>'
-    )
+    if rating <= 3:
+        text_lines = [
+            f'✅ <b>Спасибо за вашу оценку {stars}!</b>\n'
+        ]
+        if star_days > 0:
+            text_lines.append(f'За оценку вам начислено <b>+{star_days} дн.</b> подписки.\n')
+            
+        text_lines.extend([
+            '─────────────────────\n',
+            '😔 <b>Что мы можем сделать лучше?</b>\n\n',
+            'Пожалуйста, расскажите, что вам не понравилось или чего не хватает в нашем сервисе. Ваша обратная связь поможет нам стать лучше!\n\n'
+        ])
+        
+        has_content_rewards = any(d > 0 for d in [text_days, voice_days, video_days])
+        if has_content_rewards:
+            text_lines.append('В качестве благодарности за ваш развёрнутый ответ мы начислим дополнительные дни:\n')
+            if text_days > 0:
+                text_lines.append(f'📝 Текст → <b>+{text_days} дн.</b>')
+            if voice_days > 0:
+                text_lines.append(f'🎙 Голосовое → <b>+{voice_days} дн.</b>')
+            if video_days > 0:
+                text_lines.append(f'🎥 Видео-кружок → <b>+{video_days} дн.</b>')
+            text_lines.append('')
+            
+        text_lines.append('<i>Просто отправьте текст, голосовое сообщение или видео-кружок прямо сейчас!</i>')
+        text = '\n'.join(text_lines)
+    else:
+        text_lines = [
+            f'✅ <b>Спасибо за оценку {stars}!</b>\n'
+        ]
+        if star_days > 0:
+            text_lines.append(f'За вашу оценку вы получите <b>+{star_days} дн.</b> подписки.\n')
+            
+        text_lines.extend([
+            '─────────────────────\n',
+            '📝 <b>Хотите получить ещё больше дней?</b>\n\n',
+            'Оставьте развёрнутый отзыв о нашем сервисе и получите дополнительные бонусные дни:\n\n'
+        ])
+        
+        if text_days > 0:
+            text_lines.append(f'📝 Текстовый отзыв → <b>+{text_days} дн.</b>')
+        if voice_days > 0:
+            text_lines.append(f'🎙 Голосовое сообщение → <b>+{voice_days} дн.</b>')
+        if video_days > 0:
+            text_lines.append(f'🎥 Видео-кружок → <b>+{video_days} дн.</b>')
+            
+        text_lines.extend([
+            '\n<i>Просто отправьте текст, голосовое или видео-кружок прямо сейчас!</i>'
+        ])
+        text = '\n'.join(text_lines)
 
     # Кнопка «Пропустить» — завершить без контента
     keyboard = InlineKeyboardMarkup(
@@ -365,16 +403,26 @@ async def _finalize_review(
     star_days = review.star_reward_days
     content_days = review.content_reward_days
 
-    text = (
-        f'🎉 <b>Спасибо за ваш {type_name}!</b>\n\n'
-        '─────────────────────\n'
-        f'⭐ За оценку: <b>+{star_days} дн.</b>\n'
-        f'📝 За отзыв: <b>+{content_days} дн.</b>\n'
-        '─────────────────────\n'
-        f'🎁 <b>Итого: +{total_days} дн.</b> к подписке!\n\n'
-        '💙 Ваше мнение очень ценно для нас!\n'
+    text_lines = [
+        f'🎉 <b>Спасибо за ваш {type_name}!</b>\n\n',
+        '─────────────────────'
+    ]
+    if star_days > 0:
+        text_lines.append(f'⭐ За оценку: <b>+{star_days} дн.</b>')
+    if content_days > 0:
+        text_lines.append(f'📝 За отзыв: <b>+{content_days} дн.</b>')
+    
+    if star_days > 0 or content_days > 0:
+        text_lines.append('─────────────────────\n')
+        
+    if total_days > 0:
+        text_lines.append(f'🎁 <b>Итого: +{total_days} дн.</b> к подписке!\n')
+    
+    text_lines.extend([
+        '💙 Ваше мнение очень ценно для нас!',
         'Благодаря вашим отзывам мы становимся лучше ❤️'
-    )
+    ])
+    text = '\n'.join(text_lines)
 
     await message.answer(
         text,
