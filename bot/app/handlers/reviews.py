@@ -209,11 +209,17 @@ async def handle_dismiss(
     """Пользователь отказался оставлять отзыв (нажал «Не сейчас»)."""
     await state.clear()
 
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='🏠 В главное меню', callback_data='back_to_menu')]
+    ])
+
     try:
         await callback.message.edit_text(
             '👋 Хорошо! Мы спросим вас позже.\n\n'
             '💙 Спасибо, что пользуетесь нашим сервисом!',
             parse_mode='HTML',
+            reply_markup=keyboard
         )
     except Exception:
         pass
@@ -584,12 +590,25 @@ async def handle_user_reviews_carousel(
         if review_obj.rating:
             review_text += f"Оценка: {'⭐' * review_obj.rating}\n"
         
+        # Форматирование текстового отзыва
+        if review_obj.review_type == 'text' and review_obj.review_text:
+            text_content = review_obj.review_text.strip()
+            # Если текст слишком большой, отправляем его отдельным сообщением сверху
+            if len(text_content) > 3000:
+                try:
+                    sent_msg = await bot.send_message(
+                        chat_id=callback.message.chat.id,
+                        text=text_content,
+                        parse_mode="HTML"
+                    )
+                    new_media_msg_id = sent_msg.message_id
+                except Exception:
+                    pass
+            else:
+                review_text += f"Отзыв:\n{text_content}\n\n"
+                
         review_text += f"👤 <b>{user_name}</b>\n"
         review_text += f"📅 {review_obj.created_at.strftime('%d.%m.%Y')}"
-        
-        # Если текст в новой колонке
-        if review_obj.review_type == 'text' and review_obj.review_text:
-            review_text += f"\n\n{review_obj.review_text}"
             
         has_review = False
         user_review_check = await db.scalar(select(UserReview.id).where(UserReview.user_id == db_user.id))
