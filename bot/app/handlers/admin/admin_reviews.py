@@ -304,18 +304,13 @@ async def handle_notif_review_approve(callback: types.CallbackQuery, db: AsyncSe
     if review:
         review.status = 'APPROVED'
         await db.commit()
-        
-        # Удаляем медиа-сообщение
-        if review.review_content_id and ':' in review.review_content_id:
-            try:
-                chat_id_str, msg_id_str = review.review_content_id.split(':')
-                await callback.bot.delete_message(chat_id=int(chat_id_str), message_id=int(msg_id_str))
-            except Exception:
-                pass
     
-    # Удаляем текстовое сообщение с кнопками
+    # Отмечаем в чате, что отзыв проверен
+    text = callback.message.html_text if callback.message.html_text else "Отзыв"
+    text += "\n\n✅ <b>Одобрено</b>"
+    
     try:
-        await callback.message.delete()
+        await callback.message.edit_text(text, reply_markup=None, parse_mode='HTML')
         await callback.answer('✅ Отзыв одобрен', show_alert=False)
     except Exception:
         await callback.answer('Уже обработано', show_alert=False)
@@ -382,9 +377,14 @@ async def handle_notif_review_del_yes(callback: types.CallbackQuery, db: AsyncSe
         await callback.answer('❌ Отзыв не найден!', show_alert=True)
         
     try:
-        await callback.message.delete()
+        text = callback.message.html_text if callback.message.html_text else "Отзыв"
+        text += "\n\n🗑 <b>Удалено из базы</b>"
+        await callback.message.edit_text(text, reply_markup=None, parse_mode='HTML')
     except Exception:
-        pass
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
 
 
 def register_handlers(dp: Dispatcher):
