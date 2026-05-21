@@ -558,12 +558,12 @@ async def handle_user_reviews_carousel(
                 pass
 
         user_name = html.escape(review_user.full_name) if review_user and review_user.full_name else 'Без имени'
-        if review_user and review_user.username:
-            user_name += f" (@{html.escape(review_user.username)})"
-            
-        review_text = f"👤 <b>{user_name}</b>\n"
+        
+        review_text = ""
         if review_obj.rating:
             review_text += f"Оценка: {'⭐' * review_obj.rating}\n"
+        
+        review_text += f"👤 <b>{user_name}</b>\n"
         review_text += f"📅 {review_obj.created_at.strftime('%d.%m.%Y')}"
         
         # Если текст в новой колонке

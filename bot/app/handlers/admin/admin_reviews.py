@@ -330,14 +330,26 @@ async def handle_notif_review_approve(callback: types.CallbackQuery, db: AsyncSe
         await db.commit()
     
     # Отмечаем в чате, что отзыв проверен
-    text = callback.message.html_text if callback.message.html_text else "Отзыв"
+    text = callback.message.html_text or callback.message.caption
+    if not text:
+        text = "Отзыв"
+        
     text += "\n\n✅ <b>Одобрено</b>"
     
     try:
-        await callback.bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id, text=text, reply_markup=None, parse_mode='HTML')
+        if callback.message.text:
+            await callback.bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.message_id, text=text, reply_markup=None, parse_mode='HTML')
+        elif callback.message.caption:
+            await callback.bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption=text, reply_markup=None, parse_mode='HTML')
+        else:
+            await callback.bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
+            
         await callback.answer('✅ Отзыв одобрен', show_alert=False)
-    except Exception:
-        await callback.answer('Уже обработано', show_alert=False)
+    except Exception as e:
+        import structlog
+        logger = structlog.get_logger(__name__)
+        logger.error('Failed to update notif approve message', error=str(e))
+        await callback.answer('Уже обработано или ошибка', show_alert=False)
 
 @router.callback_query(F.data.startswith('notif_review_del_conf:'))
 async def handle_notif_review_del_conf(callback: types.CallbackQuery):
@@ -353,7 +365,7 @@ async def handle_notif_review_del_conf(callback: types.CallbackQuery):
     ])
     
     try:
-        await callback.bot.edit_message_reply_markup(chat_id=callback.from_user.id, message_id=callback.message.message_id, reply_markup=markup)
+        await callback.bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup)
         await callback.answer('Подтвердите удаление', show_alert=False)
     except Exception:
         await callback.answer('Ошибка обновления', show_alert=False)
@@ -372,7 +384,7 @@ async def handle_notif_review_cancel(callback: types.CallbackQuery):
     ])
     
     try:
-        await callback.bot.edit_message_reply_markup(chat_id=callback.from_user.id, message_id=callback.message.message_id, reply_markup=markup)
+        await callback.bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup)
         await callback.answer()
     except Exception:
         pass
@@ -386,7 +398,6 @@ async def handle_notif_review_del_yes(callback: types.CallbackQuery, db: AsyncSe
     review = result.scalar_one_or_none()
     
     if review:
-        # Удаляем медиа-сообщение (оно привязано через reply к текущему, либо его ID сохранен в review_content_id)
         if review.review_content_id and ':' in review.review_content_id:
             try:
                 chat_id_str, msg_id_str = review.review_content_id.split(':')
@@ -400,13 +411,22 @@ async def handle_notif_review_del_yes(callback: types.CallbackQuery, db: AsyncSe
     else:
         await callback.answer('❌ Отзыв не найден!', show_alert=True)
         
+    text = callback.message.html_text or callback.message.caption
+    if not text:
+        text = "Отзыв"
+        
+    text += "\n\n🗑 <b>Удалено из базы</b>"
+    
     try:
-        text = callback.message.html_text if callback.message.html_text else "Отзыв"
-        text += "\n\n🗑 <b>Удалено из базы</b>"
-        await callback.bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id, text=text, reply_markup=None, parse_mode='HTML')
+        if callback.message.text:
+            await callback.bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.message_id, text=text, reply_markup=None, parse_mode='HTML')
+        elif callback.message.caption:
+            await callback.bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption=text, reply_markup=None, parse_mode='HTML')
+        else:
+            await callback.bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
     except Exception:
         try:
-            await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+            await callback.bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.message_id)
         except Exception:
             pass
 
