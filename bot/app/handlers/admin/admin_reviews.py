@@ -230,13 +230,9 @@ async def handle_admin_review_test(callback: types.CallbackQuery, db: AsyncSessi
     from app.services.reviews_service import reviews_service
     
     try:
-        await reviews_service.send_review_request(
-            db, 
-            callback.bot, 
-            db_user.id, 
-            db_user.telegram_id,
-            db_user.language
-        )
+        if not reviews_service.bot:
+            reviews_service.set_bot(callback.bot)
+        await reviews_service._send_single_request(db_user)
         await callback.answer('✅ Тестовый запрос отправлен вам в личные сообщения!', show_alert=True)
     except Exception as e:
         logger.error('Failed to send test review request', error=str(e), user_id=db_user.id)
