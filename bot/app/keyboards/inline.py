@@ -197,12 +197,6 @@ async def get_main_menu_keyboard_async(
 
         return await MenuLayoutService.build_keyboard(db, context)
 
-        show_resume_checkout=show_resume_checkout,
-        custom_buttons=custom_buttons,
-        user=user,
-        has_approved_reviews=False, # Using MenuLayoutService overrides manual row logic anyway
-    )
-
     has_approved_reviews = False
     if getattr(settings, 'REVIEWS_BUTTON_ENABLED', False):
         from sqlalchemy import select, exists
@@ -3131,21 +3125,21 @@ def get_user_reviews_carousel_keyboard(
     current_page: int, 
     total_pages: int, 
     media_msg_id: int, 
-    language: str = \'ru\'
+    language: str = 'ru'
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
     keyboard = []
     
     nav_buttons = []
     if current_page > 0:
-        nav_buttons.append(InlineKeyboardButton(text=\'⬅️\', callback_data=f\'user_reviews_carousel:{current_page - 1}:{media_msg_id}\'))
+        nav_buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'user_reviews_carousel:{current_page - 1}:{media_msg_id}'))
     
-    nav_buttons.append(InlineKeyboardButton(text=f\'{current_page + 1}/{max(1, total_pages)}\', callback_data=\'ignore\'))
+    nav_buttons.append(InlineKeyboardButton(text=f'{current_page + 1}/{max(1, total_pages)}', callback_data='ignore'))
     
     if current_page < total_pages - 1:
-        nav_buttons.append(InlineKeyboardButton(text=\'➡️\', callback_data=f\'user_reviews_carousel:{current_page + 1}:{media_msg_id}\'))
+        nav_buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'user_reviews_carousel:{current_page + 1}:{media_msg_id}'))
         
     keyboard.append(nav_buttons)
-    keyboard.append([InlineKeyboardButton(text=texts.t(\'MENU_HOME\', \'🏠 На главную\'), callback_data=\'back_to_menu\')])
+    keyboard.append([InlineKeyboardButton(text=texts.t('MENU_HOME', '🏠 На главную'), callback_data='back_to_menu')])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
