@@ -247,7 +247,8 @@ async def handle_text_review(
         state=state,
         message=message,
         review_type='text',
-        content_id=str(message.message_id),
+        content_id=None,
+        text_content=message.html_text or message.text,
     )
 
 
@@ -265,7 +266,8 @@ async def handle_voice_review(
         state=state,
         message=message,
         review_type='voice',
-        content_id=str(message.message_id),
+        content_id=message.voice.file_id,
+        text_content=None,
     )
 
 
@@ -283,7 +285,8 @@ async def handle_video_note_review(
         state=state,
         message=message,
         review_type='video_note',
-        content_id=str(message.message_id),
+        content_id=message.video_note.file_id,
+        text_content=None,
     )
 
 
@@ -312,17 +315,10 @@ async def _finalize_review(
     message: types.Message,
     review_type: str,
     content_id: str | None,
+    text_content: str | None = None,
 ) -> None:
     """
     Общая логика завершения отзыва с контентом.
-
-    Args:
-        db: Сессия базы данных
-        db_user: Объект пользователя
-        state: Контекст FSM
-        message: Сообщение пользователя
-        review_type: Тип контента ('text', 'voice', 'video_note')
-        content_id: Telegram file_id (None для текста)
     """
     # Получаем ID отзыва из FSM
     data = await state.get_data()
@@ -348,85 +344,75 @@ async def _finalize_review(
         return
 
     # === НОВАЯ ЛОГИКА СОХРАНЕНИЯ КОНТЕНТА ===
-    # Сохраняем медиа/текст в админском чате, чтобы оно не исчезло при удалении у пользователя
-    final_content_id = content_id
-    if content_id:
-        from app.config import settings
-        admin_chat_id = settings.get_admin_notifications_chat_id()
+    # Отправляем в админский чат независимо
+    from app.config import settings
+    admin_chat_id = settings.get_admin_notifications_chat_id()
+    
+    admin_ids = settings.get_admin_ids()
+    if not admin_chat_id and admin_ids:
+        admin_chat_id = admin_ids[0]
         
-        admin_ids = settings.get_admin_ids()
-        if not admin_chat_id and admin_ids:
-            admin_chat_id = admin_ids[0]
+    if admin_chat_id:
+        try:
+            import html
+            stars = '⭐' * review.rating if review.rating else 'Нет оценки'
+            c_type = review_type or 'none'
             
-        if admin_chat_id:
-            try:
-                # Копируем само сообщение пользователя
-                copied_msg = await message.bot.copy_message(
-                    chat_id=admin_chat_id,
-                    from_chat_id=message.chat.id,
-                    message_id=int(content_id)
-                )
+            type_str = 'Отсутствует'
+            if c_type == 'text':
+                type_str = '📝 Текст'
+            elif c_type == 'voice':
+                type_str = '🎙 Голос'
+            elif c_type == 'video_note':
+                type_str = '🎥 Видео'
                 
-                # Сохраняем связку chat_id:message_id
-                final_content_id = f"{admin_chat_id}:{copied_msg.message_id}"
+            user_name = html.escape(db_user.full_name) if db_user.full_name else 'Без имени'
+            if db_user.username:
+                user_name += f" (@{html.escape(db_user.username)})"
                 
-                # Формируем текст уведомления
-                import html
-                stars = '⭐' * review.rating if review.rating else 'Нет оценки'
-                c_type = review_type or 'none'
+            date_str = review.created_at.strftime('%d.%m.%Y %H:%M') if review.created_at else 'Неизвестно'
+            
+            star_reward = review.star_reward_days or 0
+            content_reward = reviews_service.get_content_reward(c_type)
+            total_reward = star_reward + content_reward
+            
+            caption = (
+                f"📥 <b>Новый отзыв в системе</b>\n\n"
+                f"👤 <b>{user_name}</b> (ID: <code>{db_user.telegram_id}</code>)\n"
+                f"Оценка: {stars}\n"
+                f"Контент: {type_str}\n"
+                f"Награда: +{total_reward} дн.\n"
+                f"📅 {date_str}"
+            )
+            if c_type == 'text' and text_content:
+                caption += f"\n\n<b>Текст отзыва:</b>\n{text_content}"
                 
-                type_str = 'Отсутствует'
-                if c_type == 'text':
-                    type_str = '📝 Текст'
-                elif c_type == 'voice':
-                    type_str = '🎙 Голос'
-                elif c_type == 'video_note':
-                    type_str = '🎥 Видео'
-                    
-                user_name = html.escape(db_user.full_name) if db_user.full_name else 'Без имени'
-                if db_user.username:
-                    user_name += f" (@{html.escape(db_user.username)})"
-                    
-                date_str = review.created_at.strftime('%d.%m.%Y %H:%M') if review.created_at else 'Неизвестно'
+            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+            markup = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(text='✅ Одобрить', callback_data=f'notif_review_approve:{review.id}'),
+                    InlineKeyboardButton(text='🗑 Удалить', callback_data=f'notif_review_del_conf:{review.id}')
+                ]
+            ])
+            
+            if c_type == 'text':
+                await message.bot.send_message(chat_id=admin_chat_id, text=caption, reply_markup=markup, parse_mode='HTML')
+            elif c_type == 'voice' and content_id:
+                await message.bot.send_voice(chat_id=admin_chat_id, voice=content_id, caption=caption, reply_markup=markup, parse_mode='HTML')
+            elif c_type == 'video_note' and content_id:
+                await message.bot.send_message(chat_id=admin_chat_id, text=caption, reply_markup=markup, parse_mode='HTML')
+                await message.bot.send_video_note(chat_id=admin_chat_id, video_note=content_id)
                 
-                star_reward = review.star_reward_days or 0
-                content_reward = review.content_reward_days or 0
-                total_reward = star_reward + content_reward
-                
-                text = (
-                    f"📥 <b>Новый отзыв в системе</b>\n\n"
-                    f"👤 <b>{user_name}</b> (ID: <code>{db_user.telegram_id}</code>)\n"
-                    f"Оценка: {stars}\n"
-                    f"Контент: {type_str}\n"
-                    f"Награда: +{total_reward} дн.\n"
-                    f"📅 {date_str}"
-                )
-                
-                from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-                markup = InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(text='✅ Одобрить', callback_data=f'notif_review_approve:{review.id}'),
-                        InlineKeyboardButton(text='🗑 Удалить', callback_data=f'notif_review_del_conf:{review.id}')
-                    ]
-                ])
-                
-                await message.bot.send_message(
-                    chat_id=admin_chat_id,
-                    text=text,
-                    reply_markup=markup,
-                    parse_mode='HTML',
-                    reply_to_message_id=copied_msg.message_id
-                )
-                
-            except Exception as e:
-                logger.error("Failed to backup review message to admin chat", error=str(e), user_id=db_user.id)
+        except Exception as e:
+            logger.error("Failed to send review to admin chat", error=str(e), user_id=db_user.id)
 
     # Завершаем отзыв
     total_days = await reviews_service.complete_review(
         db=db,
         review=review,
         review_type=review_type,
-        content_id=final_content_id,
+        content_id=content_id,
+        text_content=text_content,
     )
 
     # Начисляем бонусные дни
@@ -456,10 +442,10 @@ async def _finalize_review(
         '💙 Ваше мнение очень ценно для нас!',
         'Благодаря вашим отзывам мы становимся лучше ❤️'
     ])
-    text = '\n'.join(text_lines)
+    final_text = '\n'.join(text_lines)
 
     await message.answer(
-        text,
+        final_text,
         parse_mode='HTML',
         message_effect_id='5046509860389126442',  # 🎉 Эффект праздника
     )
@@ -531,32 +517,43 @@ async def handle_user_reviews_carousel(
             pass
 
         new_media_msg_id = 0
-        if review_obj.review_content_id:
+        is_media = review_obj.review_type in ['voice', 'video_note']
+        
+        # Если есть новый текст, просто покажем его.
+        # Если старый формат (chat_id:message_id), скопируем сообщение.
+        # Если новый формат медиа (file_id), отправим файл.
+        
+        if is_media and review_obj.review_content_id:
             try:
                 if ':' in review_obj.review_content_id:
                     from_chat_id, msg_id_str = review_obj.review_content_id.split(':')
                     from_chat_id = int(from_chat_id)
                     msg_id = int(msg_id_str)
+                    copied_msg = await bot.copy_message(
+                        chat_id=callback.message.chat.id,
+                        from_chat_id=from_chat_id,
+                        message_id=msg_id
+                    )
+                    new_media_msg_id = copied_msg.message_id
                 else:
-                    from_chat_id = review_obj.user_id
-                    msg_id = int(review_obj.review_content_id)
-                    
-                copied_msg = await bot.copy_message(
-                    chat_id=callback.message.chat.id,
-                    from_chat_id=from_chat_id,
-                    message_id=msg_id
-                )
-                new_media_msg_id = copied_msg.message_id
-            except ValueError:
-                try:
                     if review_obj.review_type == 'voice':
                         sent_msg = await bot.send_voice(chat_id=callback.message.chat.id, voice=review_obj.review_content_id)
                         new_media_msg_id = sent_msg.message_id
                     elif review_obj.review_type == 'video_note':
                         sent_msg = await bot.send_video_note(chat_id=callback.message.chat.id, video_note=review_obj.review_content_id)
                         new_media_msg_id = sent_msg.message_id
-                except Exception:
-                    pass
+            except Exception:
+                pass
+        elif review_obj.review_type == 'text' and not review_obj.review_text and review_obj.review_content_id and ':' in review_obj.review_content_id:
+            # Легаси текстовый отзыв
+            try:
+                from_chat_id, msg_id_str = review_obj.review_content_id.split(':')
+                copied_msg = await bot.copy_message(
+                    chat_id=callback.message.chat.id,
+                    from_chat_id=int(from_chat_id),
+                    message_id=int(msg_id_str)
+                )
+                new_media_msg_id = copied_msg.message_id
             except Exception:
                 pass
 
@@ -569,6 +566,10 @@ async def handle_user_reviews_carousel(
             review_text += f"Оценка: {'⭐' * review_obj.rating}\n"
         review_text += f"📅 {review_obj.created_at.strftime('%d.%m.%Y')}"
         
+        # Если текст в новой колонке
+        if review_obj.review_type == 'text' and review_obj.review_text:
+            review_text += f"\n\n{review_obj.review_text}"
+        
         kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=db_user.language)
         
         await bot.send_message(chat_id=callback.message.chat.id, text=review_text, reply_markup=kb, parse_mode="HTML")
@@ -579,7 +580,6 @@ async def handle_user_reviews_carousel(
         logger = structlog.get_logger(__name__)
         logger.error("Error in user reviews carousel", error=str(e))
         await callback.answer("Произошла ошибка", show_alert=True)
-
 def register_handlers(dp: Dispatcher) -> None:
     """Регистрирует роутер отзывов в диспетчере."""
     dp.include_router(router)

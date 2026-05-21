@@ -73,20 +73,19 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     if len(parts) > 3:
         status = parts[3]
 
-    # Удаляем старые сообщения (если листаем)
+    # Удаляем старые сообщения
     if old_media_msg_id > 0:
         try:
             await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=old_media_msg_id)
         except Exception:
             pass
             
-    # Удаляем текущее сообщение (меню или старый отзыв), чтобы порядок сообщений был верным
     try:
         await callback.bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
     except Exception:
         pass
 
-    # Считаем общее количество завершённых отзывов
+    # Считаем общее количество отзывов
     total_result = await db.execute(
         select(func.count(UserReview.id)).where(UserReview.status == status)
     )
@@ -97,7 +96,6 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
             await callback.answer('Нет отзывов.', show_alert=True)
         except Exception:
             pass
-        # Так как мы удалили сообщение, нужно обязательно вернуть главное меню
         await handle_admin_reviews_main(callback, db, db_user, send_new=True)
         return
 
@@ -113,7 +111,6 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     data = result.first()
     
     if not data:
-        # Если дошли до конца (или удалили последний на странице), переходим на предыдущую
         if page > 0:
             await handle_admin_reviews_viewer(callback, db, db_user, override_data=f'admin_reviews_nav:{page - 1}:0:{status}')
             return
@@ -127,36 +124,44 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     review, user = data
 
     new_media_msg_id = 0
-    if review.review_content_id:
+    is_media = review.review_type in ['voice', 'video_note']
+    
+    if is_media and review.review_content_id:
         try:
             if ':' in review.review_content_id:
                 from_chat_id, msg_id_str = review.review_content_id.split(':')
-                from_chat_id = int(from_chat_id)
-                msg_id = int(msg_id_str)
+                copied_msg = await callback.bot.copy_message(
+                    chat_id=callback.from_user.id,
+                    from_chat_id=int(from_chat_id),
+                    message_id=int(msg_id_str)
+                )
+                new_media_msg_id = copied_msg.message_id
             else:
-                from_chat_id = user.telegram_id
-                msg_id = int(review.review_content_id)
-                
-            copied_msg = await callback.bot.copy_message(
-                chat_id=callback.from_user.id,
-                from_chat_id=from_chat_id,
-                message_id=msg_id
-            )
-            new_media_msg_id = copied_msg.message_id
-        except ValueError:
-            # Легаси: если там сохранен file_id (строка с буквами)
-            try:
                 if review.review_type == 'voice':
                     sent_msg = await callback.bot.send_voice(chat_id=callback.from_user.id, voice=review.review_content_id)
                     new_media_msg_id = sent_msg.message_id
                 elif review.review_type == 'video_note':
                     sent_msg = await callback.bot.send_video_note(chat_id=callback.from_user.id, video_note=review.review_content_id)
                     new_media_msg_id = sent_msg.message_id
-            except Exception as le:
-                logger.warning('Failed to send legacy review media', error=str(le), review_id=review.id)
         except Exception as e:
-            logger.warning('Failed to copy review media', error=str(e), review_id=review.id)
+            import structlog
+            logger = structlog.get_logger(__name__)
+            logger.warning('Failed to send media', error=str(e), review_id=review.id)
+            
+    elif review.review_type == 'text' and not review.review_text and review.review_content_id and ':' in review.review_content_id:
+        # Legacy text review
+        try:
+            from_chat_id, msg_id_str = review.review_content_id.split(':')
+            copied_msg = await callback.bot.copy_message(
+                chat_id=callback.from_user.id,
+                from_chat_id=int(from_chat_id),
+                message_id=int(msg_id_str)
+            )
+            new_media_msg_id = copied_msg.message_id
+        except Exception:
+            pass
 
+    import html
     stars = '⭐' * review.rating if review.rating else 'Нет оценки'
     content_type = review.review_type or 'none'
     
@@ -185,6 +190,9 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
         f"Награда: +{total_reward} дн.\n"
         f"📅 {date_str}"
     )
+
+    if review.review_type == 'text' and review.review_text:
+        text += f"\n\n<b>Текст отзыва:</b>\n{review.review_text}"
 
     markup = get_admin_review_viewer_keyboard(
         review_id=review.id, 

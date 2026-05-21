@@ -144,6 +144,7 @@ class ReviewsService:
         review: UserReview,
         review_type: str,
         content_id: str | None = None,
+    text_content: str | None = None,
     ) -> int:
         """
         Завершает отзыв, добавляя контент и начисляя все бонусные дни.
@@ -165,6 +166,7 @@ class ReviewsService:
         review.review_content_id = content_id
         review.content_reward_days = content_days
         review.status = 'COMPLETED'
+        review.review_text = text_content
         review.updated_at = datetime.now(UTC)
 
         await db.commit()

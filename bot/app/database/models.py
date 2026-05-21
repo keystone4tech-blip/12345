@@ -3046,6 +3046,7 @@ class UserReview(Base):
     rating = Column(Integer, nullable=True)  # 1-5
     review_type = Column(String(50), nullable=True)  # 'text', 'voice', 'video_note', 'none'
     review_content_id = Column(String(255), nullable=True)
+    review_text = Column(Text, nullable=True)
     star_reward_days = Column(Integer, default=0, nullable=False)
     content_reward_days = Column(Integer, default=0, nullable=False)
     status = Column(String(50), default='WAITING_FOR_CONTENT', nullable=False)  # 'WAITING_FOR_CONTENT', 'COMPLETED'
