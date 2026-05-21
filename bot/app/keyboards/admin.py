@@ -2456,27 +2456,46 @@ def get_admin_reviews_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text=_t(texts, 'ADMIN_REVIEWS_LIST', '📋 Список отзывов'),
                     callback_data='admin_reviews_list:0'
+                ),
+                InlineKeyboardButton(
+                    text='🧪 Тест (отправить себе)',
+                    callback_data='admin_review_test'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text='⚙️ Настройки системы отзывов',
+                    callback_data='botcfg_cat:other:REVIEWS:1:1'
                 )
             ],
             [InlineKeyboardButton(text=texts.BACK, callback_data='admin_submenu_communications')],
         ]
     )
 
-def get_admin_reviews_pagination_keyboard(current_page: int, total_pages: int, language: str = 'ru') -> InlineKeyboardMarkup:
+def get_admin_reviews_pagination_keyboard(current_page: int, total_pages: int, review_ids: list[int] = None, language: str = 'ru') -> InlineKeyboardMarkup:
     texts = get_texts(language)
-    buttons = []
     
+    keyboard = []
+    
+    # Add delete buttons if review_ids provided
+    if review_ids:
+        del_buttons = []
+        for i, r_id in enumerate(review_ids, start=1):
+            del_buttons.append(InlineKeyboardButton(text=f'🗑 {i}', callback_data=f'admin_review_del:{r_id}'))
+        if del_buttons:
+            keyboard.append(del_buttons)
+            
+    # Pagination buttons
+    nav_buttons = []
     if current_page > 0:
-        buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_list:{current_page - 1}'))
+        nav_buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_list:{current_page - 1}'))
     
-    buttons.append(InlineKeyboardButton(text=f'{current_page + 1}/{max(1, total_pages)}', callback_data='ignore'))
+    nav_buttons.append(InlineKeyboardButton(text=f'{current_page + 1}/{max(1, total_pages)}', callback_data='ignore'))
     
     if current_page < total_pages - 1:
-        buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_list:{current_page + 1}'))
+        nav_buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_list:{current_page + 1}'))
         
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            buttons,
-            [InlineKeyboardButton(text=texts.BACK, callback_data='admin_reviews')]
-        ]
-    )
+    keyboard.append(nav_buttons)
+    keyboard.append([InlineKeyboardButton(text=texts.BACK, callback_data='admin_reviews')])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
