@@ -118,12 +118,12 @@ def get_admin_communications_submenu_keyboard(language: str = 'ru') -> InlineKey
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=texts.ADMIN_MESSAGES, callback_data='admin_messages')],
             [
+                InlineKeyboardButton(text=texts.ADMIN_MESSAGES, callback_data='admin_messages'),
                 InlineKeyboardButton(
                     text=_t(texts, 'ADMIN_COMMUNICATIONS_POLLS', '🗳️ Опросы'),
                     callback_data='admin_polls',
-                )
+                ),
             ],
             [
                 InlineKeyboardButton(
@@ -135,11 +135,19 @@ def get_admin_communications_submenu_keyboard(language: str = 'ru') -> InlineKey
                 InlineKeyboardButton(
                     text=_t(texts, 'ADMIN_COMMUNICATIONS_WELCOME_TEXT', '👋 Приветственный текст'),
                     callback_data='welcome_text_panel',
-                ),
+                )
+            ],
+            [
                 InlineKeyboardButton(
                     text=_t(texts, 'ADMIN_COMMUNICATIONS_MENU_MESSAGES', '📢 Сообщения в меню'),
                     callback_data='user_messages_panel',
-                ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=_t(texts, 'ADMIN_COMMUNICATIONS_REVIEWS', '⭐ Отзывы'),
+                    callback_data='admin_reviews',
+                )
             ],
             [InlineKeyboardButton(text=texts.BACK, callback_data='admin_panel')],
         ]

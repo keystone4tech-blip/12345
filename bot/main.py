@@ -78,6 +78,7 @@ from app.services.payment_verification_service import (
 from app.services.referral_contest_service import referral_contest_service
 from app.services.remnawave_sync_service import remnawave_sync_service
 from app.services.reporting_service import reporting_service
+from app.services.reviews_service import reviews_service
 from app.services.system_settings_service import bot_configuration_service
 from app.services.traffic_monitoring_service import traffic_monitoring_scheduler
 from app.services.version_service import version_service
@@ -359,6 +360,7 @@ async def main():
         ban_notification_service.set_bot(bot)
         traffic_monitoring_scheduler.set_bot(bot)
         daily_subscription_service.set_bot(bot)
+        reviews_service.set_bot(bot)
         telegram_notifier.set_bot(bot)
 
         from app.services.channel_subscription_service import channel_subscription_service
@@ -720,6 +722,18 @@ async def main():
                 stage.skip('Суточные подписки отключены настройками')
 
         async with timeline.stage(
+            'Система отзывов',
+            '⭐',
+            success_message='Шедулер отзывов запущен',
+        ) as stage:
+            if reviews_service.is_enabled():
+                await reviews_service.start()
+                stage.log(f'Время рассылки: {settings.REVIEWS_CHECK_TIME}')
+                stage.log(f'Порог трафика: {settings.REVIEWS_TRAFFIC_THRESHOLD_MB} МБ')
+            else:
+                stage.skip('Система отзывов отключена настройками')
+
+        async with timeline.stage(
             'Сервис проверки версий',
             '📄',
             success_message='Проверка версий запущена',
@@ -790,6 +804,7 @@ async def main():
             f'Суточные подписки: {"Включен" if daily_subscription_task else "Отключен"}',
             f'Проверка версий: {"Включен" if version_check_task else "Отключен"}',
             f'Отчеты: {"Включен" if reporting_service.is_running() else "Отключен"}',
+            f'Система отзывов: {"Включена" if reviews_service.is_running() else "Отключена"}',
         ]
         services_lines.append('Проверка пополнений: ' + ('Включена' if verification_providers else 'Отключена'))
         services_lines.append(

@@ -3035,3 +3035,26 @@ class PushSubscription(Base):
 import app.database.models_ai_ticket  # noqa: F401, E402
 
 
+class UserReview(Base):
+    """Отзывы пользователей о качестве сервиса VPN."""
+
+    __tablename__ = 'user_reviews'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    
+    rating = Column(Integer, nullable=True)  # 1-5
+    review_type = Column(String(50), nullable=True)  # 'text', 'voice', 'video_note', 'none'
+    review_content_id = Column(String(255), nullable=True)
+    star_reward_days = Column(Integer, default=0, nullable=False)
+    content_reward_days = Column(Integer, default=0, nullable=False)
+    status = Column(String(50), default='WAITING_FOR_CONTENT', nullable=False)  # 'WAITING_FOR_CONTENT', 'COMPLETED'
+    
+    created_at = Column(AwareDateTime(), default=func.now())
+    updated_at = Column(AwareDateTime(), default=func.now(), onupdate=func.now())
+
+    user = relationship('User', backref=backref('reviews', cascade='all, delete-orphan'))
+
+    def __repr__(self) -> str:
+        return f"<UserReview(id={self.id}, user_id={self.user_id}, rating={self.rating}, status='{self.status}')>"
+

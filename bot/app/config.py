@@ -807,6 +807,19 @@ class Settings(BaseSettings):
     BAN_SYSTEM_API_TOKEN: str | None = None
     BAN_SYSTEM_REQUEST_TIMEOUT: int = 30
 
+    # Reviews System
+    REVIEWS_ENABLED: bool = False
+    REVIEWS_TRAFFIC_THRESHOLD_MB: int = 100
+    REVIEWS_CHECK_TIME: str = '09:00'
+    REVIEWS_REWARD_STAR_1: int = 0
+    REVIEWS_REWARD_STAR_2: int = 0
+    REVIEWS_REWARD_STAR_3: int = 0
+    REVIEWS_REWARD_STAR_4: int = 0
+    REVIEWS_REWARD_STAR_5: int = 1
+    REVIEWS_REWARD_CONTENT_TEXT: int = 1
+    REVIEWS_REWARD_CONTENT_VOICE: int = 2
+    REVIEWS_REWARD_CONTENT_VIDEO: int = 3
+
     @field_validator('MAIN_MENU_MODE', mode='before')
     @classmethod
     def normalize_main_menu_mode(cls, value: str | None) -> str:

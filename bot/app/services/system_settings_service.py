@@ -137,6 +137,7 @@ class BotConfigurationService:
         'SUPPORT_AI': '🤖 DonMatteo-AI-Tiket',
         'GIFTS': '🎁 Система подарков',
         'NALOGO': '🧾 NaloGO (Самозанятые)',
+        'REVIEWS': '⭐ Система отзывов',
         'REPLY_BUTTON_STATUS': '📊 Кнопка «Статус»',
         'REPLY_BUTTON_CONNECT': '⚡ Кнопка «Подключиться»',
         'REPLY_BUTTON_PAY': '💥 Кнопка «Оплата»',
@@ -544,6 +545,19 @@ class BotConfigurationService:
         'MENU_HELP_TEXT': 'Текст кнопки «Помощь»',
         'MENU_HELP_STYLE': 'Цвет кнопки «Помощь»',
         'MENU_HELP_EMOJI': 'Премиум-эмодзи «Помощь»',
+
+        # REVIEWS
+        'REVIEWS_ENABLED': '🟢 Включить систему отзывов',
+        'REVIEWS_TRAFFIC_THRESHOLD_MB': '📊 Порог трафика (МБ)',
+        'REVIEWS_CHECK_TIME': '🕒 Время рассылки запросов',
+        'REVIEWS_REWARD_STAR_1': '⭐ Награда за 1 звезду (дней)',
+        'REVIEWS_REWARD_STAR_2': '⭐⭐ Награда за 2 звезды (дней)',
+        'REVIEWS_REWARD_STAR_3': '⭐⭐⭐ Награда за 3 звезды (дней)',
+        'REVIEWS_REWARD_STAR_4': '⭐⭐⭐⭐ Награда за 4 звезды (дней)',
+        'REVIEWS_REWARD_STAR_5': '⭐⭐⭐⭐⭐ Награда за 5 звезд (дней)',
+        'REVIEWS_REWARD_CONTENT_TEXT': '📝 Награда за текст (дней)',
+        'REVIEWS_REWARD_CONTENT_VOICE': '🎙 Награда за голосовое (дней)',
+        'REVIEWS_REWARD_CONTENT_VIDEO': '🎥 Награда за видео-кружок (дней)',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -613,6 +627,7 @@ class BotConfigurationService:
         'REPLY_BUTTON_CONNECT': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Подключиться».',
         'REPLY_BUTTON_PAY': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Оплата».',
         'REPLY_BUTTON_HELP': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Помощь».',
+        'REVIEWS': 'Автоматический сбор отзывов пользователей: настройка порогов трафика, вознаграждений за оценки и развернутые отзывы.',
     }
 
     @staticmethod
@@ -764,6 +779,19 @@ class BotConfigurationService:
         'GIFTS_BUTTON_EMOJI': 'GIFTS',
         'GIFTS_SHARE_MESSAGE_TEMPLATE': 'GIFTS',
 
+        # REVIEWS
+        'REVIEWS_ENABLED': 'REVIEWS',
+        'REVIEWS_TRAFFIC_THRESHOLD_MB': 'REVIEWS',
+        'REVIEWS_CHECK_TIME': 'REVIEWS',
+        'REVIEWS_REWARD_STAR_1': 'REVIEWS',
+        'REVIEWS_REWARD_STAR_2': 'REVIEWS',
+        'REVIEWS_REWARD_STAR_3': 'REVIEWS',
+        'REVIEWS_REWARD_STAR_4': 'REVIEWS',
+        'REVIEWS_REWARD_STAR_5': 'REVIEWS',
+        'REVIEWS_REWARD_CONTENT_TEXT': 'REVIEWS',
+        'REVIEWS_REWARD_CONTENT_VOICE': 'REVIEWS',
+        'REVIEWS_REWARD_CONTENT_VIDEO': 'REVIEWS',
+
         # REPLY BUTTONS
         'MENU_STATUS_TEXT': 'REPLY_BUTTON_STATUS',
         'MENU_STATUS_STYLE': 'REPLY_BUTTON_STATUS',
@@ -836,6 +864,7 @@ class BotConfigurationService:
         'SUPPORT_AI_': 'SUPPORT_AI',
         'GIFTS_': 'GIFTS',
         'NALOGO_': 'NALOGO',
+        'REVIEWS_': 'REVIEWS',
     }
 
     CHOICES: dict[str, list[ChoiceOption]] = {
