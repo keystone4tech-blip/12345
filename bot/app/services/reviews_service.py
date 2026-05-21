@@ -485,29 +485,13 @@ class ReviewsService:
             ]
         )
 
-        # Формируем описание наград
-        max_star_reward = settings.REVIEWS_REWARD_STAR_5
-        max_content_reward = settings.REVIEWS_REWARD_CONTENT_VIDEO
-        max_total = max_star_reward + max_content_reward
-
         name = user.first_name or user.full_name or "пользователь"
         text_lines = [
-            f'👋 <b>Здравствуйте, {name}!</b>\n\n',
-            'Мы видим, что вы активно пользуетесь нашим сервисом, и хотели бы узнать ваше мнение о качестве нашего VPN!\n'
+            f'👋 <b>Здравствуйте, {name}!</b>\n',
+            'Видим, что вы активно пользуетесь нашим сервисом. Мы постоянно работаем над тем, чтобы настраивать VPN и делать его еще лучше для наших пользователей.\n',
+            'Будем очень признательны, если вы поделитесь своим мнением о качестве работы! В качестве благодарности за оставленный отзыв мы начислим вам дополнительные бесплатные дни подписки 🎁\n',
+            'Выберите вашу оценку:'
         ]
-        
-        if max_total > 0:
-            text_lines.append('')
-            if max_star_reward > 0:
-                text_lines.append(f'🎁 За оценку вы можете получить <b>до +{max_star_reward} дн.</b> подписки')
-            if max_content_reward > 0:
-                text_lines.append(f'📝 За развёрнутый отзыв — ещё <b>до +{max_content_reward} дн.</b>')
-            text_lines.extend([
-                '',
-                f'💎 Итого до <b>+{max_total} дней</b> бесплатно!\n'
-            ])
-            
-        text_lines.append('Выберите вашу оценку:')
         text = '\n'.join(text_lines)
 
         try:

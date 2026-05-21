@@ -89,53 +89,30 @@ async def handle_review_rating(
 
     if rating <= 3:
         text_lines = [
-            f'✅ <b>Спасибо за вашу оценку {stars}!</b>\n'
-        ]
-        if star_days > 0:
-            text_lines.append(f'За оценку вам начислено <b>+{star_days} дн.</b> подписки.\n')
-            
-        text_lines.extend([
+            f'✅ <b>Спасибо за вашу оценку {stars}!</b>\n',
             '─────────────────────\n',
-            '😔 <b>Что мы можем сделать лучше?</b>\n\n',
-            'Пожалуйста, расскажите, что вам не понравилось или чего не хватает в нашем сервисе. Ваша обратная связь поможет нам стать лучше!\n\n'
-        ])
+            '😔 <b>Что мы можем сделать лучше?</b>\n',
+            'Пожалуйста, расскажите, что вам не понравилось. Ваша обратная связь критически важна для нас, чтобы исправить проблемы.\n'
+        ]
         
         has_content_rewards = any(d > 0 for d in [text_days, voice_days, video_days])
         if has_content_rewards:
-            text_lines.append('В качестве благодарности за ваш развёрнутый ответ мы начислим дополнительные дни:\n')
-            if text_days > 0:
-                text_lines.append(f'📝 Текст → <b>+{text_days} дн.</b>')
-            if voice_days > 0:
-                text_lines.append(f'🎙 Голосовое → <b>+{voice_days} дн.</b>')
-            if video_days > 0:
-                text_lines.append(f'🎥 Видео-кружок → <b>+{video_days} дн.</b>')
-            text_lines.append('')
+            text_lines.append('В качестве извинений и благодарности за развёрнутый ответ мы начислим дополнительные дни.\n')
             
         text_lines.append('<i>Просто отправьте текст, голосовое сообщение или видео-кружок прямо сейчас!</i>')
         text = '\n'.join(text_lines)
     else:
         text_lines = [
-            f'✅ <b>Спасибо за оценку {stars}!</b>\n'
-        ]
-        if star_days > 0:
-            text_lines.append(f'За вашу оценку вы получите <b>+{star_days} дн.</b> подписки.\n')
-            
-        text_lines.extend([
+            f'✅ <b>Спасибо за оценку {stars}!</b>\n',
             '─────────────────────\n',
-            '📝 <b>Хотите получить ещё больше дней?</b>\n\n',
-            'Оставьте развёрнутый отзыв о нашем сервисе и получите дополнительные бонусные дни:\n\n'
-        ])
+            '📝 <b>Хотите получить дополнительные бонусы?</b>\n',
+            'Оставьте развёрнутый отзыв о нашем сервисе! Расскажите, что вам нравится больше всего или чего не хватает.\n'
+        ]
         
-        if text_days > 0:
-            text_lines.append(f'📝 Текстовый отзыв → <b>+{text_days} дн.</b>')
-        if voice_days > 0:
-            text_lines.append(f'🎙 Голосовое сообщение → <b>+{voice_days} дн.</b>')
-        if video_days > 0:
-            text_lines.append(f'🎥 Видео-кружок → <b>+{video_days} дн.</b>')
+        has_content_rewards = any(d > 0 for d in [text_days, voice_days, video_days])
+        if has_content_rewards:
+            text_lines.append('<i>Просто отправьте текст, голосовое или видео-кружок прямо сейчас, и мы увеличим ваш бонус!</i>\n')
             
-        text_lines.extend([
-            '\n<i>Просто отправьте текст, голосовое или видео-кружок прямо сейчас!</i>'
-        ])
         text = '\n'.join(text_lines)
 
     # Кнопка «Пропустить» — завершить без контента
