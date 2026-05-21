@@ -241,3 +241,7 @@ async def handle_admin_review_test(callback: types.CallbackQuery, db: AsyncSessi
     except Exception as e:
         logger.error('Failed to send test review request', error=str(e), user_id=db_user.id)
         await callback.answer('❌ Ошибка при отправке тестового запроса.', show_alert=True)
+
+
+def register_handlers(dp: Dispatcher):
+    dp.include_router(router)
