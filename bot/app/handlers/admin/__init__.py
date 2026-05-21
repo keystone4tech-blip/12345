@@ -3,6 +3,7 @@ from . import (
     backup,
     blacklist,
     blocked_users,
+    confidentiality,
     bot_configuration,
     bulk_ban,
     campaigns,

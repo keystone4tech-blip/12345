@@ -28,6 +28,7 @@ from app.handlers.admin import (
     backup as admin_backup,
     blacklist as admin_blacklist,
     blocked_users as admin_blocked_users,
+    confidentiality as admin_confidentiality,
     bot_configuration as admin_bot_configuration,
     bulk_ban as admin_bulk_ban,
     campaigns as admin_campaigns,
@@ -104,6 +105,19 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     from aiogram.enums import ParseMode
 
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    
+    try:
+        from app.database.database import AsyncSessionLocal
+        from app.database.models import SystemSetting
+        from sqlalchemy import select
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(SystemSetting).where(SystemSetting.key == 'bot_confidentiality'))
+            setting = result.scalar_one_or_none()
+            if setting and setting.value == 'true':
+                bot.default.protect_content = True
+    except Exception as e:
+        logger.error('Failed to load bot_confidentiality setting', error=e)
+
     bot.session.middleware(PremiumEmojiMiddleware())
 
     maintenance_service.set_bot(bot)
@@ -215,6 +229,7 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     admin_bulk_ban.register_bulk_ban_handlers(dp)
     admin_blacklist.register_blacklist_handlers(dp)
     admin_blocked_users.register_handlers(dp)
+    admin_confidentiality.register_handlers(dp)
     admin_required_channels.register_handlers(dp)
     register_channel_member_handlers(dp)
     common.register_handlers(dp)

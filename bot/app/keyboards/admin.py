@@ -71,7 +71,33 @@ def get_admin_main_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
                     callback_data='admin_payments',
                 ),
             ],
+            [
+                InlineKeyboardButton(
+                    text=_t(texts, 'ADMIN_MAIN_CONFIDENTIALITY', '🔒 Конфиденциальность'),
+                    callback_data='admin_confidentiality',
+                )
+            ],
             [InlineKeyboardButton(text=texts.BACK, callback_data='back_to_menu')],
+        ]
+    )
+
+
+def get_admin_confidentiality_keyboard(is_enabled: bool, language: str = 'ru') -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    toggle_text = (
+        _t(texts, 'ADMIN_CONFIDENTIALITY_DISABLE', '🔴 Выключить')
+        if is_enabled
+        else _t(texts, 'ADMIN_CONFIDENTIALITY_ENABLE', '🟢 Включить')
+    )
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=toggle_text,
+                    callback_data='admin_confidentiality_toggle'
+                )
+            ],
+            [InlineKeyboardButton(text=texts.BACK, callback_data='admin_panel')]
         ]
     )
 
