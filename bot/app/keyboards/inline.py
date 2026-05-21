@@ -99,6 +99,15 @@ async def get_main_menu_keyboard_async(
     if settings.MENU_LAYOUT_ENABLED:
         from app.services.menu_layout_service import MenuContext, MenuLayoutService
 
+        has_approved_reviews = False
+        if getattr(settings, 'REVIEWS_BUTTON_ENABLED', False):
+            from sqlalchemy import select, exists
+            from app.database.models import UserReview
+            try:
+                has_approved_reviews = await db.scalar(select(exists().where(UserReview.status == 'APPROVED')))
+            except Exception as e:
+                logger.error('Error checking for approved reviews', error=e)
+
         # Получаем данные для плейсхолдеров
         subscription_days_left = 0
         traffic_used_gb = 0.0
@@ -188,6 +197,21 @@ async def get_main_menu_keyboard_async(
 
         return await MenuLayoutService.build_keyboard(db, context)
 
+        show_resume_checkout=show_resume_checkout,
+        custom_buttons=custom_buttons,
+        user=user,
+        has_approved_reviews=False, # Using MenuLayoutService overrides manual row logic anyway
+    )
+
+    has_approved_reviews = False
+    if getattr(settings, 'REVIEWS_BUTTON_ENABLED', False):
+        from sqlalchemy import select, exists
+        from app.database.models import UserReview
+        try:
+            has_approved_reviews = await db.scalar(select(exists().where(UserReview.status == 'APPROVED')))
+        except Exception as e:
+            logger.error('Error checking for approved reviews', error=e)
+
     # Fallback на синхронную версию
     return get_main_menu_keyboard(
         language=language,
@@ -198,8 +222,10 @@ async def get_main_menu_keyboard_async(
         balance_kopeks=balance_kopeks,
         subscription=subscription,
         show_resume_checkout=show_resume_checkout,
+        has_saved_cart=has_saved_cart,
         custom_buttons=custom_buttons,
         user=user,
+        has_approved_reviews=has_approved_reviews,
     )
 
 
@@ -389,6 +415,7 @@ def _build_cabinet_main_menu_keyboard(
     is_moderator: bool,
     balance_kopeks: int = 0,
     user: User | None = None,
+    has_approved_reviews: bool = False,
 ) -> InlineKeyboardMarkup:
     """Build the main-menu keyboard for Cabinet mode.
 
@@ -550,6 +577,10 @@ def _build_cabinet_main_menu_keyboard(
     if info_support_row:
         keyboard_rows.append(info_support_row)
 
+    if getattr(settings, 'REVIEWS_BUTTON_ENABLED', False) and has_approved_reviews:
+        btn_text = settings.REVIEWS_BUTTON_TEXT if hasattr(settings, 'REVIEWS_BUTTON_TEXT') and settings.REVIEWS_BUTTON_TEXT else '⭐ Отзывы'
+        keyboard_rows.append([InlineKeyboardButton(text=btn_text, callback_data='user_reviews_carousel:0')])
+
     # Admin / Moderator
     admin_cfg = cached_styles.get('admin', {})
     if is_admin:
@@ -578,6 +609,7 @@ def get_main_menu_keyboard(
     is_moderator: bool = False,
     custom_buttons: list[InlineKeyboardButton] | None = None,
     user: User | None = None,
+    has_approved_reviews: bool = False,
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
 
@@ -589,6 +621,7 @@ def get_main_menu_keyboard(
             is_moderator=is_moderator,
             balance_kopeks=balance_kopeks,
             user=user,
+            has_approved_reviews=has_approved_reviews,
         )
 
     if settings.DEBUG:
@@ -817,6 +850,10 @@ def get_main_menu_keyboard(
         info_support_row.append(InlineKeyboardButton(text=texts.MENU_SUPPORT, callback_data='menu_support'))
     
     keyboard.append(info_support_row)
+
+    if getattr(settings, 'REVIEWS_BUTTON_ENABLED', False) and has_approved_reviews:
+        btn_text = settings.REVIEWS_BUTTON_TEXT if hasattr(settings, 'REVIEWS_BUTTON_TEXT') and settings.REVIEWS_BUTTON_TEXT else '⭐ Отзывы'
+        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data='user_reviews_carousel:0')])
 
     # Добавляем остальные кнопки (продление, докупка трафика, конкурсы, активация), если они есть
     remaining_extras = []
@@ -3088,3 +3125,27 @@ def get_admin_ticket_reply_cancel_keyboard(language: str = DEFAULT_LANGUAGE) -> 
             ]
         ]
     )
+
+
+def get_user_reviews_carousel_keyboard(
+    current_page: int, 
+    total_pages: int, 
+    media_msg_id: int, 
+    language: str = \'ru\'
+) -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    keyboard = []
+    
+    nav_buttons = []
+    if current_page > 0:
+        nav_buttons.append(InlineKeyboardButton(text=\'⬅️\', callback_data=f\'user_reviews_carousel:{current_page - 1}:{media_msg_id}\'))
+    
+    nav_buttons.append(InlineKeyboardButton(text=f\'{current_page + 1}/{max(1, total_pages)}\', callback_data=\'ignore\'))
+    
+    if current_page < total_pages - 1:
+        nav_buttons.append(InlineKeyboardButton(text=\'➡️\', callback_data=f\'user_reviews_carousel:{current_page + 1}:{media_msg_id}\'))
+        
+    keyboard.append(nav_buttons)
+    keyboard.append([InlineKeyboardButton(text=texts.t(\'MENU_HOME\', \'🏠 На главную\'), callback_data=\'back_to_menu\')])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

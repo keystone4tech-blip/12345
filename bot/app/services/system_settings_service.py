@@ -548,6 +548,7 @@ class BotConfigurationService:
 
         # REVIEWS
         'REVIEWS_ENABLED': '🟢 Включить систему отзывов',
+        'REVIEWS_BUTTON_ENABLED': '🔘 Кнопка "Отзывы" в меню',
         'REVIEWS_TRAFFIC_THRESHOLD_MB': '📊 Порог трафика (МБ)',
         'REVIEWS_CHECK_TIME': '🕒 Время рассылки запросов',
         'REVIEWS_REWARD_STAR_1': '⭐ Награда за 1 звезду (дней)',
@@ -781,6 +782,7 @@ class BotConfigurationService:
 
         # REVIEWS
         'REVIEWS_ENABLED': 'REVIEWS',
+        'REVIEWS_BUTTON_ENABLED': 'REVIEWS',
         'REVIEWS_TRAFFIC_THRESHOLD_MB': 'REVIEWS',
         'REVIEWS_CHECK_TIME': 'REVIEWS',
         'REVIEWS_REWARD_STAR_1': 'REVIEWS',

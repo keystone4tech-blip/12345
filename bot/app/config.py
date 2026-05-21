@@ -809,6 +809,7 @@ class Settings(BaseSettings):
 
     # Reviews System
     REVIEWS_ENABLED: bool = False
+    REVIEWS_BUTTON_ENABLED: bool = False
     REVIEWS_TRAFFIC_THRESHOLD_MB: int = 100
     REVIEWS_CHECK_TIME: str = '09:00'
     REVIEWS_REWARD_STAR_1: int = 0

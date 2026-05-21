@@ -475,6 +475,117 @@ async def _finalize_review(
 
 # ──────────────────────────── Регистрация хендлеров ────────────────────────────
 
+@router.callback_query(F.data.startswith("user_reviews_carousel:"))
+async def handle_user_reviews_carousel(
+    callback: types.CallbackQuery,
+    db: AsyncSession,
+    user: User,
+    bot: Bot
+):
+    try:
+        parts = callback.data.split(":")
+        current_page = int(parts[1]) if len(parts) > 1 else 0
+        media_msg_id = int(parts[2]) if len(parts) > 2 and parts[2] and parts[2] != "0" else 0
+
+        from sqlalchemy import select, func, desc
+        from app.database.models import UserReview
+        
+        count_stmt = select(func.count(UserReview.id)).where(UserReview.status == "APPROVED")
+        total_reviews = await db.scalar(count_stmt)
+        
+        if total_reviews == 0:
+            await callback.answer("Одобренных отзывов пока нет.", show_alert=True)
+            return
+            
+        limit = 1
+        total_pages = total_reviews
+        if current_page < 0:
+            current_page = 0
+        if current_page >= total_pages:
+            current_page = total_pages - 1
+            
+        offset = current_page * limit
+        
+        stmt = select(UserReview).where(UserReview.status == "APPROVED").order_by(desc(UserReview.created_at)).offset(offset).limit(limit)
+        review_obj = await db.scalar(stmt)
+        
+        if not review_obj:
+            await callback.answer("Отзыв не найден.", show_alert=True)
+            return
+
+        from app.keyboards.inline import get_user_reviews_carousel_keyboard
+        from app.config import settings
+        
+        new_media_msg_id = 0
+        review_text = f"👤 <b>Пользователь {review_obj.user_id}</b>\n"
+        if review_obj.rating:
+            review_text += f"Оценка: {'⭐' * review_obj.rating}\n"
+        review_text += f"📅 {review_obj.created_at.strftime('%d.%m.%Y')}"
+        
+        if review_obj.review_type in ["text", "none"]:
+            if review_obj.review_content_id:
+                review_text += f"\n\n{review_obj.review_content_id}"
+                
+            kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=user.language)
+            
+            if media_msg_id:
+                try:
+                    await bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
+                except Exception:
+                    pass
+            
+            try:
+                await callback.message.edit_text(review_text, reply_markup=kb, parse_mode="HTML")
+            except Exception:
+                await callback.message.answer(review_text, reply_markup=kb, parse_mode="HTML")
+                try:
+                    await callback.message.delete()
+                except Exception:
+                    pass
+        else:
+            try:
+                if media_msg_id:
+                    try:
+                        await bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
+                    except Exception:
+                        pass
+                
+                sent_msg = await bot.copy_message(
+                    chat_id=callback.message.chat.id,
+                    from_chat_id=review_obj.user_id,
+                    message_id=int(review_obj.review_content_id)
+                )
+                new_media_msg_id = sent_msg.message_id
+                
+                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=user.language)
+                
+                try:
+                    await callback.message.edit_text(review_text, reply_markup=kb, parse_mode="HTML")
+                except Exception:
+                    await callback.message.answer(review_text, reply_markup=kb, parse_mode="HTML")
+                    try:
+                        await callback.message.delete()
+                    except Exception:
+                        pass
+                        
+            except Exception as e:
+                logger.error("Failed to copy review media", error=e)
+                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=user.language)
+                try:
+                    await callback.message.edit_text(review_text + "\n\n[Медиа недоступно]", reply_markup=kb, parse_mode="HTML")
+                except Exception:
+                    await callback.message.answer(review_text + "\n\n[Медиа недоступно]", reply_markup=kb, parse_mode="HTML")
+                    try:
+                        await callback.message.delete()
+                    except Exception:
+                        pass
+
+        await callback.answer()
+        
+    except Exception as e:
+        logger.error("Error in user reviews carousel", error=e)
+        await callback.answer("Произошла ошибка", show_alert=True)
+
 def register_handlers(dp: Dispatcher) -> None:
     """Регистрирует роутер отзывов в диспетчере."""
     dp.include_router(router)
