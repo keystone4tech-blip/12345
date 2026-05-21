@@ -59,9 +59,10 @@ async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSess
 
 @router.callback_query(F.data.startswith('admin_reviews_list:'))
 @router.callback_query(F.data.startswith('admin_reviews_nav:'))
-async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSession, db_user: User, override_data: str = None):
     """Показ одного отзыва (Карусель)."""
-    parts = callback.data.split(':')
+    data_to_parse = override_data if override_data else callback.data
+    parts = data_to_parse.split(':')
     page = int(parts[1])
     
     old_media_msg_id = 0
@@ -114,8 +115,7 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     if not data:
         # Если дошли до конца (или удалили последний на странице), переходим на предыдущую
         if page > 0:
-            callback.data = f'admin_reviews_nav:{page - 1}:0:{status}'
-            await handle_admin_reviews_viewer(callback, db, db_user)
+            await handle_admin_reviews_viewer(callback, db, db_user, override_data=f'admin_reviews_nav:{page - 1}:0:{status}')
             return
             
         try:
@@ -225,8 +225,7 @@ async def handle_admin_reviews_approve(callback: types.CallbackQuery, db: AsyncS
         pass
     
     # Так как мы одобрили отзыв, он исчезнет из списка (offset сместится), поэтому остаемся на той же странице
-    callback.data = f'admin_reviews_nav:{page}:{media_msg_id}:{status}'
-    await handle_admin_reviews_viewer(callback, db, db_user)
+    await handle_admin_reviews_viewer(callback, db, db_user, override_data=f'admin_reviews_nav:{page}:{media_msg_id}:{status}')
 
 
 @router.callback_query(F.data.startswith('admin_reviews_del_conf:'))
@@ -272,8 +271,7 @@ async def handle_admin_reviews_del_yes(callback: types.CallbackQuery, db: AsyncS
             pass
         
     # При удалении количество отзывов уменьшилось, поэтому остаемся на той же странице (page)
-    callback.data = f'admin_reviews_nav:{page}:{media_msg_id}:{status}'
-    await handle_admin_reviews_viewer(callback, db, db_user)
+    await handle_admin_reviews_viewer(callback, db, db_user, override_data=f'admin_reviews_nav:{page}:{media_msg_id}:{status}')
 
 
 @router.callback_query(F.data.startswith('admin_reviews_exit:'))
