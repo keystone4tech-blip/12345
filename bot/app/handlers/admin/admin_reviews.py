@@ -83,7 +83,10 @@ async def handle_admin_reviews_list(callback: types.CallbackQuery, db: AsyncSess
         f"<i>{texts.t('ADMIN_REVIEWS_PAGE', 'Страница {current} из {total}').format(current=page+1, total=max(1, total_pages))}</i>\n"
     ]
 
-    for review, user in reviews_data:
+    review_ids = []
+
+    for i, (review, user) in enumerate(reviews_data, start=1):
+        review_ids.append(review.id)
         stars = '⭐' * review.rating if review.rating else 'Нет оценки'
         content_type = review.review_type or 'none'
         
@@ -102,7 +105,7 @@ async def handle_admin_reviews_list(callback: types.CallbackQuery, db: AsyncSess
         date_str = review.created_at.strftime('%d.%m.%Y %H:%M')
         
         text_lines.append(
-            f"👤 <b>{user_name}</b> (ID: {user.telegram_id})\n"
+            f"{i}. 👤 <b>{user_name}</b> (ID: {user.telegram_id})\n"
             f"Оценка: {stars}\n"
             f"Контент: {type_str}\n"
             f"Награда: +{review.star_reward_days + review.content_reward_days} дн.\n"
@@ -114,10 +117,50 @@ async def handle_admin_reviews_list(callback: types.CallbackQuery, db: AsyncSess
 
     await callback.message.edit_text(
         text,
-        reply_markup=get_admin_reviews_pagination_keyboard(page, total_pages, db_user.language),
+        reply_markup=get_admin_reviews_pagination_keyboard(page, total_pages, review_ids, db_user.language),
         parse_mode='HTML'
     )
     await callback.answer()
+
+
+@router.callback_query(F.data.startswith('admin_review_del:'))
+async def handle_admin_review_delete(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Удаление отзыва."""
+    review_id = int(callback.data.split(':')[1])
+    
+    # Ищем отзыв
+    result = await db.execute(select(UserReview).where(UserReview.id == review_id))
+    review = result.scalar_one_or_none()
+    
+    if review:
+        await db.delete(review)
+        await db.commit()
+        await callback.answer('✅ Отзыв удалён!', show_alert=True)
+        # Перезагружаем первую страницу
+        callback.data = 'admin_reviews_list:0'
+        await handle_admin_reviews_list(callback, db, db_user)
+    else:
+        await callback.answer('❌ Отзыв не найден!', show_alert=True)
+
+
+@router.callback_query(F.data == 'admin_review_test')
+async def handle_admin_review_test(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Тестовая отправка сообщения с запросом на отзыв администратору."""
+    from app.services.reviews_service import reviews_service
+    
+    # Проверяем, инициализирован ли бот в сервисе
+    if not reviews_service.bot:
+        from app.bot import bot
+        reviews_service.set_bot(bot)
+        
+    await callback.answer('⏳ Отправляем тестовый запрос...', show_alert=False)
+    
+    try:
+        await reviews_service._send_single_request(db_user)
+        await callback.message.answer('✅ Тестовый запрос на отзыв отправлен вам в личные сообщения.')
+    except Exception as e:
+        logger.error('Ошибка отправки тестового отзыва', error=e)
+        await callback.message.answer('❌ Ошибка при отправке тестового отзыва. Проверьте логи.')
 
 
 def register_handlers(dp: Dispatcher) -> None:
