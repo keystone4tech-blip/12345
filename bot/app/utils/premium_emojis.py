@@ -10,7 +10,11 @@ from typing import Any, Dict, Optional, TypeVar, Callable, Awaitable
 
 from aiogram import Bot
 from aiogram.client.session.middlewares.base import BaseRequestMiddleware, NextRequestMiddlewareType
-from aiogram.methods import SendMessage, EditMessageText, EditMessageCaption, EditMessageReplyMarkup, SendPhoto, Response
+from aiogram.methods import (
+    SendMessage, EditMessageText, EditMessageCaption, EditMessageReplyMarkup,
+    SendPhoto, SendVideo, SendDocument, SendAnimation, SendVoice, SendVideoNote,
+    AnswerCallbackQuery, Response,
+)
 from aiogram.methods.base import TelegramMethod
 
 from app.config import settings
@@ -85,11 +89,24 @@ def get_premium_emoji_id(emoji: str) -> Optional[str]:
     return emoji_map.get(emoji)
 
 
+# Регулярка для снятия существующих тегов <tg-emoji> (защита от двойного применения)
+_TG_EMOJI_TAG_RE = re.compile(r'<tg-emoji[^>]*>(.*?)</tg-emoji>')
+
+
 def replace_with_premium_emojis(text: str) -> str:
-    """Заменяет все стандартные эмодзи в тексте на теги <tg-emoji>."""
+    """Заменяет все стандартные эмодзи в тексте на теги <tg-emoji>.
+    
+    Функция идемпотентна: если текст уже содержит теги <tg-emoji>,
+    они сначала снимаются, а затем замена применяется заново.
+    Это позволяет безопасно вызывать функцию повторно.
+    """
     if not text:
         return text
-        
+
+    # Шаг 1: Снимаем существующие теги <tg-emoji> чтобы избежать двойной замены
+    if '<tg-emoji' in text:
+        text = _TG_EMOJI_TAG_RE.sub(r'\1', text)
+
     emoji_map = get_premium_emoji_map()
     pattern = get_emoji_pattern()
 
@@ -180,8 +197,20 @@ def apply_premium_to_button(button: T) -> T:
     return button
 
 
+# Типы методов, у которых нужно обрабатывать поле 'text'
+_TEXT_METHODS = (SendMessage, EditMessageText)
+# Типы методов, у которых нужно обрабатывать поле 'caption'
+_CAPTION_METHODS = (SendPhoto, SendVideo, SendDocument, SendAnimation, SendVoice, EditMessageCaption)
+
+
 class PremiumEmojiMiddleware(BaseRequestMiddleware):
-    """Middleware для автоматического применения Premium-эмодзи ко всем исходящим кнопкам."""
+    """Middleware для автоматического применения Premium-эмодзи.
+    
+    Обрабатывает:
+    - text / caption — все исходящие сообщения, включая edit-запросы
+    - reply_markup — inline- и reply-кнопки (icon_custom_emoji_id)
+    - AnswerCallbackQuery.text — текст всплывающего уведомления
+    """
 
     async def __call__(
         self,
@@ -192,14 +221,25 @@ class PremiumEmojiMiddleware(BaseRequestMiddleware):
         if not settings.USE_PREMIUM_EMOJIS:
             return await make_request(bot, method)
 
-        # logger.debug("PremiumEmojiMiddleware: processing method", method=type(method).__name__)
+        # ── 1. Обработка текста сообщений ──
+        # SendMessage, EditMessageText → поле 'text'
+        if isinstance(method, _TEXT_METHODS):
+            raw_text = getattr(method, 'text', None)
+            if raw_text and isinstance(raw_text, str):
+                method.text = replace_with_premium_emojis(raw_text)
 
-        # Проверяем методы, которые могут содержать reply_markup
+        # SendPhoto, SendVideo, SendVoice, EditMessageCaption и т.д. → поле 'caption'
+        if isinstance(method, _CAPTION_METHODS):
+            raw_caption = getattr(method, 'caption', None)
+            if raw_caption and isinstance(raw_caption, str):
+                method.caption = replace_with_premium_emojis(raw_caption)
+
+        # AnswerCallbackQuery → поле 'text' (popup-уведомление, но tg-emoji там не работают — пропускаем)
+
+        # ── 2. Обработка кнопок (reply_markup) ──
         if hasattr(method, "reply_markup") and method.reply_markup:
             markup = method.reply_markup
             if hasattr(markup, "inline_keyboard"):
-                # Работаем с копией, чтобы не менять оригинальный объект, если он где-то кешируется
-                # Но так как aiogram 3 использует Pydantic, кнопки внутри – ссылки.
                 for row in markup.inline_keyboard:
                     for i, button in enumerate(row):
                         apply_premium_to_button(button)
