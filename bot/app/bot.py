@@ -24,6 +24,7 @@ from app.handlers import (
     reviews,
 )
 from app.handlers.admin import (
+    admin_reviews,
     backup as admin_backup,
     blacklist as admin_blacklist,
     blocked_users as admin_blocked_users,
@@ -195,6 +196,7 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     admin_daily_contests.register_handlers(dp)
     admin_promo_offers.register_handlers(dp)
     admin_maintenance.register_handlers(dp)
+    admin_reviews.register_handlers(dp)
     admin_user_messages.register_handlers(dp)
     admin_updates.register_handlers(dp)
     admin_backup.register_handlers(dp)

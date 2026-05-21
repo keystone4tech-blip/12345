@@ -2446,3 +2446,37 @@ def get_broadcast_button_emoji_keyboard(language: str = 'ru') -> InlineKeyboardM
             ]
         ]
     )
+
+
+def get_admin_reviews_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=_t(texts, 'ADMIN_REVIEWS_LIST', '📋 Список отзывов'),
+                    callback_data='admin_reviews_list:0'
+                )
+            ],
+            [InlineKeyboardButton(text=texts.BACK, callback_data='admin_submenu_communications')],
+        ]
+    )
+
+def get_admin_reviews_pagination_keyboard(current_page: int, total_pages: int, language: str = 'ru') -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    buttons = []
+    
+    if current_page > 0:
+        buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_list:{current_page - 1}'))
+    
+    buttons.append(InlineKeyboardButton(text=f'{current_page + 1}/{max(1, total_pages)}', callback_data='ignore'))
+    
+    if current_page < total_pages - 1:
+        buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_list:{current_page + 1}'))
+        
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            buttons,
+            [InlineKeyboardButton(text=texts.BACK, callback_data='admin_reviews')]
+        ]
+    )

@@ -1329,7 +1329,6 @@
   "BIND_EMAIL_PROMPT": "📧 <b>Привязка Email</b>\n\nВведите ваш адрес электронной почты для регистрации в личном кабинете:",
   "BIND_PASSWORD_PROMPT": "🔑 <b>Установка пароля</b>\n\nПридумайте пароль для входа на сайт (минимум 8 символов):",
   "BIND_CANCEL_BUTTON": "❌ Отмена",
-  "CANCEL": "❌ Отмена",
   "EMAIL_ALREADY_VERIFIED": "✅ Ваш Email уже привязан!",
   "INVALID_EMAIL_FORMAT": "❌ Некорректный формат Email. Попробуйте еще раз:",
   "EMAIL_ALREADY_EXISTS": "❌ Этот Email уже используется другим аккаунтом.",
@@ -1773,5 +1772,15 @@
   "AI_TICKET_MANAGER_CALLED": "👨‍💻 <b>Менеджер вызван</b>\n\nВаше обращение передано сотруднику техподдержки. Он ответит вам в этом чате в ближайшее время.",
   "AI_TICKET_CALL_MANAGER": "🆘 Вызвать менеджера",
   "AI_TICKET_STATUS_OPEN": "Открыт",
-  "AI_TICKET_STATUS_CLOSED": "Закрыт"
+  "AI_TICKET_STATUS_CLOSED": "Закрыт",
+  "ADMIN_REVIEWS_TITLE": "⭐ Отзывы пользователей\n\nВсего отзывов: {total}\nСредняя оценка: {avg_rating} ⭐",
+  "ADMIN_REVIEWS_LIST": "📋 Список отзывов",
+  "ADMIN_REVIEWS_NO_DATA": "Нет отзывов.",
+  "ADMIN_REVIEWS_PAGE": "Отзыв {current} из {total}",
+  "ADMIN_REVIEWS_BACK": "⬅️ К отзывам",
+  "ADMIN_REVIEWS_USER": "Пользователь: {user}",
+  "ADMIN_REVIEWS_RATING": "Оценка: {rating} ⭐",
+  "ADMIN_REVIEWS_CONTENT_TYPE": "Тип контента: {content_type}",
+  "ADMIN_REVIEWS_DATE": "Дата: {date}",
+  "ADMIN_REVIEWS_HAS_CONTENT": "Есть контент"
 }

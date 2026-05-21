@@ -1608,5 +1608,15 @@
   "WEBHOOK_USER_NOT_CONNECTED": "📡 <b>Ви ще не підключились</b>\n\nВаша підписка активна, але VPN-з'єднання не було встановлено. Підключіться, щоб почати користуватися.",
   "WEBHOOK_DEVICE_ADDED": "📱 <b>Новий пристрій</b>\n\nДо вашої підписки підключено новий пристрій: <code>{device}</code>",
   "WEBHOOK_DEVICE_DELETED": "📱 <b>Пристрій видалено</b>\n\nПристрій відключено від підписки: <code>{device}</code>",
-  "WEBHOOK_CLOSE_BUTTON": "✖️ Закрити"
+  "WEBHOOK_CLOSE_BUTTON": "✖️ Закрити",
+  "ADMIN_REVIEWS_TITLE": "⭐ Отзывы пользователей\n\nВсего отзывов: {total}\nСредняя оценка: {avg_rating} ⭐",
+  "ADMIN_REVIEWS_LIST": "📋 Список отзывов",
+  "ADMIN_REVIEWS_NO_DATA": "Нет отзывов.",
+  "ADMIN_REVIEWS_PAGE": "Отзыв {current} из {total}",
+  "ADMIN_REVIEWS_BACK": "⬅️ К отзывам",
+  "ADMIN_REVIEWS_USER": "Пользователь: {user}",
+  "ADMIN_REVIEWS_RATING": "Оценка: {rating} ⭐",
+  "ADMIN_REVIEWS_CONTENT_TYPE": "Тип контента: {content_type}",
+  "ADMIN_REVIEWS_DATE": "Дата: {date}",
+  "ADMIN_REVIEWS_HAS_CONTENT": "Есть контент"
 }
