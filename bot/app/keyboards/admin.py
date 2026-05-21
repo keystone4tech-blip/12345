@@ -2476,7 +2476,24 @@ def get_admin_reviews_keyboard(language: str = 'ru', pending_count: int = 0, app
                     callback_data='botcfg_cat:other:REVIEWS:1:1'
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text='🚀 Принудительно отправить отзывы',
+                    callback_data='admin_review_force_broadcast'
+                )
+            ],
             [InlineKeyboardButton(text=texts.BACK, callback_data='admin_submenu_communications')],
+        ]
+    )
+
+def get_admin_review_broadcast_confirm_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text='✅ Да', callback_data='admin_review_broadcast_yes'),
+                InlineKeyboardButton(text='❌ Нет', callback_data='admin_reviews')
+            ]
         ]
     )
 
