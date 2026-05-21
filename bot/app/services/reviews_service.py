@@ -436,7 +436,10 @@ class ReviewsService:
     async def _get_eligible_users(self, db: AsyncSession) -> list[User]:
         """Получает список пользователей, подходящих для запроса отзыва."""
         try:
-            # Получаем пользователей с активной подпиской
+            # Порог трафика в гигабайтах (настройка задана в мегабайтах)
+            threshold_gb = settings.REVIEWS_TRAFFIC_THRESHOLD_MB / 1024.0
+
+            # Получаем пользователей с активной подпиской и нужным объемом трафика
             result = await db.execute(
                 select(User)
                 .join(Subscription, Subscription.user_id == User.id)
@@ -445,63 +448,18 @@ class ReviewsService:
                         Subscription.status == SubscriptionStatus.ACTIVE.value,
                         Subscription.end_date > datetime.now(UTC),
                         User.telegram_id.isnot(None),
+                        Subscription.traffic_used_gb >= threshold_gb,
                     )
                 )
             )
-            active_users = result.scalars().all()
-
-            # Фильтруем по порогу трафика через RemnaWave API
-            eligible = []
-            threshold_bytes = settings.REVIEWS_TRAFFIC_THRESHOLD_MB * 1024 * 1024
-
-            try:
-                from app.external.remnawave_api import RemnaWaveAPI
-
-                async with RemnaWaveAPI(
-                    base_url=settings.REMNAWAVE_API_URL,
-                    api_key=settings.REMNAWAVE_API_KEY,
-                    secret_key=getattr(settings, 'REMNAWAVE_SECRET_KEY', None),
-                    username=getattr(settings, 'REMNAWAVE_USERNAME', None),
-                    password=getattr(settings, 'REMNAWAVE_PASSWORD', None),
-                    caddy_token=getattr(settings, 'REMNAWAVE_CADDY_AUTH_TOKEN', None),
-                    auth_type=getattr(settings, 'REMNAWAVE_AUTH_TYPE', 'api_key'),
-                ) as api:
-                    for user in active_users:
-                        try:
-                            if not user.telegram_id:
-                                continue
-
-                            # Получаем данные трафика из RemnaWave
-                            panel_users = await api.get_user_by_telegram_id(user.telegram_id)
-                            if not panel_users:
-                                continue
-
-                            # Берём первого пользователя
-                            panel_user = panel_users[0]
-                            used_bytes = panel_user.used_traffic_bytes
-
-                            # Проверяем порог
-                            if used_bytes >= threshold_bytes:
-                                eligible.append(user)
-
-                        except Exception as user_err:
-                            logger.debug(
-                                'Не удалось получить трафик пользователя',
-                                user_id=user.id,
-                                error=user_err,
-                            )
-            except Exception as api_err:
-                logger.error('❌ Ошибка подключения к RemnaWave API для отзывов', error=api_err)
-                # При ошибке API — берём всех активных пользователей
-                eligible = list(active_users)
+            eligible_users = result.scalars().all()
 
             logger.info(
-                '⭐ Найдено подходящих пользователей для отзывов',
-                total_active=len(active_users),
-                eligible=len(eligible),
+                '⭐ Найдено подходящих пользователей для отзывов (из локальной БД)',
+                eligible=len(eligible_users),
                 threshold_mb=settings.REVIEWS_TRAFFIC_THRESHOLD_MB,
             )
-            return eligible
+            return list(eligible_users)
 
         except Exception as e:
             logger.error('❌ Ошибка получения списка пользователей для отзывов', error=e)
