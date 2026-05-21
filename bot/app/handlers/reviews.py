@@ -479,7 +479,7 @@ async def _finalize_review(
 async def handle_user_reviews_carousel(
     callback: types.CallbackQuery,
     db: AsyncSession,
-    user: User,
+    db_user: User,
     bot: Bot
 ):
     try:
@@ -526,7 +526,7 @@ async def handle_user_reviews_carousel(
             if review_obj.review_content_id:
                 review_text += f"\n\n{review_obj.review_content_id}"
                 
-            kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=user.language)
+            kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=db_user.language)
             
             if media_msg_id:
                 try:
@@ -557,7 +557,7 @@ async def handle_user_reviews_carousel(
                 )
                 new_media_msg_id = sent_msg.message_id
                 
-                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=user.language)
+                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=db_user.language)
                 
                 try:
                     await callback.message.edit_text(review_text, reply_markup=kb, parse_mode="HTML")
@@ -570,7 +570,7 @@ async def handle_user_reviews_carousel(
                         
             except Exception as e:
                 logger.error("Failed to copy review media", error=e)
-                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=user.language)
+                kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=0, language=db_user.language)
                 try:
                     await callback.message.edit_text(review_text + "\n\n[Медиа недоступно]", reply_markup=kb, parse_mode="HTML")
                 except Exception:
