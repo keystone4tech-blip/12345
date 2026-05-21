@@ -10,18 +10,16 @@ from sqlalchemy import select, func, desc
 from app.database.models import User, UserReview
 from app.keyboards.admin import (
     get_admin_reviews_keyboard,
-    get_admin_reviews_pagination_keyboard,
+    get_admin_review_viewer_keyboard,
+    get_admin_review_del_confirm_keyboard,
 )
 from app.localization.texts import get_texts
 
 logger = structlog.get_logger(__name__)
 router = Router(name='admin_reviews')
 
-REVIEWS_PER_PAGE = 5
-
-
 @router.callback_query(F.data == 'admin_reviews')
-async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSession, db_user: User, send_new: bool = False):
     """Главное меню отзывов (Статистика)."""
     texts = get_texts(db_user.language)
 
@@ -41,19 +39,36 @@ async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSess
         avg_rating=avg_rating
     )
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=get_admin_reviews_keyboard(db_user.language),
-        parse_mode='HTML'
-    )
+    if send_new:
+        await callback.message.answer(text, reply_markup=get_admin_reviews_keyboard(db_user.language), parse_mode='HTML')
+    else:
+        await callback.message.edit_text(text, reply_markup=get_admin_reviews_keyboard(db_user.language), parse_mode='HTML')
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith('admin_reviews_list:'))
-async def handle_admin_reviews_list(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
-    """Пагинированный список отзывов."""
-    texts = get_texts(db_user.language)
-    page = int(callback.data.split(':')[1])
+@router.callback_query(F.data.startswith('admin_reviews_nav:'))
+async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Показ одного отзыва (Карусель)."""
+    parts = callback.data.split(':')
+    page = int(parts[1])
+    
+    old_media_msg_id = 0
+    if len(parts) > 2:
+        old_media_msg_id = int(parts[2])
+
+    # Удаляем старые сообщения (если листаем)
+    if old_media_msg_id > 0:
+        try:
+            await callback.bot.delete_message(chat_id=callback.message.chat.id, message_id=old_media_msg_id)
+        except Exception:
+            pass
+            
+    # Удаляем текущее сообщение (меню или старый отзыв), чтобы порядок сообщений был верным
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
 
     # Считаем общее количество завершённых отзывов
     total_result = await db.execute(
@@ -62,85 +77,151 @@ async def handle_admin_reviews_list(callback: types.CallbackQuery, db: AsyncSess
     total_reviews = total_result.scalar() or 0
 
     if total_reviews == 0:
-        await callback.answer(texts.t('ADMIN_REVIEWS_NO_DATA', 'Нет отзывов.'), show_alert=True)
+        await callback.answer('Нет отзывов.', show_alert=True)
+        # Так как мы удалили сообщение, нужно обязательно вернуть главное меню
+        await handle_admin_reviews_main(callback, db, db_user, send_new=True)
         return
 
-    total_pages = (total_reviews + REVIEWS_PER_PAGE - 1) // REVIEWS_PER_PAGE
-
-    # Получаем отзывы для текущей страницы
+    # Получаем 1 отзыв для текущей страницы
     result = await db.execute(
         select(UserReview, User)
         .join(User, User.id == UserReview.user_id)
         .where(UserReview.status == 'COMPLETED')
         .order_by(desc(UserReview.created_at))
-        .offset(page * REVIEWS_PER_PAGE)
-        .limit(REVIEWS_PER_PAGE)
+        .offset(page)
+        .limit(1)
     )
-    reviews_data = result.all()
-
-    text_lines = [
-        f"<b>{texts.t('ADMIN_REVIEWS_LIST', '📋 Список отзывов')}</b>\n",
-        f"<i>{texts.t('ADMIN_REVIEWS_PAGE', 'Страница {current} из {total}').format(current=page+1, total=max(1, total_pages))}</i>\n"
-    ]
-
-    review_ids = []
-
-    for i, (review, user) in enumerate(reviews_data, start=1):
-        review_ids.append(review.id)
-        stars = '⭐' * review.rating if review.rating else 'Нет оценки'
-        content_type = review.review_type or 'none'
-        
-        type_str = 'Отсутствует'
-        if content_type == 'text':
-            type_str = '📝 Текст'
-        elif content_type == 'voice':
-            type_str = '🎙 Голос'
-        elif content_type == 'video_note':
-            type_str = '🎥 Видео'
+    data = result.first()
+    
+    if not data:
+        # Если дошли до конца (или удалили последний на странице), переходим на предыдущую
+        if page > 0:
+            callback.data = f'admin_reviews_nav:{page - 1}:0'
+            await handle_admin_reviews_viewer(callback, db, db_user)
+            return
             
-        user_name = user.full_name
-        if user.username:
-            user_name += f" (@{user.username})"
-            
-        date_str = review.created_at.strftime('%d.%m.%Y %H:%M')
+        await callback.answer('Отзыв не найден.', show_alert=True)
+        return
         
-        text_lines.append(
-            f"{i}. 👤 <b>{user_name}</b> (ID: {user.telegram_id})\n"
-            f"Оценка: {stars}\n"
-            f"Контент: {type_str}\n"
-            f"Награда: +{review.star_reward_days + review.content_reward_days} дн.\n"
-            f"📅 {date_str}\n"
-            f"──────────────"
-        )
+    review, user = data
 
-    text = '\n'.join(text_lines)
+    new_media_msg_id = 0
+    if review.review_content_id:
+        try:
+            copied_msg = await callback.bot.copy_message(
+                chat_id=callback.message.chat.id,
+                from_chat_id=user.telegram_id,
+                message_id=int(review.review_content_id)
+            )
+            new_media_msg_id = copied_msg.message_id
+        except Exception as e:
+            logger.warning('Failed to copy review media', error=str(e), review_id=review.id)
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=get_admin_reviews_pagination_keyboard(page, total_pages, review_ids, db_user.language),
-        parse_mode='HTML'
+    stars = '⭐' * review.rating if review.rating else 'Нет оценки'
+    content_type = review.review_type or 'none'
+    
+    type_str = 'Отсутствует'
+    if content_type == 'text':
+        type_str = '📝 Текст'
+    elif content_type == 'voice':
+        type_str = '🎙 Голос'
+    elif content_type == 'video_note':
+        type_str = '🎥 Видео'
+        
+    user_name = user.full_name
+    if user.username:
+        user_name += f" (@{user.username})"
+        
+    date_str = review.created_at.strftime('%d.%m.%Y %H:%M')
+    
+    text = (
+        f"👤 <b>{user_name}</b> (ID: {user.telegram_id})\n"
+        f"Оценка: {stars}\n"
+        f"Контент: {type_str}\n"
+        f"Награда: +{review.star_reward_days + review.content_reward_days} дн.\n"
+        f"📅 {date_str}"
     )
+
+    markup = get_admin_review_viewer_keyboard(
+        review_id=review.id, 
+        current_page=page, 
+        total_pages=total_reviews, 
+        media_msg_id=new_media_msg_id, 
+        language=db_user.language
+    )
+
+    await callback.message.answer(text, reply_markup=markup, parse_mode='HTML')
+        
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith('admin_review_del:'))
-async def handle_admin_review_delete(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
-    """Удаление отзыва."""
-    review_id = int(callback.data.split(':')[1])
+@router.callback_query(F.data.startswith('admin_reviews_approve:'))
+async def handle_admin_reviews_approve(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Одобрение отзыва (переход к следующему)."""
+    parts = callback.data.split(':')
+    # review_id = int(parts[1]) # Можно использовать для смены статуса в БД в будущем
+    page = int(parts[2])
+    media_msg_id = int(parts[3])
     
-    # Ищем отзыв
+    await callback.answer('✅ Отзыв просмотрен!', show_alert=False)
+    
+    # Просто перелистываем вперед (к старому отзыву, т.к. сортировка desc(created_at))
+    # Либо назад? Нумерация 0, 1, 2... 0 - самый новый. 
+    # Так как мы просто смотрим, переходим к следующей странице
+    callback.data = f'admin_reviews_nav:{page + 1}:{media_msg_id}'
+    await handle_admin_reviews_viewer(callback, db, db_user)
+
+
+@router.callback_query(F.data.startswith('admin_reviews_del_conf:'))
+async def handle_admin_reviews_del_conf(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Подтверждение удаления отзыва."""
+    parts = callback.data.split(':')
+    review_id = int(parts[1])
+    page = int(parts[2])
+    media_msg_id = int(parts[3])
+    
+    markup = get_admin_review_del_confirm_keyboard(review_id, page, media_msg_id, db_user.language)
+    await callback.message.edit_reply_markup(reply_markup=markup)
+    await callback.answer('Подтвердите удаление', show_alert=False)
+
+
+@router.callback_query(F.data.startswith('admin_reviews_del_yes:'))
+async def handle_admin_reviews_del_yes(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Удаление отзыва после подтверждения."""
+    parts = callback.data.split(':')
+    review_id = int(parts[1])
+    page = int(parts[2])
+    media_msg_id = int(parts[3])
+    
     result = await db.execute(select(UserReview).where(UserReview.id == review_id))
     review = result.scalar_one_or_none()
     
     if review:
         await db.delete(review)
         await db.commit()
-        await callback.answer('✅ Отзыв удалён!', show_alert=True)
-        # Перезагружаем первую страницу
-        callback.data = 'admin_reviews_list:0'
-        await handle_admin_reviews_list(callback, db, db_user)
+        await callback.answer('🗑 Отзыв удалён!', show_alert=False)
     else:
         await callback.answer('❌ Отзыв не найден!', show_alert=True)
+        
+    # При удалении количество отзывов уменьшилось, поэтому остаемся на той же странице (page)
+    callback.data = f'admin_reviews_nav:{page}:{media_msg_id}'
+    await handle_admin_reviews_viewer(callback, db, db_user)
+
+
+@router.callback_query(F.data.startswith('admin_reviews_exit:'))
+async def handle_admin_reviews_exit(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
+    """Выход из карусели отзывов."""
+    parts = callback.data.split(':')
+    media_msg_id = int(parts[1]) if len(parts) > 1 else 0
+    
+    if media_msg_id > 0:
+        try:
+            await callback.bot.delete_message(chat_id=callback.message.chat.id, message_id=media_msg_id)
+        except Exception:
+            pass
+            
+    # Заменяем текущее сообщение с кнопками на главное меню
+    await handle_admin_reviews_main(callback, db, db_user, send_new=False)
 
 
 @router.callback_query(F.data == 'admin_review_test')
@@ -148,21 +229,15 @@ async def handle_admin_review_test(callback: types.CallbackQuery, db: AsyncSessi
     """Тестовая отправка сообщения с запросом на отзыв администратору."""
     from app.services.reviews_service import reviews_service
     
-    # Проверяем, инициализирован ли бот в сервисе
-    if not reviews_service.bot:
-        from app.bot import bot
-        reviews_service.set_bot(bot)
-        
-    await callback.answer('⏳ Отправляем тестовый запрос...', show_alert=False)
-    
     try:
-        await reviews_service._send_single_request(db_user)
-        await callback.message.answer('✅ Тестовый запрос на отзыв отправлен вам в личные сообщения.')
+        await reviews_service.send_review_request(
+            db, 
+            callback.bot, 
+            db_user.id, 
+            db_user.telegram_id,
+            db_user.language
+        )
+        await callback.answer('✅ Тестовый запрос отправлен вам в личные сообщения!', show_alert=True)
     except Exception as e:
-        logger.error('Ошибка отправки тестового отзыва', error=e)
-        await callback.message.answer('❌ Ошибка при отправке тестового отзыва. Проверьте логи.')
-
-
-def register_handlers(dp: Dispatcher) -> None:
-    dp.include_router(router)
-    logger.info('⭐ Зарегистрированы админские обработчики отзывов')
+        logger.error('Failed to send test review request', error=str(e), user_id=db_user.id)
+        await callback.answer('❌ Ошибка при отправке тестового запроса.', show_alert=True)

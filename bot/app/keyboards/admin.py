@@ -2472,30 +2472,54 @@ def get_admin_reviews_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
         ]
     )
 
-def get_admin_reviews_pagination_keyboard(current_page: int, total_pages: int, review_ids: list[int] = None, language: str = 'ru') -> InlineKeyboardMarkup:
+def get_admin_review_viewer_keyboard(
+    review_id: int, 
+    current_page: int, 
+    total_pages: int, 
+    media_msg_id: int, 
+    language: str = 'ru'
+) -> InlineKeyboardMarkup:
     texts = get_texts(language)
-    
     keyboard = []
     
-    # Add delete buttons if review_ids provided
-    if review_ids:
-        del_buttons = []
-        for i, r_id in enumerate(review_ids, start=1):
-            del_buttons.append(InlineKeyboardButton(text=f'🗑 {i}', callback_data=f'admin_review_del:{r_id}'))
-        if del_buttons:
-            keyboard.append(del_buttons)
-            
-    # Pagination buttons
+    keyboard.append([
+        InlineKeyboardButton(
+            text='✅ Одобрить', 
+            callback_data=f'admin_reviews_approve:{review_id}:{current_page}:{media_msg_id}'
+        ),
+        InlineKeyboardButton(
+            text='🗑 Удалить', 
+            callback_data=f'admin_reviews_del_conf:{review_id}:{current_page}:{media_msg_id}'
+        )
+    ])
+    
     nav_buttons = []
     if current_page > 0:
-        nav_buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_list:{current_page - 1}'))
+        nav_buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_nav:{current_page - 1}:{media_msg_id}'))
     
     nav_buttons.append(InlineKeyboardButton(text=f'{current_page + 1}/{max(1, total_pages)}', callback_data='ignore'))
     
     if current_page < total_pages - 1:
-        nav_buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_list:{current_page + 1}'))
+        nav_buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_nav:{current_page + 1}:{media_msg_id}'))
         
     keyboard.append(nav_buttons)
-    keyboard.append([InlineKeyboardButton(text=texts.BACK, callback_data='admin_reviews')])
+    keyboard.append([InlineKeyboardButton(text=texts.BACK, callback_data=f'admin_reviews_exit:{media_msg_id}')])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_admin_review_del_confirm_keyboard(
+    review_id: int, 
+    current_page: int, 
+    media_msg_id: int, 
+    language: str = 'ru'
+) -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text='Да, удалить', callback_data=f'admin_reviews_del_yes:{review_id}:{current_page}:{media_msg_id}'),
+                InlineKeyboardButton(text='Отмена', callback_data=f'admin_reviews_nav:{current_page}:{media_msg_id}')
+            ]
+        ]
+    )
