@@ -10,7 +10,7 @@
 """
 
 import structlog
-from aiogram import Router, F, types, Dispatcher
+from aiogram import Router, F, types, Dispatcher, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
