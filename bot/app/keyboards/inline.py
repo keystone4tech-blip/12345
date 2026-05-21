@@ -3125,10 +3125,14 @@ def get_user_reviews_carousel_keyboard(
     current_page: int, 
     total_pages: int, 
     media_msg_id: int, 
-    language: str = 'ru'
+    language: str = 'ru',
+    has_review: bool = False
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
     keyboard = []
+    
+    review_btn_text = 'Изменить свой отзыв' if has_review else 'Оставить отзыв'
+    keyboard.append([InlineKeyboardButton(text=f'✍️ {review_btn_text}', callback_data='user_review_start')])
     
     nav_buttons = []
     if current_page > 0:

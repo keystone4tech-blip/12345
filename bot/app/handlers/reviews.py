@@ -461,6 +461,27 @@ async def _finalize_review(
 
 # ──────────────────────────── Регистрация хендлеров ────────────────────────────
 
+@router.callback_query(F.data == 'user_review_start')
+async def handle_user_review_start(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession
+):
+    from app.services.reviews_service import reviews_service
+    
+    if not reviews_service.bot:
+        reviews_service.set_bot(callback.bot)
+        
+    # Удаляем текущее сообщение (карусель), так как запрос на отзыв придет новым сообщением
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+        
+    await reviews_service._send_single_request(db_user)
+    await callback.answer('Пожалуйста, оцените наш сервис!')
+
+
 @router.callback_query(F.data.startswith("user_reviews_carousel:"))
 async def handle_user_reviews_carousel(
     callback: types.CallbackQuery,
@@ -569,8 +590,19 @@ async def handle_user_reviews_carousel(
         # Если текст в новой колонке
         if review_obj.review_type == 'text' and review_obj.review_text:
             review_text += f"\n\n{review_obj.review_text}"
+            
+        has_review = False
+        user_review_check = await db.scalar(select(UserReview.id).where(UserReview.user_id == db_user.id))
+        if user_review_check:
+            has_review = True
         
-        kb = get_user_reviews_carousel_keyboard(current_page, total_pages, media_msg_id=new_media_msg_id, language=db_user.language)
+        kb = get_user_reviews_carousel_keyboard(
+            current_page, 
+            total_pages, 
+            media_msg_id=new_media_msg_id, 
+            language=db_user.language,
+            has_review=has_review
+        )
         
         await bot.send_message(chat_id=callback.message.chat.id, text=review_text, reply_markup=kb, parse_mode="HTML")
         await callback.answer()

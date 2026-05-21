@@ -2089,6 +2089,19 @@ async def get_main_menu_text(user, texts, db: AsyncSession):
     info_sections: list[str] = []
 
     try:
+        if settings.REVIEWS_ENABLED or getattr(settings, 'REVIEWS_BUTTON_ENABLED', False):
+            from app.services.reviews_service import reviews_service
+            stats = await reviews_service.get_review_stats(db)
+            if stats['total'] > 0 and stats['avg_rating'] > 0:
+                review_hint = texts.t(
+                    'MAIN_MENU_REVIEWS_RATING',
+                    '⭐ <b>Оценка нашего сервиса: {avg_rating}</b>, основанная на отзывах пользователей. Посмотреть отзывы можно по кнопке ниже.'
+                ).format(avg_rating=stats['avg_rating'])
+                info_sections.append(review_hint)
+    except Exception as e:
+        logger.error('Ошибка получения статистики отзывов для главного меню', error=e)
+
+    try:
         promo_hint = await build_promo_offer_hint(db, user, texts)
         if promo_hint:
             info_sections.append(promo_hint.strip())
