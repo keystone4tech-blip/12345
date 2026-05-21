@@ -108,10 +108,18 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     new_media_msg_id = 0
     if review.review_content_id:
         try:
+            if ':' in review.review_content_id:
+                from_chat_id, msg_id_str = review.review_content_id.split(':')
+                from_chat_id = int(from_chat_id)
+                msg_id = int(msg_id_str)
+            else:
+                from_chat_id = user.telegram_id
+                msg_id = int(review.review_content_id)
+                
             copied_msg = await callback.bot.copy_message(
                 chat_id=callback.message.chat.id,
-                from_chat_id=user.telegram_id,
-                message_id=int(review.review_content_id)
+                from_chat_id=from_chat_id,
+                message_id=msg_id
             )
             new_media_msg_id = copied_msg.message_id
         except ValueError:

@@ -370,12 +370,43 @@ async def _finalize_review(
         await state.clear()
         return
 
+    # === НОВАЯ ЛОГИКА СОХРАНЕНИЯ КОНТЕНТА ===
+    # Сохраняем медиа/текст в админском чате, чтобы оно не исчезло при удалении у пользователя
+    final_content_id = content_id
+    if content_id:
+        from app.config import settings
+        admin_chat_id = settings.get_admin_notifications_chat_id()
+        if not admin_chat_id and settings.admin_ids:
+            admin_chat_id = settings.admin_ids[0]
+            
+        if admin_chat_id:
+            try:
+                # Отправляем инфо-сообщение
+                info_msg = await message.bot.send_message(
+                    chat_id=admin_chat_id,
+                    text=f"📥 <b>Новый отзыв в системе (бекап медиа)</b>\nПользователь ID: <code>{db_user.id}</code>",
+                    parse_mode='HTML'
+                )
+                
+                # Копируем само сообщение пользователя
+                copied_msg = await message.bot.copy_message(
+                    chat_id=admin_chat_id,
+                    from_chat_id=message.chat.id,
+                    message_id=int(content_id)
+                )
+                
+                # Сохраняем связку chat_id:message_id
+                final_content_id = f"{admin_chat_id}:{copied_msg.message_id}"
+                
+            except Exception as e:
+                logger.error("Failed to backup review message to admin chat", error=str(e), user_id=db_user.id)
+
     # Завершаем отзыв
     total_days = await reviews_service.complete_review(
         db=db,
         review=review,
         review_type=review_type,
-        content_id=content_id,
+        content_id=final_content_id,
     )
 
     # Начисляем бонусные дни
