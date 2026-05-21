@@ -92,7 +92,10 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     total_reviews = total_result.scalar() or 0
 
     if total_reviews == 0:
-        await callback.answer('Нет отзывов.', show_alert=True)
+        try:
+            await callback.answer('Нет отзывов.', show_alert=True)
+        except Exception:
+            pass
         # Так как мы удалили сообщение, нужно обязательно вернуть главное меню
         await handle_admin_reviews_main(callback, db, db_user, send_new=True)
         return
@@ -115,7 +118,10 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
             await handle_admin_reviews_viewer(callback, db, db_user)
             return
             
-        await callback.answer('Отзыв не найден.', show_alert=True)
+        try:
+            await callback.answer('Отзыв не найден.', show_alert=True)
+        except Exception:
+            pass
         return
         
     review, user = data
@@ -213,7 +219,10 @@ async def handle_admin_reviews_approve(callback: types.CallbackQuery, db: AsyncS
         review.status = 'APPROVED'
         await db.commit()
     
-    await callback.answer('✅ Отзыв одобрен!', show_alert=False)
+    try:
+        await callback.answer('✅ Отзыв одобрен!', show_alert=False)
+    except Exception:
+        pass
     
     # Так как мы одобрили отзыв, он исчезнет из списка (offset сместится), поэтому остаемся на той же странице
     callback.data = f'admin_reviews_nav:{page}:{media_msg_id}:{status}'
@@ -231,7 +240,10 @@ async def handle_admin_reviews_del_conf(callback: types.CallbackQuery, db: Async
     
     markup = get_admin_review_del_confirm_keyboard(review_id, page, media_msg_id, db_user.language, status)
     await callback.message.edit_reply_markup(reply_markup=markup)
-    await callback.answer('Подтвердите удаление', show_alert=False)
+    try:
+        await callback.answer('Подтвердите удаление', show_alert=False)
+    except Exception:
+        pass
 
 
 @router.callback_query(F.data.startswith('admin_reviews_del_yes:'))
@@ -249,9 +261,15 @@ async def handle_admin_reviews_del_yes(callback: types.CallbackQuery, db: AsyncS
     if review:
         await db.delete(review)
         await db.commit()
-        await callback.answer('🗑 Отзыв удалён!', show_alert=False)
+        try:
+            await callback.answer('🗑 Отзыв удалён!', show_alert=False)
+        except Exception:
+            pass
     else:
-        await callback.answer('❌ Отзыв не найден!', show_alert=True)
+        try:
+            await callback.answer('❌ Отзыв не найден!', show_alert=True)
+        except Exception:
+            pass
         
     # При удалении количество отзывов уменьшилось, поэтому остаемся на той же странице (page)
     callback.data = f'admin_reviews_nav:{page}:{media_msg_id}:{status}'
