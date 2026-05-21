@@ -2448,18 +2448,26 @@ def get_broadcast_button_emoji_keyboard(language: str = 'ru') -> InlineKeyboardM
     )
 
 
-def get_admin_reviews_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
+def get_admin_reviews_keyboard(language: str = 'ru', pending_count: int = 0, approved_count: int = 0) -> InlineKeyboardMarkup:
     texts = get_texts(language)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=_t(texts, 'ADMIN_REVIEWS_LIST', '📋 Список отзывов'),
-                    callback_data='admin_reviews_list:0'
-                ),
-                InlineKeyboardButton(
                     text='🧪 Тест (отправить себе)',
                     callback_data='admin_review_test'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f'📋 Список отзывов ({pending_count})',
+                    callback_data='admin_reviews_list:0:0:COMPLETED'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f'✅ Одобренные отзывы ({approved_count})',
+                    callback_data='admin_reviews_list:0:0:APPROVED'
                 )
             ],
             [
@@ -2477,30 +2485,39 @@ def get_admin_review_viewer_keyboard(
     current_page: int, 
     total_pages: int, 
     media_msg_id: int, 
-    language: str = 'ru'
+    language: str = 'ru',
+    status: str = 'COMPLETED'
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
     keyboard = []
     
-    keyboard.append([
-        InlineKeyboardButton(
-            text='✅ Одобрить', 
-            callback_data=f'admin_reviews_approve:{review_id}:{current_page}:{media_msg_id}'
-        ),
-        InlineKeyboardButton(
-            text='🗑 Удалить', 
-            callback_data=f'admin_reviews_del_conf:{review_id}:{current_page}:{media_msg_id}'
-        )
-    ])
+    if status == 'COMPLETED':
+        keyboard.append([
+            InlineKeyboardButton(
+                text='✅ Одобрить', 
+                callback_data=f'admin_reviews_approve:{review_id}:{current_page}:{media_msg_id}:{status}'
+            ),
+            InlineKeyboardButton(
+                text='🗑 Удалить', 
+                callback_data=f'admin_reviews_del_conf:{review_id}:{current_page}:{media_msg_id}:{status}'
+            )
+        ])
+    else:
+        keyboard.append([
+            InlineKeyboardButton(
+                text='🗑 Удалить', 
+                callback_data=f'admin_reviews_del_conf:{review_id}:{current_page}:{media_msg_id}:{status}'
+            )
+        ])
     
     nav_buttons = []
     if current_page > 0:
-        nav_buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_nav:{current_page - 1}:{media_msg_id}'))
+        nav_buttons.append(InlineKeyboardButton(text='⬅️', callback_data=f'admin_reviews_nav:{current_page - 1}:{media_msg_id}:{status}'))
     
     nav_buttons.append(InlineKeyboardButton(text=f'{current_page + 1}/{max(1, total_pages)}', callback_data='ignore'))
     
     if current_page < total_pages - 1:
-        nav_buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_nav:{current_page + 1}:{media_msg_id}'))
+        nav_buttons.append(InlineKeyboardButton(text='➡️', callback_data=f'admin_reviews_nav:{current_page + 1}:{media_msg_id}:{status}'))
         
     keyboard.append(nav_buttons)
     keyboard.append([InlineKeyboardButton(text=texts.BACK, callback_data=f'admin_reviews_exit:{media_msg_id}')])
@@ -2512,14 +2529,21 @@ def get_admin_review_del_confirm_keyboard(
     review_id: int, 
     current_page: int, 
     media_msg_id: int, 
-    language: str = 'ru'
+    language: str = 'ru',
+    status: str = 'COMPLETED'
 ) -> InlineKeyboardMarkup:
     texts = get_texts(language)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text='Да, удалить', callback_data=f'admin_reviews_del_yes:{review_id}:{current_page}:{media_msg_id}'),
-                InlineKeyboardButton(text='Отмена', callback_data=f'admin_reviews_nav:{current_page}:{media_msg_id}')
+                InlineKeyboardButton(
+                    text='Да, удалить', 
+                    callback_data=f'admin_reviews_del_yes:{review_id}:{current_page}:{media_msg_id}:{status}'
+                ),
+                InlineKeyboardButton(
+                    text='Отмена', 
+                    callback_data=f'admin_reviews_nav:{current_page}:{media_msg_id}:{status}'
+                )
             ]
         ]
     )

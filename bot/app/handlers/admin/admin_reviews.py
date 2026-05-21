@@ -29,21 +29,28 @@ async def handle_admin_reviews_main(callback: types.CallbackQuery, db: AsyncSess
         select(
             func.count(UserReview.id).label('total'),
             func.avg(UserReview.rating).label('avg_rating')
-        ).where(UserReview.status == 'COMPLETED')
+        ).where(UserReview.status.in_(['COMPLETED', 'APPROVED']))
     )
     row = result.fetchone()
     total = row.total if row and row.total else 0
     avg_rating = round(row.avg_rating, 1) if row and row.avg_rating else 0.0
+
+    pending_count_q = await db.execute(select(func.count(UserReview.id)).where(UserReview.status == 'COMPLETED'))
+    pending_count = pending_count_q.scalar() or 0
+
+    approved_count_q = await db.execute(select(func.count(UserReview.id)).where(UserReview.status == 'APPROVED'))
+    approved_count = approved_count_q.scalar() or 0
 
     text = texts.t('ADMIN_REVIEWS_TITLE', '⭐ Отзывы пользователей\n\nВсего отзывов: {total}\nСредняя оценка: {avg_rating} ⭐').format(
         total=total,
         avg_rating=avg_rating
     )
 
+    markup = get_admin_reviews_keyboard(language=db_user.language, pending_count=pending_count, approved_count=approved_count)
     if send_new:
-        await callback.message.answer(text, reply_markup=get_admin_reviews_keyboard(db_user.language), parse_mode='HTML')
+        await callback.message.answer(text, reply_markup=markup, parse_mode='HTML')
     else:
-        await callback.message.edit_text(text, reply_markup=get_admin_reviews_keyboard(db_user.language), parse_mode='HTML')
+        await callback.message.edit_text(text, reply_markup=markup, parse_mode='HTML')
     try:
         await callback.answer()
     except Exception:
@@ -60,6 +67,10 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     old_media_msg_id = 0
     if len(parts) > 2:
         old_media_msg_id = int(parts[2])
+        
+    status = 'COMPLETED'
+    if len(parts) > 3:
+        status = parts[3]
 
     # Удаляем старые сообщения (если листаем)
     if old_media_msg_id > 0:
@@ -76,7 +87,7 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
 
     # Считаем общее количество завершённых отзывов
     total_result = await db.execute(
-        select(func.count(UserReview.id)).where(UserReview.status == 'COMPLETED')
+        select(func.count(UserReview.id)).where(UserReview.status == status)
     )
     total_reviews = total_result.scalar() or 0
 
@@ -90,7 +101,7 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     result = await db.execute(
         select(UserReview, User)
         .join(User, User.id == UserReview.user_id)
-        .where(UserReview.status == 'COMPLETED')
+        .where(UserReview.status == status)
         .order_by(desc(UserReview.created_at))
         .offset(page)
         .limit(1)
@@ -100,7 +111,7 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     if not data:
         # Если дошли до конца (или удалили последний на странице), переходим на предыдущую
         if page > 0:
-            callback.data = f'admin_reviews_nav:{page - 1}:0'
+            callback.data = f'admin_reviews_nav:{page - 1}:0:{status}'
             await handle_admin_reviews_viewer(callback, db, db_user)
             return
             
@@ -174,7 +185,8 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
         current_page=page, 
         total_pages=total_reviews, 
         media_msg_id=new_media_msg_id, 
-        language=db_user.language
+        language=db_user.language,
+        status=status
     )
 
     await callback.message.answer(text, reply_markup=markup, parse_mode='HTML')
@@ -189,16 +201,22 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
 async def handle_admin_reviews_approve(callback: types.CallbackQuery, db: AsyncSession, db_user: User):
     """Одобрение отзыва (переход к следующему)."""
     parts = callback.data.split(':')
-    # review_id = int(parts[1]) # Можно использовать для смены статуса в БД в будущем
+    review_id = int(parts[1])
     page = int(parts[2])
     media_msg_id = int(parts[3])
+    status = parts[4] if len(parts) > 4 else 'COMPLETED'
     
-    await callback.answer('✅ Отзыв просмотрен!', show_alert=False)
+    result = await db.execute(select(UserReview).where(UserReview.id == review_id))
+    review = result.scalar_one_or_none()
     
-    # Просто перелистываем вперед (к старому отзыву, т.к. сортировка desc(created_at))
-    # Либо назад? Нумерация 0, 1, 2... 0 - самый новый. 
-    # Так как мы просто смотрим, переходим к следующей странице
-    callback.data = f'admin_reviews_nav:{page + 1}:{media_msg_id}'
+    if review:
+        review.status = 'APPROVED'
+        await db.commit()
+    
+    await callback.answer('✅ Отзыв одобрен!', show_alert=False)
+    
+    # Так как мы одобрили отзыв, он исчезнет из списка (offset сместится), поэтому остаемся на той же странице
+    callback.data = f'admin_reviews_nav:{page}:{media_msg_id}:{status}'
     await handle_admin_reviews_viewer(callback, db, db_user)
 
 
@@ -209,8 +227,9 @@ async def handle_admin_reviews_del_conf(callback: types.CallbackQuery, db: Async
     review_id = int(parts[1])
     page = int(parts[2])
     media_msg_id = int(parts[3])
+    status = parts[4] if len(parts) > 4 else 'COMPLETED'
     
-    markup = get_admin_review_del_confirm_keyboard(review_id, page, media_msg_id, db_user.language)
+    markup = get_admin_review_del_confirm_keyboard(review_id, page, media_msg_id, db_user.language, status)
     await callback.message.edit_reply_markup(reply_markup=markup)
     await callback.answer('Подтвердите удаление', show_alert=False)
 
@@ -222,6 +241,7 @@ async def handle_admin_reviews_del_yes(callback: types.CallbackQuery, db: AsyncS
     review_id = int(parts[1])
     page = int(parts[2])
     media_msg_id = int(parts[3])
+    status = parts[4] if len(parts) > 4 else 'COMPLETED'
     
     result = await db.execute(select(UserReview).where(UserReview.id == review_id))
     review = result.scalar_one_or_none()
@@ -234,7 +254,7 @@ async def handle_admin_reviews_del_yes(callback: types.CallbackQuery, db: AsyncS
         await callback.answer('❌ Отзыв не найден!', show_alert=True)
         
     # При удалении количество отзывов уменьшилось, поэтому остаемся на той же странице (page)
-    callback.data = f'admin_reviews_nav:{page}:{media_msg_id}'
+    callback.data = f'admin_reviews_nav:{page}:{media_msg_id}:{status}'
     await handle_admin_reviews_viewer(callback, db, db_user)
 
 
@@ -278,7 +298,14 @@ async def handle_notif_review_approve(callback: types.CallbackQuery, db: AsyncSe
     parts = callback.data.split(':')
     review_id = int(parts[1])
     
-    # Просто отмечаем в чате, что отзыв проверен
+    result = await db.execute(select(UserReview).where(UserReview.id == review_id))
+    review = result.scalar_one_or_none()
+    
+    if review:
+        review.status = 'APPROVED'
+        await db.commit()
+    
+    # Отмечаем в чате, что отзыв проверен
     text = callback.message.html_text if callback.message.html_text else "Отзыв"
     text += "\n\n✅ <b>Одобрено</b>"
     
