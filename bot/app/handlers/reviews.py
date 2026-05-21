@@ -187,10 +187,10 @@ async def handle_skip_content(
 
     # Отправляем благодарственное сообщение
     text = (
-        '🎉 <b>Спасибо за вашу оценку!</b>\n\n'
+        '🎉 <b>Благодарим вас за оценку!</b>\n\n'
     )
     if total_days > 0:
-        text += f'🎁 Вам начислено <b>+{total_days} дн.</b> к подписке!\n\n'
+        text += f'В качестве благодарности мы начислили вам <b>+{total_days} дн.</b> дополнительно к вашему тарифу! 🎁\n\n'
     text += '💙 Ваше мнение очень важно для нас!'
 
     try:
@@ -444,24 +444,13 @@ async def _finalize_review(
     }
     type_name = type_names.get(review_type, 'отзыв')
 
-    # Формируем благодарственное сообщение с разбивкой наград
-    star_days = review.star_reward_days
-    content_days = review.content_reward_days
-
+    # Формируем благодарственное сообщение без разбивки наград
     text_lines = [
-        f'🎉 <b>Спасибо за ваш {type_name}!</b>\n\n',
-        '─────────────────────'
+        f'🎉 <b>Благодарим вас за {type_name}!</b>\n'
     ]
-    if star_days > 0:
-        text_lines.append(f'⭐ За оценку: <b>+{star_days} дн.</b>')
-    if content_days > 0:
-        text_lines.append(f'📝 За отзыв: <b>+{content_days} дн.</b>')
-    
-    if star_days > 0 or content_days > 0:
-        text_lines.append('─────────────────────\n')
         
     if total_days > 0:
-        text_lines.append(f'🎁 <b>Итого: +{total_days} дн.</b> к подписке!\n')
+        text_lines.append(f'В качестве благодарности мы начислили вам <b>+{total_days} дн.</b> дополнительно к вашему тарифу! 🎁\n')
     
     text_lines.extend([
         '💙 Ваше мнение очень ценно для нас!',
