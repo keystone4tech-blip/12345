@@ -9,6 +9,7 @@
 """
 
 import asyncio
+from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, UTC, time as dt_time
 
 import structlog
@@ -320,29 +321,30 @@ class ReviewsService:
 
         while self._running:
             try:
-                # Определяем время следующего запуска
-                now = datetime.now(UTC)
+                # Получаем текущую локальную таймзону (например, из настроек)
+                tz = ZoneInfo(settings.TIMEZONE)
+                now_local = datetime.now(tz)
                 check_time = self._parse_check_time()
 
-                # Следующий запуск сегодня или завтра
-                next_run = now.replace(
+                # Следующий запуск сегодня или завтра по локальному времени
+                next_run_local = now_local.replace(
                     hour=check_time.hour,
                     minute=check_time.minute,
                     second=0,
                     microsecond=0,
                 )
-                if next_run <= now:
-                    next_run += timedelta(days=1)
+                if next_run_local <= now_local:
+                    next_run_local += timedelta(days=1)
 
-                # Ожидание до назначенного времени
-                wait_seconds = (next_run - now).total_seconds()
-                logger.info(
-                    '⭐ Следующая рассылка запросов на отзывы через',
-                    wait_seconds=int(wait_seconds),
-                    next_run=next_run.isoformat(),
-                )
+                wait_seconds = (next_run_local - now_local).total_seconds()
 
-                await asyncio.sleep(wait_seconds)
+                # Спим максимум 60 секунд за итерацию, чтобы быстро подхватывать изменения настроек времени рассылки
+                if wait_seconds > 60:
+                    await asyncio.sleep(60)
+                    continue
+
+                if wait_seconds > 0:
+                    await asyncio.sleep(wait_seconds)
 
                 # Проверяем, всё ещё включено ли
                 if not self._running or not self.is_enabled():
@@ -350,6 +352,9 @@ class ReviewsService:
 
                 # Выполняем рассылку
                 await self._send_review_requests()
+                
+                # Спим 60 секунд после рассылки, чтобы не запустить её повторно в ту же минуту
+                await asyncio.sleep(60)
 
             except asyncio.CancelledError:
                 logger.info('⭐ Шедулер отзывов отменён')
