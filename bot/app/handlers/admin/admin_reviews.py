@@ -2,6 +2,7 @@
 Обработчики для управления отзывами в админ-панели.
 """
 
+import html
 import structlog
 from aiogram import Router, F, types, Dispatcher
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -150,17 +151,21 @@ async def handle_admin_reviews_viewer(callback: types.CallbackQuery, db: AsyncSe
     elif content_type == 'video_note':
         type_str = '🎥 Видео'
         
-    user_name = user.full_name
+    user_name = html.escape(user.full_name) if user.full_name else 'Без имени'
     if user.username:
-        user_name += f" (@{user.username})"
+        user_name += f" (@{html.escape(user.username)})"
         
-    date_str = review.created_at.strftime('%d.%m.%Y %H:%M')
+    date_str = review.created_at.strftime('%d.%m.%Y %H:%M') if review.created_at else 'Неизвестно'
+    
+    star_reward = review.star_reward_days or 0
+    content_reward = review.content_reward_days or 0
+    total_reward = star_reward + content_reward
     
     text = (
-        f"👤 <b>{user_name}</b> (ID: {user.telegram_id})\n"
+        f"👤 <b>{user_name}</b> (ID: <code>{user.telegram_id}</code>)\n"
         f"Оценка: {stars}\n"
         f"Контент: {type_str}\n"
-        f"Награда: +{review.star_reward_days + review.content_reward_days} дн.\n"
+        f"Награда: +{total_reward} дн.\n"
         f"📅 {date_str}"
     )
 
