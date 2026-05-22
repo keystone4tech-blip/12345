@@ -8,231 +8,197 @@
 """
 
 import asyncio
-from zoneinfo import ZoneInfo
-from datetime import datetime, timedelta, UTC, time as dt_time
-
 import structlog
+from datetime import datetime, timedelta
+from typing import Optional
+
 from aiogram import Bot
-from sqlalchemy import select, and_, update
+from aiogram.exceptions import TelegramAPIError
+from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.config import settings
-from app.database.models import User, Subscription, SubscriptionStatus
+from app.database.core import get_db
+from app.database.models import User, Subscription
+from app.localization.texts import get_texts
+from app.external.remnawave_api import UserStatus
+from app.keyboards.inline import get_traffic_help_keyboard
+
 
 logger = structlog.get_logger(__name__)
 
 
 class TrafficHelpService:
-    """Управление рассылкой помощи пользователям без трафика."""
-
     def __init__(self):
-        self.bot: Bot | None = None
-        self._task: asyncio.Task | None = None
-        self._running: bool = False
+        self.bot: Optional[Bot] = None
+        self._is_running = False
+        self._task: Optional[asyncio.Task] = None
 
-    def set_bot(self, bot: Bot) -> None:
+    def set_bot(self, bot: Bot):
         self.bot = bot
 
-    def is_enabled(self) -> bool:
-        return bool(settings.TRAFFIC_HELP_ENABLED)
-
-    def is_running(self) -> bool:
-        return self._running and self._task is not None and not self._task.done()
-
-    async def start(self) -> None:
-        if not self.is_enabled():
-            logger.info('⭐ Система помощи по трафику отключена (TRAFFIC_HELP_ENABLED=false)')
+    def start(self):
+        if not settings.TRAFFIC_HELP_ENABLED:
+            logger.info("Сервис Traffic Help выключен в настройках.")
             return
 
-        if self.is_running():
-            logger.warning('⭐ Шедулер помощи по трафику уже запущен')
+        if self._is_running:
+            logger.warning("Traffic Help сервис уже запущен.")
             return
 
-        self._running = True
-        self._task = asyncio.create_task(self._scheduler_loop())
-        logger.info(
-            '⭐ Шедулер помощи по трафику запущен',
-            check_time=settings.TRAFFIC_HELP_CHECK_TIME,
-            threshold_mb=settings.TRAFFIC_HELP_THRESHOLD_MB,
-        )
+        self._is_running = True
+        self._task = asyncio.create_task(self._run_scheduler())
+        logger.info("Traffic Help сервис запущен.")
 
-    async def stop(self) -> None:
-        self._running = False
-        if self._task and not self._task.done():
+    async def stop(self):
+        self._is_running = False
+        if self._task:
             self._task.cancel()
             try:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        self._task = None
-        logger.info('⭐ Шедулер помощи по трафику остановлен')
+        logger.info("Traffic Help сервис остановлен.")
 
-    async def run_manual(self) -> tuple[int, int]:
-        """
-        Ручной запуск рассылки.
-        Возвращает (отправлено, ошибок).
-        """
-        if not self.bot:
-            logger.error('⭐ Бот не установлен, рассылка невозможна')
-            return 0, 0
-        return await self._send_help_requests()
-
-    async def _scheduler_loop(self) -> None:
-        logger.info('⭐ Цикл шедулера помощи по трафику запущен')
-
-        while self._running:
+    async def _run_scheduler(self):
+        """Фоновый цикл проверки."""
+        while self._is_running:
             try:
-                tz = ZoneInfo(settings.TIMEZONE)
-                now_local = datetime.now(tz)
-                check_time = self._parse_check_time()
+                now = datetime.now()
+                # Определяем время следующего запуска (сегодня или завтра в TRAFFIC_HELP_CHECK_TIME)
+                target_time = datetime.strptime(settings.TRAFFIC_HELP_CHECK_TIME, "%H:%M").time()
+                next_run = datetime.combine(now.date(), target_time)
 
-                next_run_local = now_local.replace(
-                    hour=check_time.hour,
-                    minute=check_time.minute,
-                    second=0,
-                    microsecond=0,
-                )
-                if next_run_local <= now_local:
-                    next_run_local += timedelta(days=1)
+                if now >= next_run:
+                    next_run += timedelta(days=1)
 
-                wait_seconds = (next_run_local - now_local).total_seconds()
-
-                if wait_seconds > 60:
-                    await asyncio.sleep(60)
-                    continue
-
-                if wait_seconds > 0:
-                    await asyncio.sleep(wait_seconds)
-
-                if not self._running or not self.is_enabled():
-                    continue
-
-                await self._send_help_requests()
+                sleep_seconds = (next_run - now).total_seconds()
+                logger.info(f"Traffic Help сервис ждет {sleep_seconds} секунд до следующей проверки ({next_run}).")
                 
-                await asyncio.sleep(60)
+                await asyncio.sleep(sleep_seconds)
+                
+                if self._is_running:
+                    await self.run_check()
 
             except asyncio.CancelledError:
-                logger.info('⭐ Шедулер помощи по трафику отменён')
                 break
             except Exception as e:
-                logger.error('❌ Ошибка в цикле шедулера помощи по трафику', error=e)
+                logger.exception(f"Ошибка в цикле Traffic Help сервиса: {e}")
                 await asyncio.sleep(60)
 
-    def _parse_check_time(self) -> dt_time:
-        try:
-            hour_str, minute_str = settings.TRAFFIC_HELP_CHECK_TIME.split(':')
-            return dt_time(hour=int(hour_str), minute=int(minute_str))
-        except Exception as e:
-            logger.error('❌ Ошибка парсинга TRAFFIC_HELP_CHECK_TIME, используем 12:00', error=e)
-            return dt_time(hour=12, minute=0)
-
-    async def _send_help_requests(self) -> tuple[int, int]:
-        """Рассылает помощь и возвращает (успешно, ошибки)."""
-        logger.info('⭐ Начинаем рассылку помощи по трафику')
-
-        try:
-            from app.database.database import AsyncSessionLocal
-
-            async with AsyncSessionLocal() as db:
-                eligible_users = await self._get_eligible_users(db)
-
-                sent_count = 0
-                error_count = 0
-
-                for user in eligible_users:
-                    try:
-                        if not user.telegram_id:
-                            continue
-
-                        await self._send_single_request(user)
-                        
-                        # Отмечаем флаг в БД
-                        await db.execute(
-                            update(User)
-                            .where(User.id == user.id)
-                            .values(setup_help_sent=True)
-                        )
-                        await db.commit()
-                        
-                        sent_count += 1
-                        await asyncio.sleep(0.5)
-
-                    except Exception as e:
-                        error_count += 1
-                        logger.error(
-                            '❌ Ошибка отправки помощи по трафику',
-                            user_id=user.id,
-                            error=e,
-                        )
-
-                logger.info(
-                    '⭐ Рассылка помощи завершена',
-                    sent=sent_count,
-                    errors=error_count,
-                )
-                return sent_count, error_count
-
-        except Exception as e:
-            logger.error('❌ Ошибка в процессе рассылки помощи', error=e)
+    async def run_check(self, admin_id: Optional[int] = None) -> tuple[int, int]:
+        """
+        Запускает проверку пользователей и рассылку.
+        Возвращает кортеж: (количество_найденных, количество_отправленных)
+        """
+        if not self.bot:
+            logger.error("Bot instance не установлен в TrafficHelpService")
             return 0, 0
 
+        logger.info("Запуск проверки пользователей для Traffic Help", triggered_by=admin_id or "scheduler")
+        
+        found_count = 0
+        sent_count = 0
+
+        async for db in get_db():
+            try:
+                users_to_notify = await self._get_eligible_users(db)
+                found_count = len(users_to_notify)
+                
+                logger.info(f"Найдено пользователей для рассылки Traffic Help: {found_count}")
+
+                for user in users_to_notify:
+                    success = await self._notify_user(db, user)
+                    if success:
+                        sent_count += 1
+                        
+                    # Небольшая пауза, чтобы не упереться в лимиты Telegram API (30 сообщений в секунду)
+                    await asyncio.sleep(0.05)
+                    
+            except Exception as e:
+                logger.exception(f"Ошибка при получении или обработке пользователей Traffic Help: {e}")
+            finally:
+                break # используем только одну сессию из генератора
+
+        logger.info("Проверка Traffic Help завершена", found_count=found_count, sent_count=sent_count)
+        return found_count, sent_count
+
     async def _get_eligible_users(self, db: AsyncSession) -> list[User]:
+        """
+        Получает список пользователей, которым нужно отправить помощь.
+        Критерии:
+        1. setup_help_sent == False (или NULL)
+        2. Есть активная подписка (UserStatus.ACTIVE)
+        3. Подписка активна больше чем TRAFFIC_HELP_DAYS_AFTER дней
+        4. Использовано трафика меньше чем TRAFFIC_HELP_THRESHOLD_MB
+        """
+        threshold_gb = settings.TRAFFIC_HELP_THRESHOLD_MB / 1024.0
+        days_after = settings.TRAFFIC_HELP_DAYS_AFTER
+        
+        now = datetime.now()
+        activation_threshold_date = now - timedelta(days=days_after)
+        
+        query = (
+            select(User)
+            .join(Subscription, User.id == Subscription.user_id)
+            .where(
+                # Сообщение еще не отправлялось
+                or_(User.setup_help_sent == False, User.setup_help_sent.is_(None)),
+                
+                # Подписка активна
+                Subscription.status == UserStatus.ACTIVE,
+                
+                # Подписка активирована давно (создана или обновлена, в идеале created_at, но тут берем updated_at или created_at)
+                Subscription.created_at <= activation_threshold_date,
+                
+                # Трафика потрачено меньше порога
+                Subscription.traffic_used_gb < threshold_gb
+            )
+        )
+        
+        result = await db.execute(query)
+        return list(result.scalars().all())
+
+    async def _notify_user(self, db: AsyncSession, user: User) -> bool:
+        """Отправляет сообщение пользователю и обновляет статус."""
+        texts = get_texts(user.language)
+        
+        # Текст сообщения
+        message_text = texts.t(
+            'TRAFFIC_HELP_MESSAGE',
+            '👋 Здравствуйте! Мы заметили, что у вас активна подписка, но вы почти не используете VPN.\n\n'
+            'Возможно, у вас возникли сложности с настройкой?\n'
+            'Если вам нужна помощь, посмотрите нашу инструкцию или напишите в поддержку — мы с радостью поможем!'
+        )
+        
+        # Клавиатура
+        keyboard = get_traffic_help_keyboard(user.language, settings.TRAFFIC_HELP_SUPPORT_URL)
+        
         try:
-            threshold_gb = settings.TRAFFIC_HELP_THRESHOLD_MB / 1024.0
-            days_after = settings.TRAFFIC_HELP_DAYS_AFTER
-            cutoff_date = datetime.now(UTC) - timedelta(days=days_after)
-
-            result = await db.execute(
-                select(User)
-                .join(Subscription, Subscription.user_id == User.id)
-                .where(
-                    and_(
-                        Subscription.status == SubscriptionStatus.ACTIVE.value,
-                        Subscription.start_date <= cutoff_date,
-                        Subscription.traffic_used_gb <= threshold_gb,
-                        User.setup_help_sent == False,
-                        User.telegram_id.isnot(None),
-                    )
-                )
+            await self.bot.send_message(
+                chat_id=user.telegram_id,
+                text=message_text,
+                reply_markup=keyboard,
+                disable_web_page_preview=True
             )
-            eligible_users = result.scalars().all()
-
-            logger.info(
-                '⭐ Найдено пользователей для помощи по трафику',
-                eligible=len(eligible_users),
-            )
-            return list(eligible_users)
-
+            
+            # Отмечаем, что отправили
+            user.setup_help_sent = True
+            await db.commit()
+            
+            logger.info("Traffic Help сообщение отправлено", user_id=user.id, telegram_id=user.telegram_id)
+            return True
+            
+        except TelegramAPIError as e:
+            logger.error(f"Не удалось отправить Traffic Help сообщение пользователю {user.telegram_id}: {e}")
+            # Отмечаем как отправленное даже при ошибке (например, если заблокировал бота), 
+            # чтобы не долбиться к нему каждый день
+            if "bot was blocked by the user" in str(e).lower() or "user is deactivated" in str(e).lower():
+                 user.setup_help_sent = True
+                 await db.commit()
+            return False
         except Exception as e:
-            logger.error('❌ Ошибка получения списка пользователей для помощи', error=e)
-            return []
+            logger.exception(f"Непредвиденная ошибка при отправке Traffic Help {user.telegram_id}: {e}")
+            return False
 
-    async def _send_single_request(self, user: User) -> None:
-        url = settings.TRAFFIC_HELP_SUPPORT_URL or settings.MINIAPP_SUPPORT_URL
-        
-        keyboard_buttons = []
-        if url:
-            keyboard_buttons.append([InlineKeyboardButton(text="🆘 Поддержка", url=url)])
-        else:
-             # Fallback to direct bot command or contact (depending on system settings)
-             pass 
-
-        # We will use the exact text format preferred for user notifications
-        text = (
-            "Привет! 👋\n\n"
-            "Видим, что у тебя активна подписка, но ты пока не пользовался нашим VPN.\n"
-            "Возникли сложности с настройкой? 🔧\n\n"
-            "Нажми кнопку ниже, и мы поможем тебе всё настроить!"
-        )
-        
-        keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons) if keyboard_buttons else None
-        
-        await self.bot.send_message(
-            chat_id=user.telegram_id,
-            text=text,
-            reply_markup=keyboard,
-            disable_web_page_preview=True
-        )
-t r a f f i c _ h e l p _ s e r v i c e   =   T r a f f i c H e l p S e r v i c e ( )  
- 
+traffic_help_service = TrafficHelpService()
