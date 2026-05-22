@@ -57,22 +57,8 @@ async def handle_review_rating(
         await callback.answer('❌ Некорректная оценка', show_alert=True)
         return
 
-    # Проверяем, нет ли уже незавершённого отзыва
-    pending = await reviews_service.get_pending_review(db, db_user.id)
-    if pending:
-        # Обновляем рейтинг существующего незавершённого отзыва
-        pending.rating = rating
-        pending.star_reward_days = reviews_service.get_star_reward(rating)
-        await db.commit()
-        review = pending
-        logger.info(
-            '⭐ Обновлён рейтинг незавершённого отзыва',
-            review_id=review.id,
-            rating=rating,
-        )
-    else:
-        # Создаём новый отзыв
-        review = await reviews_service.create_review(db, db_user.id, rating)
+    # Создаем новый или обновляем существующий отзыв пользователя
+    review = await reviews_service.create_or_update_review(db, db_user.id, rating)
 
     # Сохраняем review_id в состоянии FSM
     await state.set_state(ReviewStates.waiting_for_content)
@@ -169,8 +155,8 @@ async def handle_skip_content(
     review_id = data.get('review_id')
 
     if not review_id:
-        # Пробуем найти незавершённый отзыв
-        review = await reviews_service.get_pending_review(db, db_user.id)
+        # Пробуем найти последний отзыв
+        review = await reviews_service.get_latest_review(db, db_user.id)
         if not review:
             await callback.answer('❌ Отзыв не найден', show_alert=True)
             await state.clear()
@@ -350,7 +336,7 @@ async def _finalize_review(
         result = await db.execute(select(UserReview).where(UserReview.id == review_id))
         review = result.scalar_one_or_none()
     else:
-        review = await reviews_service.get_pending_review(db, db_user.id)
+        review = await reviews_service.get_latest_review(db, db_user.id)
 
     if not review:
         await message.answer(
@@ -360,6 +346,15 @@ async def _finalize_review(
         )
         await state.clear()
         return
+
+    # Завершаем отзыв (начисляем награды)
+    total_days = await reviews_service.complete_review(
+        db=db,
+        review=review,
+        review_type=review_type,
+        content_id=content_id,
+        text_content=text_content,
+    )
 
     # === НОВАЯ ЛОГИКА СОХРАНЕНИЯ КОНТЕНТА ===
     # Отправляем в админский чат независимо
@@ -390,16 +385,12 @@ async def _finalize_review(
                 
             date_str = review.created_at.strftime('%d.%m.%Y %H:%M') if review.created_at else 'Неизвестно'
             
-            star_reward = review.star_reward_days or 0
-            content_reward = reviews_service.get_content_reward(c_type)
-            total_reward = star_reward + content_reward
-            
             caption = (
                 f"📥 <b>Новый отзыв в системе</b>\n\n"
                 f"👤 <b>{user_name}</b> (ID: <code>{db_user.telegram_id}</code>)\n"
                 f"Оценка: {stars}\n"
                 f"Контент: {type_str}\n"
-                f"Награда: +{total_reward} дн.\n"
+                f"Награда: +{total_days} дн.\n"
                 f"📅 {date_str}"
             )
             if c_type == 'text' and text_content:
@@ -423,15 +414,6 @@ async def _finalize_review(
                 
         except Exception as e:
             logger.error("Failed to send review to admin chat", error=str(e), user_id=db_user.id)
-
-    # Завершаем отзыв
-    total_days = await reviews_service.complete_review(
-        db=db,
-        review=review,
-        review_type=review_type,
-        content_id=content_id,
-        text_content=text_content,
-    )
 
     # Начисляем бонусные дни
     if total_days > 0:

@@ -116,9 +116,19 @@ class ReviewsService:
 
     # ──────────────────────────── Работа с БД ────────────────────────────
 
-    async def create_review(self, db: AsyncSession, user_id: int, rating: int) -> UserReview:
+    async def get_latest_review(self, db: AsyncSession, user_id: int) -> UserReview | None:
+        """Получает последний отзыв пользователя (в любом статусе)."""
+        result = await db.execute(
+            select(UserReview)
+            .where(UserReview.user_id == user_id)
+            .order_by(UserReview.created_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def create_or_update_review(self, db: AsyncSession, user_id: int, rating: int) -> UserReview:
         """
-        Создаёт запись отзыва после выбора оценки пользователем.
+        Создаёт новую или обновляет существующую запись отзыва пользователя.
 
         Args:
             db: Сессия базы данных
@@ -126,28 +136,33 @@ class ReviewsService:
             rating: Оценка от 1 до 5
 
         Returns:
-            Созданный объект UserReview
+            Объект UserReview
         """
-        # Вычисляем награду за звёзды
-        star_days = self.get_star_reward(rating)
+        review = await self.get_latest_review(db, user_id)
 
-        review = UserReview(
-            user_id=user_id,
-            rating=rating,
-            star_reward_days=star_days,
-            content_reward_days=0,
-            status='WAITING_FOR_CONTENT',
-        )
-        db.add(review)
-        await db.commit()
-        await db.refresh(review)
-
-        logger.info(
-            '⭐ Создан отзыв с оценкой',
-            user_id=user_id,
-            rating=rating,
-            star_reward_days=star_days,
-        )
+        if review:
+            # Обновляем старый отзыв
+            review.rating = rating
+            review.status = 'WAITING_FOR_CONTENT'
+            # При обновлении мы не сбрасываем star_reward_days и content_reward_days,
+            # чтобы знать, за что уже были начислены награды.
+            await db.commit()
+            await db.refresh(review)
+            logger.info('⭐ Обновлён существующий отзыв (ожидание контента)', user_id=user_id, rating=rating)
+        else:
+            # Создаём новый отзыв, пока без начисленных дней
+            review = UserReview(
+                user_id=user_id,
+                rating=rating,
+                star_reward_days=0,
+                content_reward_days=0,
+                status='WAITING_FOR_CONTENT',
+            )
+            db.add(review)
+            await db.commit()
+            await db.refresh(review)
+            logger.info('⭐ Создан новый отзыв с оценкой (ожидание контента)', user_id=user_id, rating=rating)
+            
         return review
 
     async def complete_review(
@@ -156,47 +171,60 @@ class ReviewsService:
         review: UserReview,
         review_type: str,
         content_id: str | None = None,
-    text_content: str | None = None,
+        text_content: str | None = None,
     ) -> int:
         """
-        Завершает отзыв, добавляя контент и начисляя все бонусные дни.
+        Завершает отзыв, вычисляет новые дни для начисления и добавляет контент.
 
         Args:
             db: Сессия базы данных
             review: Объект отзыва
             review_type: Тип контента ('text', 'voice', 'video_note', 'none')
             content_id: Telegram file_id медиа-файла (опционально)
+            text_content: Текст отзыва (опционально)
 
         Returns:
-            Общее количество начисленных бонусных дней
+            Количество *новых* бонусных дней для начисления.
         """
-        # Вычисляем награду за контент
-        content_days = self.get_content_reward(review_type) if review_type != 'none' else 0
+        new_star_days = self.get_star_reward(review.rating)
+        new_content_days = self.get_content_reward(review_type) if review_type != 'none' else 0
 
-        # Обновляем запись
+        days_to_award = 0
+        
+        # Начисляем за звёзды только если раньше не начисляли (в БД хранится 0)
+        if review.star_reward_days == 0 and new_star_days > 0:
+            days_to_award += new_star_days
+            review.star_reward_days = new_star_days
+            
+        # Начисляем за контент только если раньше не начисляли (в БД хранится 0)
+        if review.content_reward_days == 0 and new_content_days > 0:
+            days_to_award += new_content_days
+            review.content_reward_days = new_content_days
+
+        # Обновляем запись (старые данные перезаписываются)
         review.review_type = review_type
-        review.review_content_id = content_id
-        review.content_reward_days = content_days
+        if content_id or review_type == 'none':
+            review.review_content_id = content_id
+        if text_content or review_type == 'none':
+            review.review_text = text_content
+            
         review.status = 'COMPLETED'
-        review.review_text = text_content
         review.updated_at = datetime.now(UTC)
 
         await db.commit()
         await db.refresh(review)
 
-        # Общее количество бонусных дней
-        total_days = review.star_reward_days + content_days
-
         logger.info(
-            '⭐ Отзыв завершён',
+            '⭐ Отзыв завершён/обновлён',
             review_id=review.id,
             user_id=review.user_id,
             review_type=review_type,
-            star_days=review.star_reward_days,
-            content_days=content_days,
-            total_days=total_days,
+            new_days_awarded=days_to_award,
+            total_star_days=review.star_reward_days,
+            total_content_days=review.content_reward_days,
         )
-        return total_days
+        
+        return days_to_award
 
     async def award_bonus_days(self, db: AsyncSession, user_id: int, days: int, bot: Bot) -> bool:
         """
