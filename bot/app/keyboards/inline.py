@@ -3150,11 +3150,28 @@ def get_user_reviews_carousel_keyboard(
 
 
 def get_traffic_help_keyboard(language: str, support_url: str) -> InlineKeyboardMarkup:
+    from app.config import settings
     texts = get_texts(language)
     keyboard = []
     
-    keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_INFO', '📖 Инструкция'), callback_data='menu_info', style='success')])
-    
-    keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_SUPPORT', '👨‍💻 Связь с техподдержкой'), callback_data='menu_support', style='danger')])
+    if support_url:
+        kwargs = {
+            'text': settings.TRAFFIC_HELP_SUPPORT_BUTTON_TEXT or '📖 Инструкция и поддержка',
+            'url': support_url
+        }
+        
+        style = settings.TRAFFIC_HELP_SUPPORT_BUTTON_STYLE
+        if style and style != 'default':
+            kwargs['style'] = style
+            
+        emoji_id = settings.TRAFFIC_HELP_SUPPORT_BUTTON_EMOJI
+        if emoji_id:
+            kwargs['icon_custom_emoji_id'] = str(emoji_id)
+            
+        keyboard.append([InlineKeyboardButton(**kwargs)])
+    else:
+        keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_INFO', '📖 Инструкция'), callback_data='menu_info', style='success')])
+        
+        keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_SUPPORT', '👨‍💻 Связь с техподдержкой'), callback_data='menu_support', style='danger')])
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

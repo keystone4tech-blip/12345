@@ -567,6 +567,9 @@ class BotConfigurationService:
         'TRAFFIC_HELP_THRESHOLD_MB': '📊 Порог трафика (МБ)',
         'TRAFFIC_HELP_DAYS_AFTER': '⏳ Дней после покупки',
         'TRAFFIC_HELP_SUPPORT_URL': '🔗 Ссылка на инструкцию/поддержку',
+        'TRAFFIC_HELP_SUPPORT_BUTTON_TEXT': '📝 Текст кнопки по ссылке',
+        'TRAFFIC_HELP_SUPPORT_BUTTON_STYLE': '🎨 Цвет кнопки по ссылке',
+        'TRAFFIC_HELP_SUPPORT_BUTTON_EMOJI': '⭐ Эмодзи кнопки по ссылке',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -814,6 +817,9 @@ class BotConfigurationService:
         'TRAFFIC_HELP_THRESHOLD_MB': 'TRAFFIC_HELP',
         'TRAFFIC_HELP_DAYS_AFTER': 'TRAFFIC_HELP',
         'TRAFFIC_HELP_SUPPORT_URL': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_SUPPORT_BUTTON_TEXT': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_SUPPORT_BUTTON_STYLE': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_SUPPORT_BUTTON_EMOJI': 'TRAFFIC_HELP',
         'MENU_CONNECT_TEXT': 'REPLY_BUTTON_CONNECT',
         'MENU_CONNECT_STYLE': 'REPLY_BUTTON_CONNECT',
         'MENU_CONNECT_EMOJI': 'REPLY_BUTTON_CONNECT',

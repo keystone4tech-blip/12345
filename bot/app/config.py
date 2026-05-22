@@ -827,6 +827,9 @@ class Settings(BaseSettings):
     TRAFFIC_HELP_THRESHOLD_MB: int = 10
     TRAFFIC_HELP_DAYS_AFTER: int = 1
     TRAFFIC_HELP_SUPPORT_URL: str = ''
+    TRAFFIC_HELP_SUPPORT_BUTTON_TEXT: str = '📖 Инструкция и поддержка'
+    TRAFFIC_HELP_SUPPORT_BUTTON_STYLE: str = 'primary'
+    TRAFFIC_HELP_SUPPORT_BUTTON_EMOJI: str | None = None
 
     @field_validator('MAIN_MENU_MODE', mode='before')
     @classmethod
