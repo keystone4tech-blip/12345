@@ -156,6 +156,10 @@ class FaqService:
         content: str,
         display_order: int | None = None,
         is_active: bool | None = None,
+        media_type: str | None = None,
+        media_file_id: str | None = None,
+        media_group_data: list | None = None,
+        inline_buttons: list | None = None,
     ) -> FaqPage:
         lang = cls._normalize_language(language)
         is_active_value = True if is_active is None else bool(is_active)
@@ -166,6 +170,10 @@ class FaqService:
             content=content,
             display_order=display_order,
             is_active=is_active_value,
+            media_type=media_type,
+            media_file_id=media_file_id,
+            media_group_data=media_group_data,
+            inline_buttons=inline_buttons,
         )
 
         setting = await get_faq_setting(db, lang)
@@ -184,6 +192,10 @@ class FaqService:
         content: str | None = None,
         display_order: int | None = None,
         is_active: bool | None = None,
+        media_type: str | None = None,
+        media_file_id: str | None = None,
+        media_group_data: list | None = None,
+        inline_buttons: list | None = None,
     ) -> FaqPage:
         return await update_faq_page(
             db,
@@ -192,6 +204,10 @@ class FaqService:
             content=content,
             display_order=display_order,
             is_active=is_active,
+            media_type=media_type,
+            media_file_id=media_file_id,
+            media_group_data=media_group_data,
+            inline_buttons=inline_buttons,
         )
 
     @classmethod

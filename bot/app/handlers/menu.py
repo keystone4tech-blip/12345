@@ -654,12 +654,99 @@ async def show_faq_page(
     )
     keyboard_rows.append([types.InlineKeyboardButton(text=texts.BACK, callback_data='menu_info')])
 
-    await callback.message.edit_text(
-        message_text,
-        reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows),
-        disable_web_page_preview=settings.DISABLE_WEB_PAGE_PREVIEW,
-    )
-    await callback.answer()
+    # Add inline buttons if they exist
+    if page.inline_buttons:
+        from app.utils.premium_emojis import replace_with_premium_emojis
+        custom_rows = []
+        for btn in page.inline_buttons:
+            text = btn.get('text', '')
+            url = btn.get('url', '')
+            
+            kwargs = {'text': text, 'url': url}
+            
+            style = btn.get('style')
+            if style and style != 'default':
+                kwargs['style'] = style
+                
+            emoji_id = btn.get('emoji_id')
+            if emoji_id:
+                kwargs['icon_custom_emoji_id'] = str(emoji_id)
+                # If there is a custom emoji, we might want to strip the first standard emoji from text
+                from app.utils.premium_emojis import extract_first_emoji
+                standard_emoji = extract_first_emoji(text)
+                if standard_emoji:
+                    kwargs['text'] = text.replace(standard_emoji, "", 1).strip()
+                    
+            custom_rows.append([types.InlineKeyboardButton(**kwargs)])
+        keyboard_rows = custom_rows + keyboard_rows
+
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
+
+    try:
+        if page.media_type and page.media_file_id:
+            # Delete old message to avoid mixed media/text issues when switching types
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+                
+            if len(message_text) > 1000:
+                # Text too long for caption
+                if page.media_type == 'photo':
+                    await callback.message.answer_photo(photo=page.media_file_id)
+                elif page.media_type == 'video':
+                    await callback.message.answer_video(video=page.media_file_id)
+                elif page.media_type == 'document':
+                    await callback.message.answer_document(document=page.media_file_id)
+                    
+                await callback.message.answer(
+                    message_text,
+                    reply_markup=keyboard,
+                    disable_web_page_preview=settings.DISABLE_WEB_PAGE_PREVIEW,
+                    parse_mode='HTML'
+                )
+            else:
+                if page.media_type == 'photo':
+                    await callback.message.answer_photo(
+                        photo=page.media_file_id, caption=message_text, reply_markup=keyboard, parse_mode='HTML'
+                    )
+                elif page.media_type == 'video':
+                    await callback.message.answer_video(
+                        video=page.media_file_id, caption=message_text, reply_markup=keyboard, parse_mode='HTML'
+                    )
+                elif page.media_type == 'document':
+                    await callback.message.answer_document(
+                        document=page.media_file_id, caption=message_text, reply_markup=keyboard, parse_mode='HTML'
+                    )
+        else:
+            try:
+                await callback.message.edit_text(
+                    message_text,
+                    reply_markup=keyboard,
+                    disable_web_page_preview=settings.DISABLE_WEB_PAGE_PREVIEW,
+                    parse_mode='HTML'
+                )
+            except Exception:
+                # If message was media, we can't edit text, so delete and answer
+                try:
+                    await callback.message.delete()
+                except Exception:
+                    pass
+                await callback.message.answer(
+                    message_text,
+                    reply_markup=keyboard,
+                    disable_web_page_preview=settings.DISABLE_WEB_PAGE_PREVIEW,
+                    parse_mode='HTML'
+                )
+    except Exception as e:
+        logger.error('Error showing FAQ page', error=str(e))
+        await callback.answer('Ошибка отображения', show_alert=True)
+        return
+        
+    try:
+        await callback.answer()
+    except Exception:
+        pass
 
 
 async def show_privacy_policy(

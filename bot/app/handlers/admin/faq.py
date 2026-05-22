@@ -527,6 +527,23 @@ async def show_faq_page_details(
         ]
     )
 
+    buttons.append(
+        [
+            types.InlineKeyboardButton(
+                text=texts.t('ADMIN_FAQ_EDIT_MEDIA_BUTTON', '🖼️ Изменить медиа'),
+                callback_data=f'admin_faq_edit_media:{page.id}',
+            )
+        ]
+    )
+    buttons.append(
+        [
+            types.InlineKeyboardButton(
+                text=texts.t('ADMIN_FAQ_EDIT_BUTTONS_BUTTON', '🔘 Настроить кнопки'),
+                callback_data=f'admin_faq_edit_buttons:{page.id}',
+            )
+        ]
+    )
+
     toggle_text = texts.t('ADMIN_FAQ_PAGE_ENABLE_BUTTON', '✅ Включить страницу')
     if page.is_active:
         toggle_text = texts.t(
@@ -1046,7 +1063,337 @@ async def show_faq_html_help(
     await callback.answer()
 
 
+
+@admin_required
+@error_handler
+async def start_edit_faq_media(
+    callback: types.CallbackQuery,
+    db_user: User,
+    state: FSMContext,
+    db: AsyncSession,
+):
+    texts = get_texts(db_user.language)
+    raw_id = (callback.data or '').split(':', 1)[-1]
+    
+    await state.update_data(editing_faq_id=int(raw_id))
+    await state.set_state(AdminStates.waiting_for_faq_media)
+
+    await callback.message.edit_text(
+        '🖼️ <b>Изменение медиафайла</b>\n\n'
+        'Отправьте фото, видео или документ для этой страницы FAQ.\n'
+        'Или нажмите "Удалить медиа", чтобы страница была только текстовой.',
+        reply_markup=types.InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    types.InlineKeyboardButton(
+                        text='🗑️ Удалить медиа',
+                        callback_data='admin_faq_delete_media',
+                    )
+                ],
+                [
+                    types.InlineKeyboardButton(
+                        text=texts.t('ADMIN_FAQ_CANCEL_BUTTON', '⬅️ Отмена'),
+                        callback_data=f'admin_faq_page:{raw_id}',
+                    )
+                ]
+            ]
+        ),
+        parse_mode='HTML'
+    )
+    await callback.answer()
+
+@admin_required
+@error_handler
+async def delete_faq_media(
+    callback: types.CallbackQuery,
+    db_user: User,
+    state: FSMContext,
+    db: AsyncSession,
+):
+    data = await state.get_data()
+    page_id = data.get('editing_faq_id')
+    if not page_id:
+        await callback.answer('Ошибка.', show_alert=True)
+        return
+        
+    await FaqService.update_page(db, page_id, media_type=None, media_file_id=None, media_group_data=None)
+    await state.clear()
+    
+    callback.data = f'admin_faq_page:{page_id}'
+    await show_faq_page_details(callback, db_user, db)
+
+@admin_required
+@error_handler
+async def process_faq_media(
+    message: types.Message,
+    db_user: User,
+    state: FSMContext,
+    db: AsyncSession,
+):
+    data = await state.get_data()
+    page_id = data.get('editing_faq_id')
+    
+    media_file_id = None
+    media_type = None
+    
+    if message.photo:
+        media_file_id = message.photo[-1].file_id
+        media_type = 'photo'
+    elif message.video:
+        media_file_id = message.video.file_id
+        media_type = 'video'
+    elif message.document:
+        media_file_id = message.document.file_id
+        media_type = 'document'
+    else:
+        await message.answer('❌ Пожалуйста, отправьте фото, видео или документ.')
+        return
+        
+    await FaqService.update_page(db, page_id, media_type=media_type, media_file_id=media_file_id)
+    await state.clear()
+    
+    await message.answer(
+        '✅ <b>Медиа обновлено!</b>',
+        reply_markup=types.InlineKeyboardMarkup(
+            inline_keyboard=[[
+                types.InlineKeyboardButton(text='⬅️ К странице', callback_data=f'admin_faq_page:{page_id}')
+            ]]
+        ),
+        parse_mode='HTML'
+    )
+
+@admin_required
+@error_handler
+async def start_edit_faq_buttons(
+    callback: types.CallbackQuery,
+    db_user: User,
+    state: FSMContext,
+    db: AsyncSession,
+):
+    texts = get_texts(db_user.language)
+    raw_id = (callback.data or '').split(':', 1)[-1]
+    
+    page = await FaqService.get_page(db, int(raw_id), db_user.language, fallback=False, include_inactive=True)
+    if not page:
+        await callback.answer('Страница не найдена')
+        return
+        
+    buttons = page.inline_buttons or []
+    
+    await state.update_data(editing_faq_id=int(raw_id), current_faq_buttons=buttons)
+    
+    await show_faq_buttons_editor(callback, db_user, state, db)
+    await callback.answer()
+
+async def show_faq_buttons_editor(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
+    data = await state.get_data()
+    page_id = data.get('editing_faq_id')
+    buttons = data.get('current_faq_buttons', [])
+    
+    text = '🔘 <b>Настройка кнопок</b>\n\nТекущие кнопки:\n'
+    for i, btn in enumerate(buttons, 1):
+        text += f"{i}. {btn.get('text')} - {btn.get('url')}\n"
+        
+    if not buttons:
+        text += "Нет кнопок."
+        
+    keyboard = []
+    if len(buttons) < 5:
+        keyboard.append([types.InlineKeyboardButton(text='➕ Добавить кнопку', callback_data='admin_faq_add_btn')])
+    if buttons:
+        keyboard.append([types.InlineKeyboardButton(text='🗑️ Очистить кнопки', callback_data='admin_faq_clear_btns')])
+        
+    keyboard.append([types.InlineKeyboardButton(text='💾 Сохранить', callback_data='admin_faq_save_btns')])
+    keyboard.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data=f'admin_faq_page:{page_id}')])
+    
+    try:
+        await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode='HTML')
+    except Exception:
+        await callback.message.answer(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode='HTML')
+
+@admin_required
+@error_handler
+async def add_faq_button(callback: types.CallbackQuery, db_user: User, state: FSMContext):
+    await state.set_state(AdminStates.waiting_for_faq_button_text)
+    
+    try:
+        await callback.message.edit_text(
+            'Введите текст для новой кнопки:',
+            reply_markup=types.InlineKeyboardMarkup(
+                inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_faq_cancel_btn')]]
+            )
+        )
+    except Exception:
+        await callback.message.answer(
+            'Введите текст для новой кнопки:',
+            reply_markup=types.InlineKeyboardMarkup(
+                inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_faq_cancel_btn')]]
+            )
+        )
+    await callback.answer()
+
+@admin_required
+@error_handler
+async def process_faq_btn_text(message: types.Message, db_user: User, state: FSMContext):
+    await state.update_data(temp_btn_text=message.text)
+    await state.set_state(AdminStates.waiting_for_faq_button_url)
+    await message.answer('Введите ссылку для кнопки (начинается с http/https/tg):')
+
+@admin_required
+@error_handler
+async def process_faq_btn_url(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
+    url = message.text.strip()
+    if not url.startswith(('http://', 'https://', 'tg://')):
+        await message.answer('Неверный формат ссылки. Попробуйте снова:')
+        return
+        
+    await state.update_data(temp_btn_url=url)
+    
+    keyboard = types.InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                types.InlineKeyboardButton(text='🔵 Синяя', callback_data='admin_faq_style_primary'),
+                types.InlineKeyboardButton(text='🟢 Зеленая', callback_data='admin_faq_style_success'),
+            ],
+            [
+                types.InlineKeyboardButton(text='🔴 Красная', callback_data='admin_faq_style_danger'),
+                types.InlineKeyboardButton(text='⚪ Обычная', callback_data='admin_faq_style_default'),
+            ],
+            [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_faq_cancel_btn')],
+        ]
+    )
+    
+    await message.answer(
+        '🎨 <b>Выберите стиль (цвет) для кнопки:</b>\n\n'
+        '<i>Стили — это новая функция Telegram. Если клиент пользователя не поддерживает их, кнопка будет обычной.</i>',
+        parse_mode='HTML',
+        reply_markup=keyboard,
+    )
+    await state.set_state(AdminStates.waiting_for_faq_button_style)
+
+@admin_required
+@error_handler
+async def process_faq_btn_style(callback: types.CallbackQuery, db_user: User, state: FSMContext):
+    style = callback.data.replace('admin_faq_style_', '')
+    await state.update_data(temp_btn_style=style)
+    
+    from app.keyboards.admin import get_broadcast_button_emoji_keyboard
+    
+    try:
+        await callback.message.edit_text(
+            '✨ <b>Отправьте премиум эмодзи для кнопки:</b>\n\n'
+            '<i>Или просто любой эмодзи. Он будет добавлен в начало текста кнопки.</i>\n'
+            '<i>Нажмите "Пропустить", если эмодзи не нужен.</i>',
+            parse_mode='HTML',
+            reply_markup=get_broadcast_button_emoji_keyboard(db_user.language)
+        )
+    except Exception:
+        await callback.message.answer(
+            '✨ <b>Отправьте премиум эмодзи для кнопки:</b>\n\n'
+            '<i>Или просто любой эмодзи. Он будет добавлен в начало текста кнопки.</i>\n'
+            '<i>Нажмите "Пропустить", если эмодзи не нужен.</i>',
+            parse_mode='HTML',
+            reply_markup=get_broadcast_button_emoji_keyboard(db_user.language)
+        )
+    await state.set_state(AdminStates.waiting_for_faq_button_emoji)
+    await callback.answer()
+
+@admin_required
+@error_handler
+async def process_faq_btn_emoji(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
+    emoji_text = message.text.strip()
+    from app.utils.message_patch import get_custom_emoji_id
+    custom_emoji_id = get_custom_emoji_id(message)
+    
+    data = await state.get_data()
+    text = data.get('temp_btn_text')
+    url = data.get('temp_btn_url')
+    style = data.get('temp_btn_style')
+    
+    if custom_emoji_id:
+        final_text = text 
+    else:
+        final_text = f"{emoji_text} {text}"
+        
+    buttons = data.get('current_faq_buttons', [])
+    btn_data = {'text': final_text, 'url': url}
+    if style and style != 'default':
+        btn_data['style'] = style
+    if custom_emoji_id:
+        btn_data['emoji_id'] = str(custom_emoji_id)
+        
+    buttons.append(btn_data)
+    
+    await state.update_data(current_faq_buttons=buttons)
+    await message.answer('✅ Кнопка добавлена.')
+    
+    mock_callback = types.CallbackQuery(id='0', from_user=message.from_user, chat_instance='', data='', message=message)
+    await show_faq_buttons_editor(mock_callback, db_user, state, db)
+
+@admin_required
+@error_handler
+async def process_faq_btn_emoji_skip(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
+    data = await state.get_data()
+    text = data.get('temp_btn_text')
+    url = data.get('temp_btn_url')
+    style = data.get('temp_btn_style')
+    
+    buttons = data.get('current_faq_buttons', [])
+    btn_data = {'text': text, 'url': url}
+    if style and style != 'default':
+        btn_data['style'] = style
+        
+    buttons.append(btn_data)
+    
+    await state.update_data(current_faq_buttons=buttons)
+    await show_faq_buttons_editor(callback, db_user, state, db)
+    await callback.answer('Кнопка добавлена.')
+
+@admin_required
+@error_handler
+async def clear_faq_buttons(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
+    await state.update_data(current_faq_buttons=[])
+    await show_faq_buttons_editor(callback, db_user, state, db)
+    await callback.answer('Кнопки очищены')
+
+@admin_required
+@error_handler
+async def save_faq_buttons(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
+    data = await state.get_data()
+    page_id = data.get('editing_faq_id')
+    buttons = data.get('current_faq_buttons', [])
+    
+    await FaqService.update_page(db, page_id, inline_buttons=buttons)
+    await state.clear()
+    
+    callback.data = f'admin_faq_page:{page_id}'
+    await show_faq_page_details(callback, db_user, db)
+
+@admin_required
+@error_handler
+async def cancel_faq_btn(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
+    await show_faq_buttons_editor(callback, db_user, state, db)
+    await callback.answer()
+
+
+
 def register_handlers(dp: Dispatcher) -> None:
+    dp.callback_query.register(start_edit_faq_media, F.data.startswith('admin_faq_edit_media:'))
+    dp.callback_query.register(delete_faq_media, F.data == 'admin_faq_delete_media')
+    dp.message.register(process_faq_media, AdminStates.waiting_for_faq_media)
+    
+    dp.callback_query.register(start_edit_faq_buttons, F.data.startswith('admin_faq_edit_buttons:'))
+    dp.callback_query.register(add_faq_button, F.data == 'admin_faq_add_btn')
+    dp.message.register(process_faq_btn_text, AdminStates.waiting_for_faq_button_text)
+    dp.message.register(process_faq_btn_url, AdminStates.waiting_for_faq_button_url)
+    dp.callback_query.register(process_faq_btn_style, F.data.startswith('admin_faq_style_'))
+    dp.message.register(process_faq_btn_emoji, AdminStates.waiting_for_faq_button_emoji)
+    dp.callback_query.register(process_faq_btn_emoji_skip, F.data == 'admin_broadcast_skip_emoji', AdminStates.waiting_for_faq_button_emoji)
+    
+    dp.callback_query.register(clear_faq_buttons, F.data == 'admin_faq_clear_btns')
+    dp.callback_query.register(save_faq_buttons, F.data == 'admin_faq_save_btns')
+    dp.callback_query.register(cancel_faq_btn, F.data == 'admin_faq_cancel_btn')
+
     dp.callback_query.register(
         show_faq_management,
         F.data == 'admin_faq',

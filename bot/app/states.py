@@ -151,6 +151,11 @@ class AdminStates(StatesGroup):
     creating_faq_content = State()
     editing_faq_title = State()
     editing_faq_content = State()
+    waiting_for_faq_media = State()
+    waiting_for_faq_button_text = State()
+    waiting_for_faq_button_url = State()
+    waiting_for_faq_button_style = State()
+    waiting_for_faq_button_emoji = State()
     editing_notification_value = State()
     editing_traffic_setting = State()
 

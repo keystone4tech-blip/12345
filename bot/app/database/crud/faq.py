@@ -76,6 +76,10 @@ async def create_faq_page(
     content: str,
     display_order: int | None = None,
     is_active: bool = True,
+    media_type: str | None = None,
+    media_file_id: str | None = None,
+    media_group_data: list | None = None,
+    inline_buttons: list | None = None,
 ) -> FaqPage:
     if display_order is None:
         result = await db.execute(select(func.max(FaqPage.display_order)).where(FaqPage.language == language))
@@ -88,6 +92,10 @@ async def create_faq_page(
         content=content,
         display_order=display_order,
         is_active=is_active,
+        media_type=media_type,
+        media_file_id=media_file_id,
+        media_group_data=media_group_data,
+        inline_buttons=inline_buttons,
     )
 
     db.add(page)
@@ -107,6 +115,10 @@ async def update_faq_page(
     content: str | None = None,
     display_order: int | None = None,
     is_active: bool | None = None,
+    media_type: str | None = None,
+    media_file_id: str | None = None,
+    media_group_data: list | None = None,
+    inline_buttons: list | None = None,
 ) -> FaqPage:
     if title is not None:
         page.title = title
@@ -116,6 +128,14 @@ async def update_faq_page(
         page.display_order = display_order
     if is_active is not None:
         page.is_active = bool(is_active)
+    if media_type is not None:
+        page.media_type = media_type
+    if media_file_id is not None:
+        page.media_file_id = media_file_id
+    if media_group_data is not None:
+        page.media_group_data = media_group_data
+    if inline_buttons is not None:
+        page.inline_buttons = inline_buttons
 
     page.updated_at = datetime.now(UTC)
 
