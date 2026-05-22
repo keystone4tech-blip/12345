@@ -37,7 +37,10 @@ class TrafficHelpService:
     def set_bot(self, bot: Bot):
         self.bot = bot
 
-    def start(self):
+    def is_enabled(self) -> bool:
+        return settings.TRAFFIC_HELP_ENABLED
+
+    async def start(self):
         if not settings.TRAFFIC_HELP_ENABLED:
             logger.info("Сервис Traffic Help выключен в настройках.")
             return
