@@ -1,10 +1,10 @@
-﻿\"\"\"add_media_to_faq
+"""add_media_to_faq
 
 Revision ID: 0019_add_media_to_faq
 Revises: c4a72e00fcdf
 Create Date: 2026-05-22 17:35:00.000000
 
-\"\"\"
+"""
 from typing import Sequence, Union
 
 from alembic import op
