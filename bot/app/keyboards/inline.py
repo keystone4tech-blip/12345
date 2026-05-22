@@ -3153,9 +3153,8 @@ def get_traffic_help_keyboard(language: str, support_url: str) -> InlineKeyboard
     texts = get_texts(language)
     keyboard = []
     
-    keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_INFO', '📖 Инструкция'), callback_data='info')])
+    keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_FAQ', '❓ FAQ'), callback_data='menu_faq', style='success')])
     
-    if support_url:
-        keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_SUPPORT', '👨‍💻 Написать в поддержку'), url=support_url)])
+    keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_SUPPORT', '👨‍💻 Связь с техподдержкой'), callback_data='menu_support', style='danger')])
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
