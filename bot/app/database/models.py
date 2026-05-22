@@ -1824,6 +1824,10 @@ class FaqPage(Base):
     content = Column(Text, nullable=False)
     display_order = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    media_type = Column(String(50), nullable=True)
+    media_file_id = Column(String(255), nullable=True)
+    media_group_data = Column(JSON, nullable=True)
+    inline_buttons = Column(JSON, nullable=True)
     created_at = Column(AwareDateTime(), default=func.now())
     updated_at = Column(AwareDateTime(), default=func.now(), onupdate=func.now())
 
