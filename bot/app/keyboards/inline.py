@@ -3147,3 +3147,15 @@ def get_user_reviews_carousel_keyboard(
     keyboard.append([InlineKeyboardButton(text=texts.t('MENU_HOME', '🏠 На главную'), callback_data='back_to_menu')])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_traffic_help_keyboard(language: str, support_url: str) -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    keyboard = []
+    
+    keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_INFO', '📖 Инструкция'), callback_data='info')])
+    
+    if support_url:
+        keyboard.append([InlineKeyboardButton(text=texts.t('TRAFFIC_HELP_BTN_SUPPORT', '👨‍💻 Написать в поддержку'), url=support_url)])
+        
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
