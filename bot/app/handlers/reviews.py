@@ -91,34 +91,26 @@ async def handle_review_rating(
         text_lines = [
             f'✅ <b>Спасибо за вашу оценку {stars}!</b>\n',
             '─────────────────────\n',
-            '😔 <b>Что мы можем сделать лучше?</b>\n',
-            'Пожалуйста, расскажите, что вам не понравилось. Ваша обратная связь критически важна для нас, чтобы исправить проблемы.\n'
+            'Вы можете оставить отзыв или пожелание к вашей оценке.\n',
+            'В зависимости от комментария (текст, аудио или видео) вам будут начислены <b>дополнительные дни</b> к подписке.\n',
+            'Что мы можем сделать лучше? Ваша обратная связь поможет нам исправить проблемы.'
         ]
-        
-        has_content_rewards = any(d > 0 for d in [text_days, voice_days, video_days])
-        if has_content_rewards:
-            text_lines.append('В качестве извинений и благодарности за развёрнутый ответ мы начислим дополнительные дни.\n')
-            
-        text_lines.append('<i>Просто отправьте текст, голосовое сообщение или видео-кружок прямо сейчас!</i>')
-        text = '\n'.join(text_lines)
     else:
         text_lines = [
             f'✅ <b>Спасибо за оценку {stars}!</b>\n',
             '─────────────────────\n',
-            '📝 <b>Хотите получить дополнительные бонусы?</b>\n',
-            'Оставьте развёрнутый отзыв о нашем сервисе! Расскажите, что вам нравится больше всего или чего не хватает.\n'
+            'Вы можете оставить отзыв или пожелание к вашей оценке.\n',
+            'В зависимости от комментария (текст, аудио или видео) вам будут начислены <b>дополнительные дни</b> к подписке.\n',
+            'Расскажите, что вам нравится больше всего или чего не хватает!'
         ]
-        
-        has_content_rewards = any(d > 0 for d in [text_days, voice_days, video_days])
-        if has_content_rewards:
-            text_lines.append('<i>Просто отправьте текст, голосовое или видео-кружок прямо сейчас, и мы увеличим ваш бонус!</i>\n')
-            
-        text = '\n'.join(text_lines)
 
-    # Кнопка «Пропустить» — завершить без контента
+    text = '\n'.join(text_lines)
+
+    # Кнопки добавления комментария и завершения
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='⏩ Пропустить', callback_data='review_skip_content')],
+            [InlineKeyboardButton(text='📝 Добавить комментарий', callback_data='review_add_content')],
+            [InlineKeyboardButton(text='✅ Завершить', callback_data='review_skip_content')],
         ]
     )
 
@@ -139,6 +131,26 @@ async def handle_review_rating(
 
     await callback.answer()
 
+
+@router.callback_query(F.data == 'review_add_content')
+async def handle_add_content(
+    callback: types.CallbackQuery,
+    state: FSMContext,
+):
+    """
+    Пользователь нажал 'Добавить комментарий'.
+    Бот уже в состоянии waiting_for_content, просто выводим подсказку.
+    """
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+        
+    await callback.message.answer(
+        'Пожалуйста, отправьте ваш текст, голосовое сообщение или видео-кружок прямо в этот чат 💬',
+        parse_mode='HTML'
+    )
+    await callback.answer()
 
 @router.callback_query(F.data == 'review_skip_content')
 async def handle_skip_content(

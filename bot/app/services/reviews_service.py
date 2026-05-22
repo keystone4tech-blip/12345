@@ -33,6 +33,8 @@ class ReviewsService:
         self.bot: Bot | None = None
         # Фоновая задача шедулера
         self._task: asyncio.Task | None = None
+        # Задача автозавершения отзывов
+        self._auto_complete_task: asyncio.Task | None = None
         # Флаг работы
         self._running: bool = False
 
@@ -62,6 +64,7 @@ class ReviewsService:
 
         self._running = True
         self._task = asyncio.create_task(self._scheduler_loop())
+        self._auto_complete_task = asyncio.create_task(self._auto_complete_loop())
         logger.info(
             '⭐ Шедулер отзывов запущен',
             check_time=settings.REVIEWS_CHECK_TIME,
@@ -78,6 +81,15 @@ class ReviewsService:
             except asyncio.CancelledError:
                 pass
         self._task = None
+
+        if self._auto_complete_task and not self._auto_complete_task.done():
+            self._auto_complete_task.cancel()
+            try:
+                await self._auto_complete_task
+            except asyncio.CancelledError:
+                pass
+        self._auto_complete_task = None
+        
         logger.info('⭐ Шедулер отзывов остановлен')
 
     # ──────────────────────────── Награды ────────────────────────────
@@ -374,6 +386,89 @@ class ReviewsService:
         except Exception:
             logger.warning('⚠️ Некорректный формат REVIEWS_CHECK_TIME, используем 09:00')
             return dt_time(hour=9, minute=0)
+
+    async def _auto_complete_loop(self) -> None:
+        """Фоновый процесс проверки зависших отзывов (раз в 5 минут)."""
+        logger.info('⭐ Цикл автозавершения отзывов запущен')
+        while self._running:
+            try:
+                await asyncio.sleep(300) # каждые 5 минут
+                if not self._running or not self.is_enabled():
+                    continue
+
+                from app.database.database import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
+                    cutoff = datetime.now(UTC) - timedelta(hours=1)
+                    # Ищем отзывы в ожидании старше 1 часа
+                    result = await db.execute(
+                        select(UserReview)
+                        .where(
+                            and_(
+                                UserReview.status == 'WAITING_FOR_CONTENT',
+                                UserReview.updated_at < cutoff,
+                            )
+                        )
+                    )
+                    abandoned_reviews = result.scalars().all()
+                    
+                    for review in abandoned_reviews:
+                        try:
+                            # 1. Завершаем отзыв (начисляются дни за звёзды)
+                            total_days = await self.complete_review(db, review, review_type='none')
+                            
+                            # 2. Начисляем дни и синхронизируем с RemnaWave
+                            if total_days > 0 and self.bot:
+                                await self.award_bonus_days(db, review.user_id, total_days, self.bot)
+                            
+                            # 3. Отправляем в админский чат
+                            if self.bot:
+                                from app.config import settings
+                                admin_chat_id = settings.get_admin_notifications_chat_id()
+                                if not admin_chat_id and settings.get_admin_ids():
+                                    admin_chat_id = settings.get_admin_ids()[0]
+                                    
+                                if admin_chat_id:
+                                    import html
+                                    from app.database.crud.user import get_user_by_id
+                                    user = await get_user_by_id(db, review.user_id)
+                                    user_name = html.escape(user.full_name) if user and user.full_name else 'Без имени'
+                                    if user and user.username:
+                                        user_name += f" (@{html.escape(user.username)})"
+                                        
+                                    stars = '⭐' * review.rating if review.rating else 'Нет оценки'
+                                    date_str = review.created_at.strftime('%d.%m.%Y %H:%M') if review.created_at else 'Неизвестно'
+                                    
+                                    caption = (
+                                        f"📥 <b>Новый отзыв в системе (Автозавершение)</b>\n\n"
+                                        f"👤 <b>{user_name}</b> (ID: <code>{user.telegram_id if user else review.user_id}</code>)\n"
+                                        f"Оценка: {stars}\n"
+                                        f"Контент: Отсутствует (Таймаут)\n"
+                                        f"Награда: +{total_days} дн.\n"
+                                        f"📅 {date_str}"
+                                    )
+                                    
+                                    markup = InlineKeyboardMarkup(inline_keyboard=[
+                                        [
+                                            InlineKeyboardButton(text='✅ Одобрить', callback_data=f'notif_review_approve:{review.id}'),
+                                            InlineKeyboardButton(text='🗑 Удалить', callback_data=f'notif_review_del_conf:{review.id}')
+                                        ]
+                                    ])
+                                    await self.bot.send_message(chat_id=admin_chat_id, text=caption, reply_markup=markup, parse_mode='HTML')
+                            
+                            # 4. Уведомляем пользователя (тихо)
+                            if self.bot and 'user' in locals() and user and user.telegram_id:
+                                msg_text = f"Ваша оценка {stars} успешно учтена! В качестве благодарности вам начислено <b>+{total_days} дн.</b> 🎁"
+                                await self.bot.send_message(chat_id=user.telegram_id, text=msg_text, parse_mode='HTML', disable_notification=True)
+                                
+                            logger.info('⭐ Отзыв автозавершён по таймауту', review_id=review.id, user_id=review.user_id)
+                        except Exception as e:
+                            logger.error('❌ Ошибка при автозавершении отзыва', review_id=review.id, error=e)
+                            
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error('❌ Ошибка в цикле автозавершения отзывов', error=e)
+                await asyncio.sleep(60)
 
     async def _send_review_requests(self) -> None:
         """
