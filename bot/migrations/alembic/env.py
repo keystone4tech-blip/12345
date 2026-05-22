@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+bot_dir = str(Path(__file__).parent.parent.parent.absolute())
+if bot_dir not in sys.path:
+    sys.path.insert(0, bot_dir)
+if 'app' in sys.modules:
+    del sys.modules['app']
 
 from app.database.models import Base
 from app.config import settings

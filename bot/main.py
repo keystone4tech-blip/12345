@@ -81,6 +81,7 @@ from app.services.reporting_service import reporting_service
 from app.services.reviews_service import reviews_service
 from app.services.system_settings_service import bot_configuration_service
 from app.services.traffic_monitoring_service import traffic_monitoring_scheduler
+from app.services.traffic_help_service import traffic_help_service
 from app.services.version_service import version_service
 from app.services.web_api_token_service import ensure_default_web_api_token
 from app.utils.log_handlers import ExcludePaymentFilter, LevelFilterHandler
@@ -359,6 +360,7 @@ async def main():
         broadcast_service.set_bot(bot)
         ban_notification_service.set_bot(bot)
         traffic_monitoring_scheduler.set_bot(bot)
+        traffic_help_service.set_bot(bot)
         daily_subscription_service.set_bot(bot)
         reviews_service.set_bot(bot)
         telegram_notifier.set_bot(bot)
@@ -734,6 +736,18 @@ async def main():
                 stage.skip('Система отзывов отключена настройками')
 
         async with timeline.stage(
+            'Помощь по трафику',
+            '🔧',
+            success_message='Шедулер помощи по трафику запущен',
+        ) as stage:
+            if traffic_help_service.is_enabled():
+                await traffic_help_service.start()
+                stage.log(f'Время проверки: {settings.TRAFFIC_HELP_CHECK_TIME}')
+                stage.log(f'Задержка дней: {settings.TRAFFIC_HELP_DAYS_AFTER}')
+            else:
+                stage.skip('Помощь по трафику отключена настройками')
+
+        async with timeline.stage(
             'Сервис проверки версий',
             '📄',
             success_message='Проверка версий запущена',
@@ -805,6 +819,7 @@ async def main():
             f'Проверка версий: {"Включен" if version_check_task else "Отключен"}',
             f'Отчеты: {"Включен" if reporting_service.is_running() else "Отключен"}',
             f'Система отзывов: {"Включена" if reviews_service.is_running() else "Отключена"}',
+            f'Помощь по трафику: {"Включена" if traffic_help_service.is_running() else "Отключена"}',
         ]
         services_lines.append('Проверка пополнений: ' + ('Включена' if verification_providers else 'Отключена'))
         services_lines.append(

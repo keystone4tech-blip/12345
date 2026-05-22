@@ -173,6 +173,10 @@ def get_admin_communications_submenu_keyboard(language: str = 'ru') -> InlineKey
                 InlineKeyboardButton(
                     text=_t(texts, 'ADMIN_COMMUNICATIONS_REVIEWS', '⭐ Отзывы'),
                     callback_data='admin_reviews',
+                ),
+                InlineKeyboardButton(
+                    text=_t(texts, 'ADMIN_COMMUNICATIONS_TRAFFIC_HELP', '🔧 Помощь с настройкой'),
+                    callback_data='admin_traffic_help',
                 )
             ],
             [InlineKeyboardButton(text=texts.BACK, callback_data='admin_panel')],
@@ -2508,7 +2512,43 @@ def get_admin_reviews_keyboard(language: str = 'ru', pending_count: int = 0, app
                     callback_data='admin_review_force_broadcast'
                 )
             ],
-            [InlineKeyboardButton(text=texts.BACK, callback_data='admin_submenu_communications')],
+            [
+                InlineKeyboardButton(
+                    text=texts.BACK,
+                    callback_data='admin_submenu_communications'
+                )
+            ]
+        ]
+    )
+
+def get_admin_traffic_help_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
+    texts = get_texts(language)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text='🧪 Тест (отправить себе)',
+                    callback_data='admin_traffic_help_test'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text='⚙️ Настройки',
+                    callback_data='botcfg_cat:other:TRAFFIC_HELP:1:1'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text='🚀 Принудительно запустить рассылку',
+                    callback_data='admin_traffic_help_trigger'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=texts.BACK,
+                    callback_data='admin_submenu_communications'
+                )
+            ]
         ]
     )
 

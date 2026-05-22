@@ -57,6 +57,7 @@ from app.handlers.admin import (
     subscriptions as admin_subscriptions,
     system_logs as admin_system_logs,
     tariffs as admin_tariffs,
+    traffic_help as admin_traffic_help,
     tickets as admin_tickets,
     trials as admin_trials,
     updates as admin_updates,
@@ -212,6 +213,7 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     admin_maintenance.register_handlers(dp)
     admin_reviews.register_handlers(dp)
     admin_user_messages.register_handlers(dp)
+    admin_traffic_help.register_handlers(dp)
     admin_updates.register_handlers(dp)
     admin_backup.register_handlers(dp)
     admin_system_logs.register_handlers(dp)

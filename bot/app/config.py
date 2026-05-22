@@ -820,6 +820,13 @@ class Settings(BaseSettings):
     REVIEWS_REWARD_CONTENT_TEXT: int = 1
     REVIEWS_REWARD_CONTENT_VOICE: int = 2
     REVIEWS_REWARD_CONTENT_VIDEO: int = 3
+    
+    # Настройки системы помощи при отсутствии трафика
+    TRAFFIC_HELP_ENABLED: bool = True
+    TRAFFIC_HELP_CHECK_TIME: str = '12:00'
+    TRAFFIC_HELP_THRESHOLD_MB: int = 10
+    TRAFFIC_HELP_DAYS_AFTER: int = 1
+    TRAFFIC_HELP_SUPPORT_URL: str = ''
 
     @field_validator('MAIN_MENU_MODE', mode='before')
     @classmethod

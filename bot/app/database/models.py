@@ -1015,6 +1015,7 @@ class User(Base):
     balance_kopeks = Column(Integer, default=0)
     used_promocodes = Column(Integer, default=0)
     has_had_paid_subscription = Column(Boolean, default=False, nullable=False)
+    setup_help_sent = Column(Boolean, default=False, nullable=False)
     referred_by_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
     referral_code = Column(String(20), unique=True, nullable=True)
     created_at = Column(AwareDateTime(), default=func.now())
