@@ -205,4 +205,36 @@ class TrafficHelpService:
             logger.exception(f"Непредвиденная ошибка при отправке Traffic Help {user.telegram_id}: {e}")
             return False
 
+    async def send_test_message(self, admin_user: User) -> bool:
+        """Отправляет тестовое сообщение администратору без изменения статуса в БД."""
+        if not self.bot:
+            logger.error("Bot instance не установлен в TrafficHelpService")
+            return False
+            
+        texts = get_texts(admin_user.language)
+        
+        # Текст сообщения
+        message_text = texts.t(
+            'TRAFFIC_HELP_MESSAGE',
+            '👋 Здравствуйте! Мы заметили, что у вас активна подписка, но вы почти не используете VPN.\n\n'
+            'Возможно, у вас возникли сложности с настройкой?\n'
+            'Если вам нужна помощь, посмотрите нашу инструкцию или напишите в поддержку — мы с радостью поможем!'
+        )
+        
+        # Клавиатура
+        keyboard = get_traffic_help_keyboard(admin_user.language, settings.TRAFFIC_HELP_SUPPORT_URL)
+        
+        try:
+            await self.bot.send_message(
+                chat_id=admin_user.telegram_id,
+                text=message_text,
+                reply_markup=keyboard,
+                disable_web_page_preview=True
+            )
+            logger.info("Тестовое Traffic Help сообщение отправлено", telegram_id=admin_user.telegram_id)
+            return True
+        except Exception as e:
+            logger.exception(f"Непредвиденная ошибка при отправке тестового Traffic Help {admin_user.telegram_id}: {e}")
+            return False
+
 traffic_help_service = TrafficHelpService()

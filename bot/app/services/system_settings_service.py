@@ -142,6 +142,7 @@ class BotConfigurationService:
         'REPLY_BUTTON_CONNECT': '⚡ Кнопка «Подключиться»',
         'REPLY_BUTTON_PAY': '💥 Кнопка «Оплата»',
         'REPLY_BUTTON_HELP': '❓ Кнопка «Помощь»',
+        'TRAFFIC_HELP': '🛠 Помощь по трафику',
     }
 
     SETTING_LABELS: dict[str, str] = {
@@ -559,6 +560,13 @@ class BotConfigurationService:
         'REVIEWS_REWARD_CONTENT_TEXT': '📝 Награда за текст (дней)',
         'REVIEWS_REWARD_CONTENT_VOICE': '🎙 Награда за голосовое (дней)',
         'REVIEWS_REWARD_CONTENT_VIDEO': '🎥 Награда за видео-кружок (дней)',
+        
+        # TRAFFIC_HELP
+        'TRAFFIC_HELP_ENABLED': '🛠 Включить помощь по трафику',
+        'TRAFFIC_HELP_CHECK_TIME': '🕒 Время проверки',
+        'TRAFFIC_HELP_THRESHOLD_MB': '📊 Порог трафика (МБ)',
+        'TRAFFIC_HELP_DAYS_AFTER': '⏳ Дней после покупки',
+        'TRAFFIC_HELP_SUPPORT_URL': '🔗 Ссылка на инструкцию/поддержку',
     }
 
     CATEGORY_DESCRIPTIONS: dict[str, str] = {
@@ -629,6 +637,7 @@ class BotConfigurationService:
         'REPLY_BUTTON_PAY': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Оплата».',
         'REPLY_BUTTON_HELP': 'Настройка текста, цвета и премиум-эмодзи для кнопки «Помощь».',
         'REVIEWS': 'Автоматический сбор отзывов пользователей: настройка порогов трафика, вознаграждений за оценки и развернутые отзывы.',
+        'TRAFFIC_HELP': 'Настройки системы автоматической помощи пользователям без трафика.',
     }
 
     @staticmethod
@@ -798,6 +807,13 @@ class BotConfigurationService:
         'MENU_STATUS_TEXT': 'REPLY_BUTTON_STATUS',
         'MENU_STATUS_STYLE': 'REPLY_BUTTON_STATUS',
         'MENU_STATUS_EMOJI': 'REPLY_BUTTON_STATUS',
+        
+        # TRAFFIC_HELP
+        'TRAFFIC_HELP_ENABLED': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_CHECK_TIME': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_THRESHOLD_MB': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_DAYS_AFTER': 'TRAFFIC_HELP',
+        'TRAFFIC_HELP_SUPPORT_URL': 'TRAFFIC_HELP',
         'MENU_CONNECT_TEXT': 'REPLY_BUTTON_CONNECT',
         'MENU_CONNECT_STYLE': 'REPLY_BUTTON_CONNECT',
         'MENU_CONNECT_EMOJI': 'REPLY_BUTTON_CONNECT',

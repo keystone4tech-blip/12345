@@ -1,17 +1,21 @@
 import structlog
 from aiogram import Router, F, types
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import User
 from app.keyboards.admin import get_admin_traffic_help_keyboard
 from app.localization.texts import get_texts
 from app.services.traffic_help_service import traffic_help_service
+from app.utils.decorators import admin_required, error_handler
 
 logger = structlog.get_logger(__name__)
 router = Router(name='admin_traffic_help')
 
 @router.callback_query(F.data == 'admin_traffic_help')
-async def handle_admin_traffic_help_main(callback: types.CallbackQuery, db_user: User):
-    """Главное меню помощи по трафику."""
+@admin_required
+@error_handler
+async def handle_admin_traffic_help_main(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
+    """Главое меню помощи по трафику."""
     texts = get_texts(db_user.language)
     
     status_text = "Включена" if traffic_help_service.is_enabled() else "Отключена"
@@ -31,16 +35,20 @@ async def handle_admin_traffic_help_main(callback: types.CallbackQuery, db_user:
     await callback.answer()
 
 @router.callback_query(F.data == 'admin_traffic_help_test')
-async def handle_admin_traffic_help_test(callback: types.CallbackQuery, db_user: User):
+@admin_required
+@error_handler
+async def handle_admin_traffic_help_test(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
     """Отправить тестовое сообщение себе."""
     if not traffic_help_service.bot:
         traffic_help_service.set_bot(callback.bot)
         
-    await traffic_help_service._send_single_request(db_user)
+    await traffic_help_service.send_test_message(db_user)
     await callback.answer('✅ Тестовое сообщение отправлено!', show_alert=True)
 
 @router.callback_query(F.data == 'admin_traffic_help_trigger')
-async def handle_admin_traffic_help_trigger(callback: types.CallbackQuery, db_user: User):
+@admin_required
+@error_handler
+async def handle_admin_traffic_help_trigger(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
     """Принудительный запуск рассылки."""
     if not traffic_help_service.bot:
         traffic_help_service.set_bot(callback.bot)
@@ -48,7 +56,7 @@ async def handle_admin_traffic_help_trigger(callback: types.CallbackQuery, db_us
     import asyncio
     
     # Run the background task without awaiting here so the callback responds quickly
-    asyncio.create_task(traffic_help_service.run_manual())
+    asyncio.create_task(traffic_help_service.run_check(admin_id=db_user.telegram_id))
     await callback.answer('🚀 Рассылка запущена в фоновом режиме', show_alert=True)
 
 def register_handlers(dp: Router):
