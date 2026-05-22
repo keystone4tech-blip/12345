@@ -1059,6 +1059,12 @@ class BotConfigurationService:
             ChoiceOption('danger', '🔴 Красный'),
             ChoiceOption('default', '⚪ Серый'),
         ],
+        'TRAFFIC_HELP_SUPPORT_BUTTON_STYLE': [
+            ChoiceOption('primary', '🔵 Синий'),
+            ChoiceOption('success', '🟢 Зелёный'),
+            ChoiceOption('danger', '🔴 Красный'),
+            ChoiceOption('default', '⚪ Серый'),
+        ],
     }
 
     SETTING_HINTS: dict[str, dict[str, str]] = {
