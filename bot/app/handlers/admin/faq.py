@@ -1133,6 +1133,45 @@ async def process_faq_media(
     data = await state.get_data()
     page_id = data.get('editing_faq_id')
     
+    if message.media_group_id:
+        media_group_data = data.get('faq_media_group_data', [])
+        current_group_id = data.get('faq_media_group_id')
+        
+        if current_group_id != message.media_group_id:
+            media_group_data = []
+            await state.update_data(faq_media_group_id=message.media_group_id)
+            
+        media_item = {}
+        if message.photo:
+            media_item = {'type': 'photo', 'media': message.photo[-1].file_id}
+        elif message.video:
+            media_item = {'type': 'video', 'media': message.video.file_id}
+        elif message.audio:
+            media_item = {'type': 'audio', 'media': message.audio.file_id}
+        elif message.document:
+            media_item = {'type': 'document', 'media': message.document.file_id}
+            
+        if media_item:
+            if message.caption:
+                media_item['caption'] = message.caption
+            media_group_data.append(media_item)
+            await state.update_data(faq_media_group_data=media_group_data)
+            
+        await FaqService.update_page(db, page_id, media_group_data=media_group_data, media_file_id=None, media_type=None)
+        
+        if not data.get(f'faq_album_{message.media_group_id}'):
+            await state.update_data({f'faq_album_{message.media_group_id}': True})
+            await message.answer(
+                '✅ <b>Медиагруппа добавлена!</b>',
+                reply_markup=types.InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        types.InlineKeyboardButton(text='⬅️ К странице', callback_data=f'admin_faq_page:{page_id}')
+                    ]]
+                ),
+                parse_mode='HTML'
+            )
+        return
+        
     media_file_id = None
     media_type = None
     
@@ -1145,11 +1184,20 @@ async def process_faq_media(
     elif message.document:
         media_file_id = message.document.file_id
         media_type = 'document'
+    elif message.voice:
+        media_file_id = message.voice.file_id
+        media_type = 'voice'
+    elif message.video_note:
+        media_file_id = message.video_note.file_id
+        media_type = 'video_note'
+    elif message.audio:
+        media_file_id = message.audio.file_id
+        media_type = 'audio'
     else:
-        await message.answer('❌ Пожалуйста, отправьте фото, видео или документ.')
+        await message.answer('❌ Пожалуйста, отправьте фото, видео, документ, голос, аудио, кружок или альбом.')
         return
         
-    await FaqService.update_page(db, page_id, media_type=media_type, media_file_id=media_file_id)
+    await FaqService.update_page(db, page_id, media_type=media_type, media_file_id=media_file_id, media_group_data=None)
     await state.clear()
     
     await message.answer(

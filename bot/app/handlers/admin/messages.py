@@ -1365,6 +1365,9 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
             return
 
     target = data.get('broadcast_target')
+    if not target:
+        await callback.answer('❌ Ошибка: аудитория рассылки не выбрана. Начните заново.', show_alert=True)
+        return
     message_text = data.get('broadcast_message')
     selected_buttons = data.get('selected_buttons')
     if selected_buttons is None:
@@ -1463,6 +1466,9 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
 async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state: FSMContext, db: AsyncSession):
     data = await state.get_data()
     target = data.get('broadcast_target')
+    if not target:
+        await callback.answer('❌ Ошибка: аудитория рассылки не выбрана. Начните заново.', show_alert=True)
+        return
     message_text = data.get('broadcast_message')
     selected_buttons = data.get('selected_buttons')
     if selected_buttons is None:

@@ -683,21 +683,58 @@ async def show_faq_page(
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
 
     try:
-        if page.media_type and page.media_file_id:
+        media_group_data = getattr(page, 'media_group_data', None)
+        if media_group_data:
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+            
+            media_group = []
+            for item in media_group_data:
+                item_type = item.get('type')
+                item_media = item.get('media')
+                item_caption = item.get('caption')
+                
+                if item_type == 'photo':
+                    media_group.append(types.InputMediaPhoto(media=item_media, caption=item_caption))
+                elif item_type == 'video':
+                    media_group.append(types.InputMediaVideo(media=item_media, caption=item_caption))
+                elif item_type == 'audio':
+                    media_group.append(types.InputMediaAudio(media=item_media, caption=item_caption))
+                elif item_type == 'document':
+                    media_group.append(types.InputMediaDocument(media=item_media, caption=item_caption))
+            
+            if media_group:
+                await callback.message.answer_media_group(media=media_group)
+                
+            await callback.message.answer(
+                message_text,
+                reply_markup=keyboard,
+                disable_web_page_preview=settings.DISABLE_WEB_PAGE_PREVIEW,
+                parse_mode='HTML'
+            )
+        elif page.media_type and page.media_file_id:
             # Delete old message to avoid mixed media/text issues when switching types
             try:
                 await callback.message.delete()
             except Exception:
                 pass
                 
-            if len(message_text) > 1000:
-                # Text too long for caption
+            if len(message_text) > 1000 or page.media_type == 'video_note':
+                # Text too long for caption or media doesn't support captions
                 if page.media_type == 'photo':
                     await callback.message.answer_photo(photo=page.media_file_id)
                 elif page.media_type == 'video':
                     await callback.message.answer_video(video=page.media_file_id)
                 elif page.media_type == 'document':
                     await callback.message.answer_document(document=page.media_file_id)
+                elif page.media_type == 'voice':
+                    await callback.message.answer_voice(voice=page.media_file_id)
+                elif page.media_type == 'video_note':
+                    await callback.message.answer_video_note(video_note=page.media_file_id)
+                elif page.media_type == 'audio':
+                    await callback.message.answer_audio(audio=page.media_file_id)
                     
                 await callback.message.answer(
                     message_text,
@@ -717,6 +754,14 @@ async def show_faq_page(
                 elif page.media_type == 'document':
                     await callback.message.answer_document(
                         document=page.media_file_id, caption=message_text, reply_markup=keyboard, parse_mode='HTML'
+                    )
+                elif page.media_type == 'voice':
+                    await callback.message.answer_voice(
+                        voice=page.media_file_id, caption=message_text, reply_markup=keyboard, parse_mode='HTML'
+                    )
+                elif page.media_type == 'audio':
+                    await callback.message.answer_audio(
+                        audio=page.media_file_id, caption=message_text, reply_markup=keyboard, parse_mode='HTML'
                     )
         else:
             try:
