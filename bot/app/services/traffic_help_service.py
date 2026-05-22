@@ -40,6 +40,9 @@ class TrafficHelpService:
     def is_enabled(self) -> bool:
         return settings.TRAFFIC_HELP_ENABLED
 
+    def is_running(self) -> bool:
+        return self._is_running
+
     async def start(self):
         if not settings.TRAFFIC_HELP_ENABLED:
             logger.info("Сервис Traffic Help выключен в настройках.")
