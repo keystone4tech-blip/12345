@@ -57,7 +57,7 @@ from app.handlers.admin import (
     subscriptions as admin_subscriptions,
     system_logs as admin_system_logs,
     tariffs as admin_tariffs,
-    traffic_help as admin_traffic_help,
+    admin_traffic_help,
     tickets as admin_tickets,
     trials as admin_trials,
     updates as admin_updates,

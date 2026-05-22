@@ -32,7 +32,7 @@ from . import (
     subscriptions,
     support_settings,
     system_logs,
-    traffic_help,
+    admin_traffic_help,
     tickets,
     trials,
     updates,
