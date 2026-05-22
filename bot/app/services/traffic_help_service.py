@@ -18,7 +18,7 @@ from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.database.core import get_db
+from app.database.database import AsyncSessionLocal
 from app.database.models import User, Subscription
 from app.localization.texts import get_texts
 from app.external.remnawave_api import UserStatus
@@ -100,7 +100,7 @@ class TrafficHelpService:
         found_count = 0
         sent_count = 0
 
-        async for db in get_db():
+        async with AsyncSessionLocal() as db:
             try:
                 users_to_notify = await self._get_eligible_users(db)
                 found_count = len(users_to_notify)
@@ -117,8 +117,6 @@ class TrafficHelpService:
                     
             except Exception as e:
                 logger.exception(f"Ошибка при получении или обработке пользователей Traffic Help: {e}")
-            finally:
-                break # используем только одну сессию из генератора
 
         logger.info("Проверка Traffic Help завершена", found_count=found_count, sent_count=sent_count)
         return found_count, sent_count
