@@ -100,6 +100,11 @@ class ThrottlingMiddleware(BaseMiddleware):
             self.user_buckets[user_id] = now
             return await handler(event, data)
 
+        # Игнорируем троттлинг для медиагрупп, так как они приходят пакетом
+        if getattr(event, 'media_group_id', None):
+            self.user_buckets[user_id] = now
+            return await handler(event, data)
+
         # --- Общий троттлинг (0.5 сек) ---
         last_call = self.user_buckets.get(user_id, 0)
 

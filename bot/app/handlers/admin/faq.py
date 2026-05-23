@@ -485,9 +485,12 @@ async def show_faq_page_details(
         'Текст ещё не задан.',
     )
     if preview:
-        preview_trimmed = preview[:400]
-        if len(preview) > 400:
-            preview_trimmed += '...'
+        from app.utils.text import strip_html
+        if len(preview) > 1000:
+            preview_trimmed = strip_html(preview)[:1000] + '...'
+        else:
+            preview_trimmed = preview
+            
         preview_text = texts.t('ADMIN_FAQ_PAGE_PREVIEW', '<b>Превью:</b>\n{content}').format(
             content=preview_trimmed
         )
@@ -591,10 +594,14 @@ async def show_faq_page_details(
         ]
     )
 
-    await callback.message.edit_text(
-        message_text,
-        reply_markup=types.InlineKeyboardMarkup(inline_keyboard=buttons),
-    )
+    try:
+        await callback.message.edit_text(
+            message_text,
+            reply_markup=types.InlineKeyboardMarkup(inline_keyboard=buttons),
+            parse_mode='HTML'
+        )
+    except Exception:
+        pass
     await callback.answer()
 
 
@@ -1116,7 +1123,9 @@ async def delete_faq_media(
         await callback.answer('Ошибка.', show_alert=True)
         return
         
-    await FaqService.update_page(db, page_id, media_type=None, media_file_id=None, media_group_data=None)
+    page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
+    if page:
+        await FaqService.update_page(db, page, media_type=None, media_file_id=None, media_group_data=None)
     await state.clear()
     
     callback.data = f'admin_faq_page:{page_id}'
@@ -1157,7 +1166,9 @@ async def process_faq_media(
             media_group_data.append(media_item)
             await state.update_data(faq_media_group_data=media_group_data)
             
-        await FaqService.update_page(db, page_id, media_group_data=media_group_data, media_file_id=None, media_type=None)
+        page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
+        if page:
+            await FaqService.update_page(db, page, media_group_data=media_group_data, media_file_id=None, media_type=None)
         
         if not data.get(f'faq_album_{message.media_group_id}'):
             await state.update_data({f'faq_album_{message.media_group_id}': True})
@@ -1197,7 +1208,9 @@ async def process_faq_media(
         await message.answer('❌ Пожалуйста, отправьте фото, видео, документ, голос, аудио, кружок или альбом.')
         return
         
-    await FaqService.update_page(db, page_id, media_type=media_type, media_file_id=media_file_id, media_group_data=None)
+    page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
+    if page:
+        await FaqService.update_page(db, page, media_type=media_type, media_file_id=media_file_id, media_group_data=None)
     await state.clear()
     
     await message.answer(
@@ -1411,7 +1424,9 @@ async def save_faq_buttons(callback: types.CallbackQuery, db_user: User, state: 
     page_id = data.get('editing_faq_id')
     buttons = data.get('current_faq_buttons', [])
     
-    await FaqService.update_page(db, page_id, inline_buttons=buttons)
+    page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
+    if page:
+        await FaqService.update_page(db, page, inline_buttons=buttons)
     await state.clear()
     
     callback.data = f'admin_faq_page:{page_id}'
