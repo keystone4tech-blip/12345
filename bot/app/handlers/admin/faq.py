@@ -485,7 +485,7 @@ async def show_faq_page_details(
         'Текст ещё не задан.',
     )
     if preview:
-        from app.utils.text import strip_html
+        from app.utils.validators import strip_html
         if len(preview) > 1000:
             preview_trimmed = strip_html(preview)[:1000] + '...'
         else:
