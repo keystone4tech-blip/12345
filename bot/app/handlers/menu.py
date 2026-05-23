@@ -587,13 +587,6 @@ async def show_faq_page(
     total_pages = len(content_pages)
     current_page = max(1, min(requested_page, total_pages))
 
-    header = texts.t('FAQ_HEADER', '❓ <b>FAQ</b>')
-    title_template = texts.t('FAQ_PAGE_TITLE', '<b>{title}</b>')
-    page_title = (page.title or '').strip()
-    if not page_title:
-        page_title = texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
-    title_block = title_template.format(title=html.escape(page_title))
-
     body = content_pages[current_page - 1]
 
     footer_template = texts.t(
@@ -607,7 +600,7 @@ async def show_faq_page(
         except Exception:
             footer = f'{current_page}/{total_pages}'
 
-    parts_to_join = [header, title_block]
+    parts_to_join = []
     if body:
         parts_to_join.append(body)
     if footer:

@@ -1,3 +1,4 @@
+import asyncio
 import html
 from datetime import datetime
 
@@ -15,6 +16,8 @@ from app.utils.validators import get_html_help_text, validate_html_tags, strip_h
 
 
 logger = structlog.get_logger(__name__)
+
+media_group_locks = {}
 
 
 def _format_timestamp(value: datetime | None) -> str:
@@ -1125,7 +1128,7 @@ async def delete_faq_media(
         
     page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
     if page:
-        await FaqService.update_page(db, page, media_type=None, media_file_id=None, media_group_data=None)
+        await FaqService.update_page(db, page, media_type='', media_file_id='', media_group_data=[])
     await state.clear()
     
     callback.data = f'admin_faq_page:{page_id}'
@@ -1143,44 +1146,49 @@ async def process_faq_media(
     page_id = data.get('editing_faq_id')
     
     if message.media_group_id:
-        media_group_data = data.get('faq_media_group_data', [])
-        current_group_id = data.get('faq_media_group_id')
-        
-        if current_group_id != message.media_group_id:
-            media_group_data = []
-            await state.update_data(faq_media_group_id=message.media_group_id)
+        if message.media_group_id not in media_group_locks:
+            media_group_locks[message.media_group_id] = asyncio.Lock()
             
-        media_item = {}
-        if message.photo:
-            media_item = {'type': 'photo', 'media': message.photo[-1].file_id}
-        elif message.video:
-            media_item = {'type': 'video', 'media': message.video.file_id}
-        elif message.audio:
-            media_item = {'type': 'audio', 'media': message.audio.file_id}
-        elif message.document:
-            media_item = {'type': 'document', 'media': message.document.file_id}
+        async with media_group_locks[message.media_group_id]:
+            data = await state.get_data()
+            media_group_data = data.get('faq_media_group_data', [])
+            current_group_id = data.get('faq_media_group_id')
             
-        if media_item:
-            if message.caption:
-                media_item['caption'] = message.caption
-            media_group_data.append(media_item)
-            await state.update_data(faq_media_group_data=media_group_data)
+            if current_group_id != message.media_group_id:
+                media_group_data = []
+                await state.update_data(faq_media_group_id=message.media_group_id)
+                
+            media_item = {}
+            if message.photo:
+                media_item = {'type': 'photo', 'media': message.photo[-1].file_id}
+            elif message.video:
+                media_item = {'type': 'video', 'media': message.video.file_id}
+            elif message.audio:
+                media_item = {'type': 'audio', 'media': message.audio.file_id}
+            elif message.document:
+                media_item = {'type': 'document', 'media': message.document.file_id}
+                
+            if media_item:
+                if message.caption:
+                    media_item['caption'] = message.caption
+                media_group_data.append(media_item)
+                await state.update_data(faq_media_group_data=media_group_data)
+                
+            page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
+            if page:
+                await FaqService.update_page(db, page, media_group_data=media_group_data, media_file_id='', media_type='')
             
-        page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
-        if page:
-            await FaqService.update_page(db, page, media_group_data=media_group_data, media_file_id=None, media_type=None)
-        
-        if not data.get(f'faq_album_{message.media_group_id}'):
-            await state.update_data({f'faq_album_{message.media_group_id}': True})
-            await message.answer(
-                '✅ <b>Медиагруппа добавлена!</b>',
-                reply_markup=types.InlineKeyboardMarkup(
-                    inline_keyboard=[[
-                        types.InlineKeyboardButton(text='⬅️ К странице', callback_data=f'admin_faq_page:{page_id}')
-                    ]]
-                ),
-                parse_mode='HTML'
-            )
+            if not data.get(f'faq_album_{message.media_group_id}'):
+                await state.update_data({f'faq_album_{message.media_group_id}': True})
+                await message.answer(
+                    '✅ <b>Медиагруппа добавлена!</b>',
+                    reply_markup=types.InlineKeyboardMarkup(
+                        inline_keyboard=[[
+                            types.InlineKeyboardButton(text='⬅️ К странице', callback_data=f'admin_faq_page:{page_id}')
+                        ]]
+                    ),
+                    parse_mode='HTML'
+                )
         return
         
     media_file_id = None
@@ -1210,7 +1218,7 @@ async def process_faq_media(
         
     page = await FaqService.get_page(db, page_id, db_user.language, fallback=False, include_inactive=True)
     if page:
-        await FaqService.update_page(db, page, media_type=media_type, media_file_id=media_file_id, media_group_data=None)
+        await FaqService.update_page(db, page, media_type=media_type, media_file_id=media_file_id, media_group_data=[])
     await state.clear()
     
     await message.answer(
