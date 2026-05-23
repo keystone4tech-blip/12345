@@ -478,7 +478,7 @@ async def handle_user_review_start(
     except Exception:
         pass
         
-    await reviews_service._send_single_request(db_user)
+    await reviews_service._send_single_request(db_user, db)
     await callback.answer('Пожалуйста, оцените наш сервис!')
 
 

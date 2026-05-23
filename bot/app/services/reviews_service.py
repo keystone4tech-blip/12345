@@ -140,7 +140,7 @@ class ReviewsService:
         """
         review = await self.get_latest_review(db, user_id)
 
-        if review:
+        if review and review.status != 'COMPLETED':
             # Обновляем старый отзыв
             review.rating = rating
             review.status = 'WAITING_FOR_CONTENT'
@@ -312,7 +312,7 @@ class ReviewsService:
             .where(
                 and_(
                     UserReview.user_id == user_id,
-                    UserReview.created_at >= cutoff,
+                    UserReview.updated_at >= cutoff,
                 )
             )
             .limit(1)
@@ -505,7 +505,7 @@ class ReviewsService:
         Критерии отбора:
         - Активная подписка
         - Трафик >= REVIEWS_TRAFFIC_THRESHOLD_MB
-        - Не оставляли отзыв за последние 30 дней
+        - Не оставляли отзыв за последние 7 дней
         """
         if not self.bot:
             logger.error('⭐ Бот не установлен, рассылка невозможна')
@@ -530,11 +530,11 @@ class ReviewsService:
                             continue
 
                         # Проверяем, не оставлял ли уже отзыв
-                        if await self.has_recent_review(db, user.id, days=30):
+                        if await self.has_recent_review(db, user.id, days=7):
                             continue
 
                         # Отправляем запрос на отзыв
-                        await self._send_single_request(user)
+                        await self._send_single_request(user, db)
                         sent_count += 1
 
                         # Задержка между отправками (антифлуд)
@@ -590,7 +590,7 @@ class ReviewsService:
             logger.error('❌ Ошибка получения списка пользователей для отзывов', error=e)
             return []
 
-    async def _send_single_request(self, user: User) -> None:
+    async def _send_single_request(self, user: User, db: AsyncSession) -> None:
         """Отправляет одному пользователю запрос на отзыв."""
         # Клавиатура с кнопками рейтинга (1-5 звёзд)
         keyboard = InlineKeyboardMarkup(
@@ -627,6 +627,21 @@ class ReviewsService:
                 parse_mode='HTML',
             )
             logger.debug('⭐ Запрос на отзыв отправлен', user_id=user.id)
+            
+            # Фиксируем дату запроса
+            review = await self.get_latest_review(db, user.id)
+            if review and review.status != 'COMPLETED':
+                review.updated_at = datetime.now(UTC)
+            else:
+                review = UserReview(
+                    user_id=user.id,
+                    status='REQUESTED',
+                    star_reward_days=0,
+                    content_reward_days=0
+                )
+                db.add(review)
+            await db.commit()
+            
         except Exception as e:
             logger.warning(
                 '⚠️ Не удалось отправить запрос на отзыв',
