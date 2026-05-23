@@ -96,28 +96,34 @@ _TG_EMOJI_TAG_RE = re.compile(r'<tg-emoji[^>]*>(.*?)</tg-emoji>')
 def replace_with_premium_emojis(text: str) -> str:
     """Заменяет все стандартные эмодзи в тексте на теги <tg-emoji>.
     
-    Функция идемпотентна: если текст уже содержит теги <tg-emoji>,
-    они сначала снимаются, а затем замена применяется заново.
-    Это позволяет безопасно вызывать функцию повторно.
+    Оставляет уже существующие теги <tg-emoji> без изменений,
+    чтобы пользователь мог отправлять свои собственные премиум-эмодзи.
     """
     if not text:
         return text
 
-    # Шаг 1: Снимаем существующие теги <tg-emoji> чтобы избежать двойной замены
-    if '<tg-emoji' in text:
-        text = _TG_EMOJI_TAG_RE.sub(r'\1', text)
-
     emoji_map = get_premium_emoji_map()
-    pattern = get_emoji_pattern()
+    emoji_regex = get_emoji_pattern().pattern
+    
+    if not emoji_regex or emoji_regex == '(?!)':
+        return text
+        
+    # Ищем либо существующий тег <tg-emoji>, либо стандартный эмодзи из нашей базы
+    combined_pattern = re.compile(f'(<tg-emoji[^>]*>.*?</tg-emoji>)|({emoji_regex})')
 
     def _replace(match):
-        emoji = match.group(0)
+        if match.group(1):
+            # Существующий тег — не трогаем
+            return match.group(1)
+            
+        # Обычный эмодзи — заменяем, если есть в базе
+        emoji = match.group(2)
         emoji_id = emoji_map.get(emoji)
         if emoji_id:
             return f'<tg-emoji emoji-id="{emoji_id}">{emoji}</tg-emoji>'
         return emoji
 
-    return pattern.sub(_replace, text)
+    return combined_pattern.sub(_replace, text)
 
 
 def extract_first_emoji(text: str) -> Optional[str]:
