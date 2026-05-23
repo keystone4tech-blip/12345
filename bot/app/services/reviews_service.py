@@ -620,7 +620,16 @@ class ReviewsService:
         text = '\n'.join(text_lines)
 
         try:
-            await self.bot.send_message(
+            # 1. Если есть старый запрос (не завершённый), удаляем его из чата, чтобы не дублировались
+            review = await self.get_latest_review(db, user.id)
+            if review and review.status != 'COMPLETED' and getattr(review, 'request_message_id', None):
+                try:
+                    await self.bot.delete_message(chat_id=user.telegram_id, message_id=review.request_message_id)
+                except Exception as e:
+                    logger.debug('Не удалось удалить старое сообщение с запросом отзыва', error=str(e))
+
+            # 2. Отправляем новый запрос
+            sent_msg = await self.bot.send_message(
                 chat_id=user.telegram_id,
                 text=text,
                 reply_markup=keyboard,
@@ -628,16 +637,23 @@ class ReviewsService:
             )
             logger.debug('⭐ Запрос на отзыв отправлен', user_id=user.id)
             
-            # Фиксируем дату запроса
-            review = await self.get_latest_review(db, user.id)
+            # 3. Закрепляем новое сообщение в чате
+            try:
+                await self.bot.pin_chat_message(chat_id=user.telegram_id, message_id=sent_msg.message_id)
+            except Exception as e:
+                logger.debug('Не удалось закрепить сообщение с запросом отзыва', error=str(e))
+            
+            # 4. Фиксируем дату запроса и message_id
             if review and review.status != 'COMPLETED':
                 review.updated_at = datetime.now(UTC)
+                review.request_message_id = sent_msg.message_id
             else:
                 review = UserReview(
                     user_id=user.id,
                     status='REQUESTED',
                     star_reward_days=0,
-                    content_reward_days=0
+                    content_reward_days=0,
+                    request_message_id=sent_msg.message_id
                 )
                 db.add(review)
             await db.commit()
