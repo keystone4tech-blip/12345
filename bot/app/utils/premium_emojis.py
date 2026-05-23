@@ -224,6 +224,17 @@ class PremiumEmojiMiddleware(BaseRequestMiddleware):
         bot: Bot,
         method: TelegramMethod[Response[T]],
     ) -> Response[T]:
+        # AnswerCallbackQuery не поддерживает HTML-теги во всплывающих окнах.
+        # Поэтому мы всегда (независимо от настроек премиум-эмодзи) очищаем текст 
+        # от любых тегов, чтобы пользователю не выводился сырой код вроде <tg-emoji>.
+        if isinstance(method, AnswerCallbackQuery):
+            raw_text = getattr(method, 'text', None)
+            if raw_text and isinstance(raw_text, str):
+                import re
+                import html
+                clean_text = re.sub(r'<[^>]+>', '', raw_text)
+                method.text = html.unescape(clean_text)
+
         if not settings.USE_PREMIUM_EMOJIS:
             return await make_request(bot, method)
 
