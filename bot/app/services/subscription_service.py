@@ -804,9 +804,13 @@ class SubscriptionService:
     ) -> int:
         try:
             from app.config import PERIOD_PRICES
+            from app.database.crud.tariff import get_tariff_by_id
 
             # Use subscription's tariff price if available, fall back to global PERIOD_PRICES
             tariff = getattr(subscription, 'tariff', None)
+            if tariff is None and subscription.tariff_id:
+                tariff = await get_tariff_by_id(db, subscription.tariff_id)
+
             tariff_price = tariff.get_price_for_period(period_days) if tariff else None
             base_price_original = tariff_price if tariff_price is not None else PERIOD_PRICES.get(period_days, 0)
 
@@ -840,7 +844,14 @@ class SubscriptionService:
                     else:
                         device_limit = forced_limit
 
-            devices_price = max(0, (device_limit or 0) - settings.DEFAULT_DEVICE_LIMIT) * settings.PRICE_PER_DEVICE
+            if tariff:
+                base_devices = tariff.device_limit
+                price_per_extra_device = tariff.device_price_kopeks if tariff.device_price_kopeks is not None else settings.PRICE_PER_DEVICE
+            else:
+                base_devices = settings.DEFAULT_DEVICE_LIMIT
+                price_per_extra_device = settings.PRICE_PER_DEVICE
+
+            devices_price = max(0, (device_limit or 0) - base_devices) * price_per_extra_device
             devices_discount_percent = _resolve_discount_percent(
                 user,
                 promo_group,
@@ -1185,8 +1196,15 @@ class SubscriptionService:
                     else:
                         device_limit = forced_limit
 
-            additional_devices = max(0, (device_limit or 0) - settings.DEFAULT_DEVICE_LIMIT)
-            devices_price_per_month = additional_devices * settings.PRICE_PER_DEVICE
+            if tariff:
+                base_devices = tariff.device_limit
+                price_per_extra_device = tariff.device_price_kopeks if tariff.device_price_kopeks is not None else settings.PRICE_PER_DEVICE
+            else:
+                base_devices = settings.DEFAULT_DEVICE_LIMIT
+                price_per_extra_device = settings.PRICE_PER_DEVICE
+
+            additional_devices = max(0, (device_limit or 0) - base_devices)
+            devices_price_per_month = additional_devices * price_per_extra_device
             devices_discount_percent = _resolve_discount_percent(
                 user,
                 promo_group,

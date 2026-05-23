@@ -350,71 +350,14 @@ async def show_payment_methods(callback: types.CallbackQuery, db_user: User, db:
 
         try:
             # Получаем цены для текущих параметров
-            from app.config import PERIOD_PRICES
-            from app.database.crud.tariff import get_tariff_by_id
-
-            # В режиме тарифов берём цену из тарифа пользователя
-            base_price_original = 0
-            if settings.is_tariffs_mode() and subscription.tariff_id:
-                tariff = await get_tariff_by_id(db, subscription.tariff_id)
-                if tariff and tariff.period_prices:
-                    base_price_original = tariff.period_prices.get(str(duration_days), 0)
-
-            # Если не нашли в тарифе - используем PERIOD_PRICES
-            if base_price_original <= 0:
-                base_price_original = PERIOD_PRICES.get(duration_days, 0)
-
-            period_discount_percent = db_user.get_promo_discount('period', duration_days)
-            base_price, base_discount_total = apply_percentage_discount(
-                base_price_original,
-                period_discount_percent,
-            )
-
-            # Рассчитываем стоимость серверов
             from app.services.subscription_service import SubscriptionService
 
             subscription_service = SubscriptionService()
-            (
-                servers_price_per_month,
-                per_server_monthly_prices,
-            ) = await subscription_service.get_countries_price_by_uuids(
-                current_connected_squads,
+            total_price = await subscription_service.calculate_renewal_price(
+                subscription,
+                duration_days,
                 db,
-                promo_group_id=db_user.promo_group_id,
-            )
-            servers_discount_percent = db_user.get_promo_discount('servers', duration_days)
-            total_servers_price = 0
-            for server_price in per_server_monthly_prices:
-                discounted_per_month, discount_per_month = apply_percentage_discount(
-                    server_price,
-                    servers_discount_percent,
-                )
-                total_servers_price += discounted_per_month
-
-            # Рассчитываем стоимость трафика
-            traffic_price_per_month = settings.get_traffic_price(current_traffic)
-            traffic_discount_percent = db_user.get_promo_discount('traffic', duration_days)
-            traffic_discounted_per_month, traffic_discount_per_month = apply_percentage_discount(
-                traffic_price_per_month,
-                traffic_discount_percent,
-            )
-
-            # Рассчитываем стоимость устройств
-            additional_devices = max(0, (current_device_limit or 0) - settings.DEFAULT_DEVICE_LIMIT)
-            devices_price_per_month = additional_devices * settings.PRICE_PER_DEVICE
-            devices_discount_percent = db_user.get_promo_discount('devices', duration_days)
-            devices_discounted_per_month, devices_discount_per_month = apply_percentage_discount(
-                devices_price_per_month,
-                devices_discount_percent,
-            )
-
-            # Общая стоимость
-            months_in_period = calculate_months_from_days(duration_days)
-            total_price = (
-                base_price
-                + total_servers_price * months_in_period
-                + traffic_discounted_per_month * months_in_period
-                + devices_discounted_per_month * months_in_period
+                user=db_user,
             )
 
             traffic_value = current_traffic or 0

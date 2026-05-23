@@ -1523,8 +1523,20 @@ async def handle_extend_subscription(callback: types.CallbackQuery, db_user: Use
                     else:
                         device_limit = forced_limit
 
-            additional_devices = max(0, (device_limit or 0) - settings.DEFAULT_DEVICE_LIMIT)
-            devices_price_per_month = additional_devices * settings.PRICE_PER_DEVICE
+            tariff = getattr(subscription, 'tariff', None)
+            if tariff is None and subscription.tariff_id:
+                from app.database.crud.tariff import get_tariff_by_id
+                tariff = await get_tariff_by_id(db, subscription.tariff_id)
+
+            if tariff:
+                base_devices = tariff.device_limit
+                price_per_extra_device = tariff.device_price_kopeks if tariff.device_price_kopeks is not None else settings.PRICE_PER_DEVICE
+            else:
+                base_devices = settings.DEFAULT_DEVICE_LIMIT
+                price_per_extra_device = settings.PRICE_PER_DEVICE
+
+            additional_devices = max(0, (device_limit or 0) - base_devices)
+            devices_price_per_month = additional_devices * price_per_extra_device
             devices_total_base = devices_price_per_month * months_in_period
             devices_price_info = calculate_user_price(db_user, devices_total_base, days, 'devices')
 
@@ -1729,8 +1741,20 @@ async def confirm_extend_subscription(callback: types.CallbackQuery, db_user: Us
                 else:
                     device_limit = forced_limit
 
-        additional_devices = max(0, (device_limit or 0) - settings.DEFAULT_DEVICE_LIMIT)
-        devices_price_per_month = additional_devices * settings.PRICE_PER_DEVICE
+        tariff = getattr(subscription, 'tariff', None)
+        if tariff is None and subscription.tariff_id:
+            from app.database.crud.tariff import get_tariff_by_id
+            tariff = await get_tariff_by_id(db, subscription.tariff_id)
+
+        if tariff:
+            base_devices = tariff.device_limit
+            price_per_extra_device = tariff.device_price_kopeks if tariff.device_price_kopeks is not None else settings.PRICE_PER_DEVICE
+        else:
+            base_devices = settings.DEFAULT_DEVICE_LIMIT
+            price_per_extra_device = settings.PRICE_PER_DEVICE
+
+        additional_devices = max(0, (device_limit or 0) - base_devices)
+        devices_price_per_month = additional_devices * price_per_extra_device
         devices_discount_percent = db_user.get_promo_discount(
             'devices',
             days,

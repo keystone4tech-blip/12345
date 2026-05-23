@@ -941,9 +941,9 @@ async def show_settings_history(
             ts_text = timestamp.strftime('%d.%m %H:%M') if timestamp else '—'
             try:
                 parsed_value = bot_configuration_service.deserialize_value(row.key, row.value)
-                formatted_value = bot_configuration_service.format_value_human(row.key, parsed_value)
+                formatted_value = html.escape(bot_configuration_service.format_value_human(row.key, parsed_value))
             except Exception:
-                formatted_value = row.value or '—'
+                formatted_value = html.escape(row.value or '—')
             lines.append(f'{ts_text} • <code>{row.key}</code> = {formatted_value}')
     else:
         lines.append('История изменений пуста.')
