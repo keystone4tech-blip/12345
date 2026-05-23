@@ -104,7 +104,18 @@ async def show_rules(callback: types.CallbackQuery, db_user: User, db: AsyncSess
     await callback.answer()
 
 
+async def handle_service_pinned_message(message: types.Message):
+    """Удаляет системные сообщения о том, что сообщение было закреплено."""
+    try:
+        await message.delete()
+    except Exception as e:
+        logger.debug('Не удалось удалить сервисное сообщение о закреплении', error=str(e))
+
+
 def register_handlers(dp: Dispatcher):
+    # Удаление системного сообщения о закреплении
+    dp.message.register(handle_service_pinned_message, F.pinned_message)
+
     # Удаление уведомлений
     dp.callback_query.register(handle_delete_ban_notification, F.data == 'ban_notify:delete')
     dp.callback_query.register(handle_webhook_notification_close, F.data == 'webhook:close')
