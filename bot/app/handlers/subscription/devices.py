@@ -79,6 +79,7 @@ async def get_servers_display_names(squad_uuids: list[str]) -> str:
         from app.database.database import AsyncSessionLocal
 
         server_names = []
+        missing_uuids = []
 
         async with AsyncSessionLocal() as db:
             for uuid in squad_uuids:
@@ -88,10 +89,11 @@ async def get_servers_display_names(squad_uuids: list[str]) -> str:
                     logger.debug('Найден сервер в БД', uuid=uuid, display_name=server.display_name)
                 else:
                     logger.warning('Сервер с UUID не найден в БД', uuid=uuid)
+                    missing_uuids.append(uuid)
 
-        if not server_names:
+        if missing_uuids:
             countries = await _get_available_countries()
-            for uuid in squad_uuids:
+            for uuid in missing_uuids:
                 for country in countries:
                     if country['uuid'] == uuid:
                         server_names.append(country['name'])
@@ -129,8 +131,8 @@ async def get_current_devices_count(db_user: User) -> str:
             response = await api._make_request('GET', f'/api/hwid/devices/{db_user.remnawave_uuid}')
 
             if response and 'response' in response:
-                total_devices = response['response'].get('total', 0)
-                return str(total_devices)
+                devices_list = response['response'].get('devices', [])
+                return str(len(devices_list))
             return '—'
 
     except Exception as e:
@@ -696,8 +698,8 @@ async def handle_device_management(callback: types.CallbackQuery, db_user: User,
 
             if response and 'response' in response:
                 devices_info = response['response']
-                total_devices = devices_info.get('total', 0)
                 devices_list = devices_info.get('devices', [])
+                total_devices = len(devices_list)
 
                 if total_devices == 0:
                     await callback.message.edit_text(
