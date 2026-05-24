@@ -818,20 +818,26 @@ class SubscriptionService:
                 user = getattr(subscription, 'user', None)
             promo_group = promo_group or (user.get_primary_promo_group() if user else None)
 
-            servers_price, _ = await self.get_countries_price_by_uuids(
-                subscription.connected_squads,
-                db,
-                promo_group_id=promo_group.id if promo_group else None,
-            )
+            if tariff:
+                servers_price = 0
+                servers_discount_percent = 0
+                servers_discount = 0
+                discounted_servers_price = 0
+            else:
+                servers_price, _ = await self.get_countries_price_by_uuids(
+                    subscription.connected_squads,
+                    db,
+                    promo_group_id=promo_group.id if promo_group else None,
+                )
 
-            servers_discount_percent = _resolve_discount_percent(
-                user,
-                promo_group,
-                'servers',
-                period_days=period_days,
-            )
-            servers_discount = servers_price * servers_discount_percent // 100
-            discounted_servers_price = servers_price - servers_discount
+                servers_discount_percent = _resolve_discount_percent(
+                    user,
+                    promo_group,
+                    'servers',
+                    period_days=period_days,
+                )
+                servers_discount = servers_price * servers_discount_percent // 100
+                discounted_servers_price = servers_price - servers_discount
 
             device_limit = subscription.device_limit
             if device_limit is None:
@@ -861,20 +867,26 @@ class SubscriptionService:
             devices_discount = devices_price * devices_discount_percent // 100
             discounted_devices_price = devices_price - devices_discount
 
-            # В режиме fixed_with_topup при продлении используем фиксированный лимит
-            if settings.is_traffic_fixed():
-                renewal_traffic_gb = settings.get_fixed_traffic_limit()
+            if tariff:
+                traffic_price = 0
+                traffic_discount_percent = 0
+                traffic_discount = 0
+                discounted_traffic_price = 0
             else:
-                renewal_traffic_gb = subscription.traffic_limit_gb
-            traffic_price = settings.get_traffic_price(renewal_traffic_gb)
-            traffic_discount_percent = _resolve_discount_percent(
-                user,
-                promo_group,
-                'traffic',
-                period_days=period_days,
-            )
-            traffic_discount = traffic_price * traffic_discount_percent // 100
-            discounted_traffic_price = traffic_price - traffic_discount
+                # В режиме fixed_with_topup при продлении используем фиксированный лимит
+                if settings.is_traffic_fixed():
+                    renewal_traffic_gb = settings.get_fixed_traffic_limit()
+                else:
+                    renewal_traffic_gb = subscription.traffic_limit_gb
+                traffic_price = settings.get_traffic_price(renewal_traffic_gb)
+                traffic_discount_percent = _resolve_discount_percent(
+                    user,
+                    promo_group,
+                    'traffic',
+                    period_days=period_days,
+                )
+                traffic_discount = traffic_price * traffic_discount_percent // 100
+                discounted_traffic_price = traffic_price - traffic_discount
 
             period_discount_percent = _resolve_discount_percent(
                 user,
@@ -1170,20 +1182,27 @@ class SubscriptionService:
                 user = getattr(subscription, 'user', None)
             promo_group = promo_group or (user.get_primary_promo_group() if user else None)
 
-            servers_price_per_month, _ = await self.get_countries_price_by_uuids(
-                subscription.connected_squads,
-                db,
-                promo_group_id=promo_group.id if promo_group else None,
-            )
-            servers_discount_percent = _resolve_discount_percent(
-                user,
-                promo_group,
-                'servers',
-                period_days=period_days,
-            )
-            servers_discount_per_month = servers_price_per_month * servers_discount_percent // 100
-            discounted_servers_per_month = servers_price_per_month - servers_discount_per_month
-            total_servers_price = discounted_servers_per_month * months_in_period
+            if tariff:
+                servers_price_per_month = 0
+                servers_discount_percent = 0
+                servers_discount_per_month = 0
+                discounted_servers_per_month = 0
+                total_servers_price = 0
+            else:
+                servers_price_per_month, _ = await self.get_countries_price_by_uuids(
+                    subscription.connected_squads,
+                    db,
+                    promo_group_id=promo_group.id if promo_group else None,
+                )
+                servers_discount_percent = _resolve_discount_percent(
+                    user,
+                    promo_group,
+                    'servers',
+                    period_days=period_days,
+                )
+                servers_discount_per_month = servers_price_per_month * servers_discount_percent // 100
+                discounted_servers_per_month = servers_price_per_month - servers_discount_per_month
+                total_servers_price = discounted_servers_per_month * months_in_period
 
             device_limit = subscription.device_limit
             if device_limit is None:
@@ -1215,21 +1234,28 @@ class SubscriptionService:
             discounted_devices_per_month = devices_price_per_month - devices_discount_per_month
             total_devices_price = discounted_devices_per_month * months_in_period
 
-            # В режиме fixed_with_topup при продлении используем фиксированный лимит
-            if settings.is_traffic_fixed():
-                renewal_traffic_gb = settings.get_fixed_traffic_limit()
+            if tariff:
+                traffic_price_per_month = 0
+                traffic_discount_percent = 0
+                traffic_discount_per_month = 0
+                discounted_traffic_per_month = 0
+                total_traffic_price = 0
             else:
-                renewal_traffic_gb = subscription.traffic_limit_gb
-            traffic_price_per_month = settings.get_traffic_price(renewal_traffic_gb)
-            traffic_discount_percent = _resolve_discount_percent(
-                user,
-                promo_group,
-                'traffic',
-                period_days=period_days,
-            )
-            traffic_discount_per_month = traffic_price_per_month * traffic_discount_percent // 100
-            discounted_traffic_per_month = traffic_price_per_month - traffic_discount_per_month
-            total_traffic_price = discounted_traffic_per_month * months_in_period
+                # В режиме fixed_with_topup при продлении используем фиксированный лимит
+                if settings.is_traffic_fixed():
+                    renewal_traffic_gb = settings.get_fixed_traffic_limit()
+                else:
+                    renewal_traffic_gb = subscription.traffic_limit_gb
+                traffic_price_per_month = settings.get_traffic_price(renewal_traffic_gb)
+                traffic_discount_percent = _resolve_discount_percent(
+                    user,
+                    promo_group,
+                    'traffic',
+                    period_days=period_days,
+                )
+                traffic_discount_per_month = traffic_price_per_month * traffic_discount_percent // 100
+                discounted_traffic_per_month = traffic_price_per_month - traffic_discount_per_month
+                total_traffic_price = discounted_traffic_per_month * months_in_period
 
             period_discount_percent = _resolve_discount_percent(
                 user,
