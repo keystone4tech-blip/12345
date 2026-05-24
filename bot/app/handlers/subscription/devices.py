@@ -70,40 +70,108 @@ async def get_current_devices_detailed(db_user: User) -> dict:
         return {'count': 0, 'devices': []}
 
 
+def _map_tag_to_country_name(tag: str) -> str:
+    tag_lower = tag.lower()
+    if 'germany' in tag_lower or 'steal' in tag_lower or 'de' == tag_lower:
+        return '🇩🇪 Германия'
+    elif 'finland' in tag_lower or 'fi' == tag_lower:
+        return '🇫🇮 Финляндия'
+    elif 'sweden' in tag_lower or 'se' == tag_lower:
+        return '🇸🇪 Швеция'
+    elif 'netherlands' in tag_lower or 'nl' == tag_lower:
+        return '🇳🇱 Нидерланды'
+    elif 'usa' in tag_lower or 'us' == tag_lower or 'america' in tag_lower:
+        return '🇺🇸 США'
+    elif 'france' in tag_lower or 'fr' == tag_lower:
+        return '🇫🇷 Франция'
+    elif 'uk' in tag_lower or 'gb' == tag_lower or 'england' in tag_lower:
+        return '🇬🇧 Великобритания'
+    elif 'italy' in tag_lower or 'it' == tag_lower:
+        return '🇮🇹 Италия'
+    elif 'spain' in tag_lower or 'es' == tag_lower:
+        return '🇪🇸 Испания'
+    elif 'canada' in tag_lower or 'ca' == tag_lower:
+        return '🇨🇦 Канада'
+    elif 'japan' in tag_lower or 'jp' == tag_lower:
+        return '🇯🇵 Япония'
+    elif 'singapore' in tag_lower or 'sg' == tag_lower:
+        return '🇸🇬 Сингапур'
+    elif 'australia' in tag_lower or 'au' == tag_lower:
+        return '🇦🇺 Австралия'
+    elif 'poland' in tag_lower or 'pl' == tag_lower:
+        return '🇵🇱 Польша'
+    elif 'turkey' in tag_lower or 'tr' == tag_lower:
+        return '🇹🇷 Турция'
+    elif 'kazakhstan' in tag_lower or 'kz' == tag_lower:
+        return '🇰🇿 Казахстан'
+    elif 'russia' in tag_lower or 'ru' == tag_lower:
+        return '🇷🇺 Россия'
+    elif 'ukraine' in tag_lower or 'ua' == tag_lower:
+        return '🇺🇦 Украина'
+    else:
+        return f'🌐 {tag.capitalize()}'
+
+
 async def get_servers_display_names(squad_uuids: list[str]) -> str:
     if not squad_uuids:
         return 'Нет серверов'
 
     try:
-        from app.database.crud.server_squad import get_server_squad_by_uuid
-        from app.database.database import AsyncSessionLocal
+        from app.services.remnawave_service import RemnaWaveService
+        from app.utils.cache import cache, cache_key
 
-        server_names = []
-        missing_uuids = []
+        service = RemnaWaveService()
+        all_country_names = set()
 
-        async with AsyncSessionLocal() as db:
-            for uuid in squad_uuids:
-                server = await get_server_squad_by_uuid(db, uuid)
-                if server:
-                    server_names.append(server.display_name)
-                    logger.debug('Найден сервер в БД', uuid=uuid, display_name=server.display_name)
-                else:
-                    logger.warning('Сервер с UUID не найден в БД', uuid=uuid)
-                    missing_uuids.append(uuid)
+        for uuid in squad_uuids:
+            cache_key_val = cache_key('squad_inbounds_display', uuid)
+            cached = await cache.get(cache_key_val)
 
-        if missing_uuids:
-            countries = await _get_available_countries()
-            for uuid in missing_uuids:
-                for country in countries:
-                    if country['uuid'] == uuid:
-                        server_names.append(country['name'])
-                        logger.debug('Найден сервер в кэше', uuid=uuid, country=country['name'])
-                        break
+            if cached is not None:
+                all_country_names.update(cached)
+                continue
 
-        if not server_names:
+            squad_details = await service.get_squad_details(uuid)
+            squad_countries = set()
+
+            if squad_details and 'inbounds' in squad_details:
+                for inbound in squad_details['inbounds']:
+                    tag = inbound.get('tag', '')
+                    country_name = _map_tag_to_country_name(tag)
+                    if country_name:
+                        squad_countries.add(country_name)
+
+            # Если не нашли инбаундов или squad_details вернул None, берем из БД
+            if not squad_countries:
+                from app.database.crud.server_squad import get_server_squad_by_uuid
+                from app.database.database import AsyncSessionLocal
+
+                async with AsyncSessionLocal() as db:
+                    server = await get_server_squad_by_uuid(db, uuid)
+                    if server:
+                        squad_countries.add(server.display_name)
+                    else:
+                        # Fallback
+                        countries = await _get_available_countries()
+                        for country in countries:
+                            if country['uuid'] == uuid:
+                                squad_countries.add(country['name'])
+                                break
+
+            if squad_countries:
+                # Кэшируем успешный результат на 5 минут
+                await cache.set(cache_key_val, list(squad_countries), 300)
+
+            all_country_names.update(squad_countries)
+
+        if not all_country_names:
             if len(squad_uuids) == 1:
                 return '🎯 Тестовый сервер'
             return f'{len(squad_uuids)} стран'
+
+        server_names = list(all_country_names)
+        # Сортируем
+        server_names.sort()
 
         if len(server_names) > 6:
             displayed = ', '.join(server_names[:6])
