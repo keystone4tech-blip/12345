@@ -277,8 +277,8 @@ async def show_subscription_info(callback: types.CallbackQuery, db_user: User, d
     show_devices = settings.is_devices_selection_enabled()
 
     try:
-        from app.handlers.subscription.devices import get_devices_info
-        dev_info = await get_devices_info(db_user)
+        from app.handlers.subscription.devices import get_current_devices_detailed
+        dev_info = await get_current_devices_detailed(db_user)
         devices_list = dev_info.get('devices', [])
         devices_used_str = str(dev_info.get('count', 0))
     except Exception as e:
@@ -2893,9 +2893,13 @@ async def handle_subscription_settings(callback: types.CallbackQuery, db_user: U
 
     show_devices = settings.is_devices_selection_enabled()
 
-    from app.handlers.subscription.devices import get_devices_info
-    dev_info = await get_devices_info(db_user)
-    devices_used = str(dev_info.get('count', 0))
+    from app.handlers.subscription.devices import get_current_devices_detailed
+    try:
+        dev_info = await get_current_devices_detailed(db_user)
+        devices_used = str(dev_info.get('count', 0))
+    except Exception as e:
+        logger.error('Ошибка получения устройств в настройках', error=e)
+        devices_used = '—'
 
     settings_template = texts.t(
         'SUBSCRIPTION_SETTINGS_OVERVIEW',
