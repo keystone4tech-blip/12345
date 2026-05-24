@@ -276,14 +276,13 @@ async def show_subscription_info(callback: types.CallbackQuery, db_user: User, d
 
     show_devices = settings.is_devices_selection_enabled()
 
-    if show_devices:
-        try:
-            from app.handlers.subscription.devices import get_devices_info
-            dev_info = await get_devices_info(db_user)
-            devices_list = dev_info.get('devices', [])
-            devices_used_str = str(dev_info.get('count', 0))
-        except Exception as e:
-            logger.error('Ошибка получения устройств для отображения', error=e)
+    try:
+        from app.handlers.subscription.devices import get_devices_info
+        dev_info = await get_devices_info(db_user)
+        devices_list = dev_info.get('devices', [])
+        devices_used_str = str(dev_info.get('count', 0))
+    except Exception as e:
+        logger.error('Ошибка получения устройств для отображения', error=e)
             
     servers_names = await get_servers_display_names(subscription.connected_squads)
     servers_display = servers_names if servers_names else texts.t('SUBSCRIPTION_NO_SERVERS', 'Нет серверов')
@@ -397,9 +396,6 @@ async def show_subscription_info(callback: types.CallbackQuery, db_user: User, d
 🌍 Серверы: {servers}
 📱 Устройства: {devices_used} / {device_limit}""",
         )
-
-    if not show_devices:
-        message_template = '\n'.join([line for line in message_template.split('\n') if '{devices_used}' not in line])
 
     device_limit_display = str(subscription.device_limit)
 
@@ -2897,10 +2893,9 @@ async def handle_subscription_settings(callback: types.CallbackQuery, db_user: U
 
     show_devices = settings.is_devices_selection_enabled()
 
-    if show_devices:
-        devices_used = await get_current_devices_count(db_user)
-    else:
-        devices_used = 0
+    from app.handlers.subscription.devices import get_devices_info
+    dev_info = await get_devices_info(db_user)
+    devices_used = str(dev_info.get('count', 0))
 
     settings_template = texts.t(
         'SUBSCRIPTION_SETTINGS_OVERVIEW',
@@ -2914,9 +2909,7 @@ async def handle_subscription_settings(callback: types.CallbackQuery, db_user: U
         ),
     )
 
-    if not show_devices:
-        settings_template = '\n'.join([line for line in settings_template.split('\n') if '{devices_used}' not in line])
-
+    
     devices_limit_display = str(subscription.device_limit)
 
     settings_text = settings_template.format(
