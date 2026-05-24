@@ -353,11 +353,12 @@ async def show_payment_methods(callback: types.CallbackQuery, db_user: User, db:
             from app.services.subscription_service import SubscriptionService
 
             subscription_service = SubscriptionService()
-            total_price = await subscription_service.calculate_renewal_price(
+            total_price, breakdown = await subscription_service.calculate_renewal_price(
                 subscription,
                 duration_days,
                 db,
                 user=db_user,
+                return_breakdown=True,
             )
 
             traffic_value = current_traffic or 0
@@ -371,8 +372,25 @@ async def show_payment_methods(callback: types.CallbackQuery, db_user: User, db:
                 f'{traffic_display}, {current_device_limit} устр.'
             )
             estimated_price_info = (
-                f'💰 Стоимость продления (примерно): {texts.format_price(total_price)} за {duration_days} дней'
+                f'💰 Стоимость продления (примерно): <b>{texts.format_price(total_price)}</b> за {duration_days} дней'
             )
+            
+            breakdown_parts = []
+            if breakdown['base_price'] > 0:
+                breakdown_parts.append(f"{texts.format_price(breakdown['base_price'])} тариф")
+            if breakdown['servers_price'] > 0:
+                breakdown_parts.append(f"{texts.format_price(breakdown['servers_price'])} серверы")
+            if breakdown['traffic_price'] > 0:
+                breakdown_parts.append(f"{texts.format_price(breakdown['traffic_price'])} трафик")
+            if breakdown['devices_price'] > 0:
+                extra_devices = breakdown['extra_devices_count']
+                if extra_devices > 0:
+                    breakdown_parts.append(f"{texts.format_price(breakdown['devices_price'])} за {extra_devices} доп. устр.")
+                else:
+                    breakdown_parts.append(f"{texts.format_price(breakdown['devices_price'])} за доп. устр.")
+            
+            if breakdown_parts and len(breakdown_parts) > 1:
+                estimated_price_info += f"\n<i>({', '.join(breakdown_parts).replace(', ', ' + ')})</i>"
 
             tariff_info = f'\n\n📋 <b>Ваш текущий тариф:</b>\n{current_tariff_desc}\n{estimated_price_info}'
         except Exception as e:

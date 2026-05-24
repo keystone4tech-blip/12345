@@ -801,7 +801,8 @@ class SubscriptionService:
         *,
         user: User | None = None,
         promo_group: PromoGroup | None = None,
-    ) -> int:
+        return_breakdown: bool = False,
+    ) -> int | tuple[int, dict]:
         try:
             from app.config import PERIOD_PRICES
             from app.database.crud.tariff import get_tariff_by_id
@@ -928,6 +929,15 @@ class SubscriptionService:
                     )
                 logger.debug(message)
             logger.debug('💎 ИТОГО: ₽', total_price=total_price / 100)
+
+            if return_breakdown:
+                return total_price, {
+                    'base_price': base_price,
+                    'servers_price': discounted_servers_price,
+                    'devices_price': discounted_devices_price,
+                    'traffic_price': discounted_traffic_price,
+                    'extra_devices_count': max(0, (device_limit or 0) - base_devices) if tariff else 0,
+                }
 
             return total_price
 
