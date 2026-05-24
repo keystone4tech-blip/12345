@@ -272,43 +272,19 @@ async def show_subscription_info(callback: types.CallbackQuery, db_user: User, d
         ).format(used=used_traffic, limit=subscription.traffic_limit_gb)
 
     devices_used_str = '—'
-    devices_list = []
-    devices_count = 0
+    devices_list: list[dict[str, Any]] = []
 
     show_devices = settings.is_devices_selection_enabled()
-    devices_used_str = ''
-    devices_list: list[dict[str, Any]] = []
 
     if show_devices:
         try:
-            if db_user.remnawave_uuid:
-                from app.services.remnawave_service import RemnaWaveService
-
-                service = RemnaWaveService()
-
-                async with service.get_api_client() as api:
-                    response = await api._make_request('GET', f'/api/hwid/devices/{db_user.remnawave_uuid}')
-
-                    if response and 'response' in response:
-                        devices_info = response['response']
-                        devices_list = devices_info.get('devices', [])
-                        devices_count = len(devices_list)
-                        devices_used_str = str(devices_count)
-                        logger.info(
-                            'Найдено устройств для пользователя',
-                            devices_count=devices_count,
-                            telegram_id=db_user.telegram_id,
-                        )
-                    else:
-                        logger.warning(
-                            'Не удалось получить информацию об устройствах для', telegram_id=db_user.telegram_id
-                        )
-
+            from app.handlers.subscription.devices import get_devices_info
+            dev_info = await get_devices_info(db_user)
+            devices_list = dev_info.get('devices', [])
+            devices_used_str = str(dev_info.get('count', 0))
         except Exception as e:
             logger.error('Ошибка получения устройств для отображения', error=e)
-            devices_used = await get_current_devices_count(db_user)
-            devices_used_str = str(devices_used)
-
+            
     servers_names = await get_servers_display_names(subscription.connected_squads)
     servers_display = servers_names if servers_names else texts.t('SUBSCRIPTION_NO_SERVERS', 'Нет серверов')
 
@@ -423,10 +399,7 @@ async def show_subscription_info(callback: types.CallbackQuery, db_user: User, d
         )
 
     if not show_devices:
-        message_template = message_template.replace(
-            '\n📱 Устройства: {devices_used} / {device_limit}',
-            '',
-        )
+        message_template = '\n'.join([line for line in message_template.split('\n') if '{devices_used}' not in line])
 
     device_limit_display = str(subscription.device_limit)
 
@@ -2942,10 +2915,7 @@ async def handle_subscription_settings(callback: types.CallbackQuery, db_user: U
     )
 
     if not show_devices:
-        settings_template = settings_template.replace(
-            '\n📱 Устройства: {devices_used} / {devices_limit}',
-            '',
-        )
+        settings_template = '\n'.join([line for line in settings_template.split('\n') if '{devices_used}' not in line])
 
     devices_limit_display = str(subscription.device_limit)
 

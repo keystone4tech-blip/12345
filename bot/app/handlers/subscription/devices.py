@@ -59,8 +59,8 @@ async def get_current_devices_detailed(db_user: User) -> dict:
 
             if response and 'response' in response:
                 devices_info = response['response']
-                total_devices = devices_info.get('total', 0)
                 devices_list = devices_info.get('devices', [])
+                total_devices = len(devices_list)
 
                 return {'count': total_devices, 'devices': devices_list[:5]}
             return {'count': 0, 'devices': []}
