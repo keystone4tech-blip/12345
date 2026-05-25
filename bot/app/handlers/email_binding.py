@@ -119,8 +119,28 @@ async def process_email(message: types.Message, state: FSMContext, db_user: User
     existing_user = result.scalar_one_or_none()
     
     if existing_user:
-        await message.answer(texts.t("EMAIL_ALREADY_EXISTS", "❌ Этот Email уже используется другим аккаунтом."))
-        return
+        try:
+            from app.services.merge_service import MergeService
+            merge_service = MergeService()
+            merge_token = await merge_service.create_merge_token(db_user.id, existing_user.id)
+            cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
+            merge_url = f"{cabinet_url}/merge/{merge_token}"
+            
+            await message.answer(
+                texts.t("EMAIL_ALREADY_EXISTS_MERGE", "⚠️ <b>Этот Email уже используется.</b>\n\nВы можете объединить текущий Telegram-аккаунт с аккаунтом на сайте. Для этого нажмите кнопку ниже:"),
+                reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
+                    [types.InlineKeyboardButton(text=texts.t("MERGE_ACCOUNTS_BTN", "🔄 Объединить аккаунты"), web_app=types.WebAppInfo(url=merge_url))],
+                    [types.InlineKeyboardButton(text=texts.t("CANCEL", "❌ Отмена"), callback_data="cancel_email_binding")]
+                ]),
+                parse_mode="HTML"
+            )
+            await state.clear()
+            return
+        except Exception as e:
+            logger.error("Error creating merge token", error=e)
+            await message.answer(texts.t("SYSTEM_ERROR", "❌ Произошла системная ошибка. Пожалуйста, попробуйте позже."))
+            await state.clear()
+            return
 
     await state.update_data(email=email)
     await message.answer(
