@@ -179,7 +179,7 @@ export function AppHeader({
         style={{
           paddingTop: isFullscreen
             ? `${Math.max(safeAreaInset.top, contentSafeAreaInset.top) + (telegramPlatform === 'android' ? 48 : 45)}px`
-            : undefined,
+            : 'env(safe-area-inset-top)',
         }}
       >
         <div
@@ -306,7 +306,11 @@ export function AppHeader({
       {mobileMenuOpen && (
         <div
           className="fixed inset-x-0 bottom-0 z-40 animate-fade-in lg:hidden"
-          style={{ top: headerHeight }}
+          style={{
+            top: isFullscreen
+              ? `${headerHeight}px`
+              : `calc(${headerHeight}px + env(safe-area-inset-top))`,
+          }}
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileMenuOpen(false)} />

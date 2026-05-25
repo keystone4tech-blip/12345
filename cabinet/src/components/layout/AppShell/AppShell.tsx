@@ -470,7 +470,14 @@ export function AppShell({ children }: AppShellProps) {
       <div className="hidden h-14 lg:block" />
 
       {/* Mobile spacer */}
-      <div className="lg:hidden" style={{ height: headerHeight }} />
+      <div
+        className="lg:hidden"
+        style={{
+          height: isMobileFullscreen
+            ? `${headerHeight}px`
+            : `calc(${headerHeight}px + env(safe-area-inset-top))`,
+        }}
+      />
 
       {/* Main content */}
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">
