@@ -2148,7 +2148,8 @@ async def get_merge_preview(
                 t_res = await db.execute(select(Tariff).where(Tariff.id == sub.tariff_id))
                 t_obj = t_res.scalar_one_or_none()
                 if t_obj:
-                    tariff_name = t_obj.name
+                    import re
+                    tariff_name = re.sub(r'<[^>]*>', '', t_obj.name).strip()
 
             sub_preview = MergeSubscriptionPreview(
                 status=sub.status,

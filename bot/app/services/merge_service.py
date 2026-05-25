@@ -291,7 +291,7 @@ class MergeService:
 
         # 7. Наконец, удаляем вторичного пользователя из базы данных
         logger.info("🗑️ MERGE: Удаление дублирующего вторичного аккаунта", secondary_user_id=secondary_id)
-        await db.delete(secondary_user = secondary_user)
+        await db.delete(secondary_user)
 
         # Коммитим транзакцию
         await db.commit()
