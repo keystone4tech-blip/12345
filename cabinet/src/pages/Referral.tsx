@@ -232,8 +232,8 @@ export default function Referral() {
     }
   };
 
-  const shareLink = () => {
-    if (!referralLink) return;
+  const shareLink = (url: string) => {
+    if (!url) return;
     const shareText = t('referral.shareMessage', {
       percent: info?.commission_percent || 0,
       botName: branding?.name || import.meta.env.VITE_APP_NAME || 'Cabinet',
@@ -244,14 +244,14 @@ export default function Referral() {
         .share({
           title: t('referral.title'),
           text: shareText,
-          url: referralLink,
+          url: url,
         })
         .catch(() => { });
       return;
     }
 
     const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(
-      referralLink,
+      url,
     )}&text=${encodeURIComponent(shareText)}`;
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   };
@@ -333,7 +333,7 @@ export default function Referral() {
                 <svg className="h-4 w-4 text-accent-400" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
                 </svg>
-                {t('referral.botLink')}
+                {t('referral.botLink')} <span className="text-dark-400 font-normal">(не работает без ВПН)</span>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input
@@ -342,16 +342,27 @@ export default function Referral() {
                   value={botReferralLink}
                   className="input flex-1 text-sm"
                 />
-                <button
-                  onClick={() => copyLink(botReferralLink, 'bot')}
-                  className={`btn-primary shrink-0 px-4 ${copiedLink === 'bot' ? 'bg-success-500 hover:bg-success-500' : ''
-                    }`}
-                >
-                  {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
-                  <span className="ml-2">
-                    {copiedLink === 'bot' ? t('referral.copied') : t('referral.copyLink')}
-                  </span>
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => copyLink(botReferralLink, 'bot')}
+                    className={`btn-primary shrink-0 px-4 ${copiedLink === 'bot' ? 'bg-success-500 hover:bg-success-500' : ''
+                      }`}
+                  >
+                    {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
+                    <span className="ml-2">
+                      {copiedLink === 'bot' ? t('referral.copied') : t('referral.copyLink')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => shareLink(botReferralLink)}
+                    disabled={!botReferralLink}
+                    className={`btn-secondary flex shrink-0 items-center px-4 ${!botReferralLink ? 'cursor-not-allowed opacity-50' : ''
+                      }`}
+                  >
+                    <ShareIcon />
+                    <span className="ml-2">{t('referral.shareButton')}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -371,7 +382,7 @@ export default function Referral() {
                   d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                 />
               </svg>
-              {t('referral.cabinetLink')}
+              {t('referral.cabinetLink')} <span className="text-dark-400 font-normal">(доступен всегда)</span>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input type="text" readOnly value={referralLink} className="input flex-1 text-sm" />
@@ -388,7 +399,7 @@ export default function Referral() {
                   </span>
                 </button>
                 <button
-                  onClick={shareLink}
+                  onClick={() => shareLink(referralLink)}
                   disabled={!referralLink}
                   className={`btn-secondary flex shrink-0 items-center px-4 ${!referralLink ? 'cursor-not-allowed opacity-50' : ''
                     }`}
