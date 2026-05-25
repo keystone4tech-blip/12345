@@ -339,23 +339,33 @@ async def gift_confirm_purchase(
 
     # 3. Ссылка и кнопка 
     bot_me = await callback.bot.get_me()
-    gift_link = f"https://t.me/{bot_me.username}?start=gift_{token}"
+    cabinet_url = settings.CABINET_URL.rstrip('/')
+    gift_link_bot = f"https://t.me/{bot_me.username}?start=gift_{token}"
+    gift_link_cabinet = f"{cabinet_url}/gift?tab=activate&code={token}"
     
     share_text = (
         "🎁 Привет! У меня для тебя отличный подарок!\n\n"
         "Безлимитный и безопасный доступ в интернет без ограничений. ❤️\n\n"
         "Хватит ждать загрузки и сидеть без связи с родными и близкими!\n"
-        "⏳ Жми и активируй свой доступ по ссылке:\n"
-        f"{gift_link}"
+        "⏳ Жми и активируй свой доступ по ссылке в телеграм-боте:\n"
+        f"{gift_link_bot}\n\n"
+        "Если у тебя нет доступа к Telegram, ты можешь активировать подарок на сайте:\n"
+        f"{gift_link_cabinet}"
     )
     encoded_text = urllib.parse.quote(share_text)
     share_url = f"https://t.me/share/url?text={encoded_text}"
 
     text = (
         f"✅ <b>Подарок успешно оплачен!</b>\n\n"
-        f"Ваша подарочная ссылка готова. Отправьте её получателю!\n\n"
-        f"<code>{gift_link}</code>\n\n"
-        f"⚠️ <i>Ссылка действительна 30 дней и может быть активирована только одним человеком.</i>"
+        f"Ваши подарочные ссылки готовы. Отправьте их получателю!\n\n"
+        f"🤖 <b>Ссылка на бота:</b>\n"
+        f"<code>{gift_link_bot}</code>\n"
+        f"(не работает без ВПН)\n\n"
+        f"🌐 <b>Ссылка на личный кабинет:</b>\n"
+        f"<code>{gift_link_cabinet}</code>\n"
+        f"(доступен всегда)\n\n"
+        f"💡 <i>Если у получателя нет доступа в телеграм, отправьте ему ссылку на сайт (личный кабинет).</i>\n\n"
+        f"⚠️ <i>Подарок действителен 30 дней и может быть активирован только одним человеком.</i>"
     )
 
     try:
@@ -484,12 +494,15 @@ async def gift_history_handler(
     for i, g in enumerate(history, 1):
         status = "✅ Принят" if g['is_used'] else "⏳ Ожидает"
         recipient = f" ({g['recipient_name']})" if g['recipient_name'] else ""
-        link = f"<code>https://t.me/{bot_me.username}?start=gift_{g['token']}</code>"
+        cabinet_url = settings.CABINET_URL.rstrip('/')
+        link_bot = f"<code>https://t.me/{bot_me.username}?start=gift_{g['token']}</code>"
+        link_cabinet = f"<code>{cabinet_url}/gift?tab=activate&code={g['token']}</code>"
         
         text += (
             f"{i}. 📦 <b>{g['tariff_name']}</b> ({g['period_days']} дн.)\n"
             f"   Статус: <b>{status}</b>{recipient}\n"
-            f"   Ссылка: {link}\n\n"
+            f"   Ссылка (бот): {link_bot}\n"
+            f"   Ссылка (сайт): {link_cabinet}\n\n"
         )
     
     text += "<i>Нажмите на ссылку, чтобы скопировать её.</i>"
