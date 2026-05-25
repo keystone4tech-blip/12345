@@ -787,6 +787,14 @@ function BuyTabContent({
             <span>После оплаты будут сформированы <b>две подарочные ссылки</b>: на Telegram-бота и на личный кабинет.</span>
           </li>
           <li className="flex gap-2">
+            <span className="text-accent-400 mt-0.5">•</span>
+            <span>Ссылка действительна в течение 30 дней, и активировать её можно только один раз.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-400 mt-0.5">•</span>
+            <span>Посмотреть ваши активированные или отправленные подарки вы можете на вкладке <b>«Мои подарки»</b>.</span>
+          </li>
+          <li className="flex gap-2">
             <span className="text-warning-400 mt-0.5">💡</span>
             <span className="text-dark-300"><b>Совет:</b> Если у получателя сейчас нет доступа к Telegram, отправьте ему ссылку на личный кабинет — сайт всегда доступен без VPN.</span>
           </li>
