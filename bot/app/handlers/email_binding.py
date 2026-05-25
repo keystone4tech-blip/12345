@@ -121,16 +121,57 @@ async def process_email(message: types.Message, state: FSMContext, db_user: User
     if existing_user:
         try:
             from app.services.merge_service import MergeService
+            from app.cabinet.services.email_service import email_service
+            
             merge_service = MergeService()
             merge_token = await merge_service.create_merge_token(db_user.id, existing_user.id)
             cabinet_url = settings.CABINET_URL or "https://lk.mozhnovpn.tech"
             merge_url = f"{cabinet_url}/merge/{merge_token}"
             
+            subject = texts.t("MERGE_EMAIL_SUBJECT", "Слияние аккаунтов")
+            body_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .button {{
+                        display: inline-block;
+                        padding: 12px 24px;
+                        background-color: #007bff;
+                        color: white !important;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                    }}
+                    .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Здравствуйте!</h2>
+                    <p>Вы (или кто-то другой) запросили объединение вашего аккаунта на сайте с новым аккаунтом в Telegram.</p>
+                    <p>Для подтверждения слияния аккаунтов, пожалуйста, нажмите на кнопку ниже:</p>
+                    <a href="{merge_url}" class="button">Объединить аккаунты</a>
+                    <p>Или скопируйте и вставьте эту ссылку в браузер:</p>
+                    <p><a href="{merge_url}">{merge_url}</a></p>
+                    <p>Ссылка действительна в течение 15 минут.</p>
+                    <p>Если вы не запрашивали объединение аккаунтов, просто проигнорируйте это письмо.</p>
+                    <div class="footer">
+                        <p>С уважением,<br>{settings.SMTP_FROM_NAME}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            email_service.send_email(to_email=existing_user.email, subject=subject, body_html=body_html)
+            
             await message.answer(
-                texts.t("EMAIL_ALREADY_EXISTS_MERGE", "⚠️ <b>Этот Email уже используется.</b>\n\nВы можете объединить текущий Telegram-аккаунт с аккаунтом на сайте. Для этого нажмите кнопку ниже:"),
+                texts.t("EMAIL_ALREADY_EXISTS_MERGE_SENT", "⚠️ <b>Этот Email уже используется.</b>\n\nВ целях безопасности мы отправили письмо на указанную почту.\n\nПожалуйста, перейдите по ссылке в письме, чтобы подтвердить владение Email и объединить аккаунты."),
                 reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
-                    [types.InlineKeyboardButton(text=texts.t("MERGE_ACCOUNTS_BTN", "🔄 Объединить аккаунты"), web_app=types.WebAppInfo(url=merge_url))],
-                    [types.InlineKeyboardButton(text=texts.t("CANCEL", "❌ Отмена"), callback_data="cancel_email_binding")]
+                    [types.InlineKeyboardButton(text=texts.t("CANCEL", "❌ Отмена / Готово"), callback_data="cancel_email_binding")]
                 ]),
                 parse_mode="HTML"
             )
