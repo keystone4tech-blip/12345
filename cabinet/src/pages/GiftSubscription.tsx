@@ -767,6 +767,32 @@ function BuyTabContent({
 
   return (
     <div className="space-y-6">
+      {/* Instruction Block */}
+      <div className="rounded-2xl border border-accent-500/20 bg-accent-500/5 p-4 space-y-3">
+        <h3 className="text-sm font-bold text-accent-400 flex items-center gap-2">
+          <GiftIcon className="h-4 w-4" />
+          Как подарить VPN?
+        </h3>
+        <ul className="text-xs text-dark-200 space-y-2 list-none">
+          <li className="flex gap-2">
+            <span className="text-accent-400 mt-0.5">•</span>
+            <span>Вы можете подарить доступ к VPN своим близким, друзьям или коллегам.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-400 mt-0.5">•</span>
+            <span>Выберите тариф и оплатите его любым удобным способом (с баланса, картой, криптой и т.д.).</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-400 mt-0.5">•</span>
+            <span>После оплаты будут сформированы <b>две подарочные ссылки</b>: на Telegram-бота и на личный кабинет.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-warning-400 mt-0.5">💡</span>
+            <span className="text-dark-300"><b>Совет:</b> Если у получателя сейчас нет доступа к Telegram, отправьте ему ссылку на личный кабинет — сайт всегда доступен без VPN.</span>
+          </li>
+        </ul>
+      </div>
+
       {/* Tariff selection */}
       {showTariffCards && (
         <div>
@@ -783,13 +809,6 @@ function BuyTabContent({
               />
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Selected tariff description */}
-      {selectedTariff?.description && (
-        <div className="rounded-xl border border-dark-800/30 bg-dark-800/20 px-4 py-3">
-          <p className="text-sm text-dark-300">{selectedTariff.description}</p>
         </div>
       )}
 
