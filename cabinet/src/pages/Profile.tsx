@@ -470,20 +470,22 @@ export default function Profile() {
                     <input type="text" readOnly value={referralLink} className="input w-full text-sm" />
                   </div>
                   <div className="flex gap-2">
-                    <Button
+                    <button
                       onClick={copyReferralLink}
-                      variant={copied ? 'primary' : 'primary'}
-                      className={copied ? 'bg-success-500 hover:bg-success-500' : ''}
+                      className={`btn-primary shrink-0 px-4 ${copied ? 'bg-success-500 hover:bg-success-500' : ''}`}
                     >
                       {copied ? <CheckIcon /> : <CopyIcon />}
                       <span className="ml-2">
                         {copied ? t('referral.copied') : t('referral.copyLink')}
                       </span>
-                    </Button>
-                    <Button onClick={() => shareReferralLink(referralLink)} variant="secondary">
+                    </button>
+                    <button
+                      onClick={() => shareReferralLink(referralLink)}
+                      className="btn-secondary flex shrink-0 items-center px-4"
+                    >
                       <ShareIcon />
-                      <span className="ml-2 hidden sm:inline">{t('referral.shareButton')}</span>
-                    </Button>
+                      <span className="ml-2">{t('referral.shareButton')}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -502,20 +504,22 @@ export default function Profile() {
                       <input type="text" readOnly value={botReferralLink} className="input w-full text-sm" />
                     </div>
                     <div className="flex gap-2">
-                      <Button
+                      <button
                         onClick={copyBotReferralLink}
-                        variant={botCopied ? 'primary' : 'primary'}
-                        className={botCopied ? 'bg-success-500 hover:bg-success-500' : ''}
+                        className={`btn-primary shrink-0 px-4 ${botCopied ? 'bg-success-500 hover:bg-success-500' : ''}`}
                       >
                         {botCopied ? <CheckIcon /> : <CopyIcon />}
                         <span className="ml-2">
                           {botCopied ? t('referral.copied') : t('referral.copyLink')}
                         </span>
-                      </Button>
-                      <Button onClick={() => shareReferralLink(botReferralLink)} variant="secondary">
+                      </button>
+                      <button
+                        onClick={() => shareReferralLink(botReferralLink)}
+                        className="btn-secondary flex shrink-0 items-center px-4"
+                      >
                         <ShareIcon />
-                        <span className="ml-2 hidden sm:inline">{t('referral.shareButton')}</span>
-                      </Button>
+                        <span className="ml-2">{t('referral.shareButton')}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
