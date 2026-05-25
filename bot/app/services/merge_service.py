@@ -156,9 +156,38 @@ class MergeService:
             "remnawave_uuid", "trojan_password", "vless_uuid", "ss_password"
         ]
         
+        # Список уникальных полей, которые вызывают UniqueViolation при дублировании
+        unique_fields = ["telegram_id", "email", "google_id", "yandex_id", "discord_id", "vk_id", "remnawave_uuid"]
+        
+        # Сохраняем оригинальные значения уникальных полей вторичного юзера ДО очистки
+        # После SQL UPDATE и refresh() эти поля станут NULL, но нам нужны оригинальные значения
+        secondary_snapshot = {}
+        for field in fields_to_copy:
+            secondary_snapshot[field] = getattr(secondary_user, field)
+        
+        # --- ШАГ А: Через ПРЯМОЙ SQL очищаем ВСЕ уникальные поля у вторичного юзера ---
+        # Это гарантирует, что БД увидит NULL в unique-колонках ДО того, как мы назначим их основному.
+        # ORM-кэш SQLAlchemy может не сбрасывать изменения вовремя, поэтому используем raw SQL.
+        await db.execute(
+            text(
+                "UPDATE users SET telegram_id = NULL, email = NULL, google_id = NULL, "
+                "yandex_id = NULL, discord_id = NULL, vk_id = NULL, remnawave_uuid = NULL "
+                "WHERE id = :sec_id"
+            ),
+            {"sec_id": secondary_id}
+        )
+        # Принудительно сбрасываем изменения в базу данных
+        await db.flush()
+        logger.info("🧹 MERGE: Уникальные поля вторичного аккаунта очищены через SQL", secondary_user_id=secondary_id)
+        
+        # Обновляем ORM-объект secondary_user, чтобы он отражал актуальное состояние БД
+        await db.refresh(secondary_user)
+        
+        # --- ШАГ Б: Теперь безопасно копируем значения на основной аккаунт ---
+        # Используем снимок (secondary_snapshot) для получения оригинальных значений
         for field in fields_to_copy:
             primary_val = getattr(primary_user, field)
-            secondary_val = getattr(secondary_user, field)
+            secondary_val = secondary_snapshot[field]  # Берём из снимка, а не из обновлённого ORM-объекта
             if primary_val is None and secondary_val is not None:
                 setattr(primary_user, field, secondary_val)
                 logger.info(f"🔗 MERGE: Поле '{field}' перенесено", primary_user_id=primary_id, value=secondary_val)
