@@ -68,11 +68,38 @@ async def handle_ai_ticket_message(
     # 1. Создаём/получаем тикет
     texts = get_texts(db_user.language)
     try:
-        ticket = await ForumService.get_or_create_ticket(db, bot, db_user.id, db_user.full_name)
+        ticket, is_new = await ForumService.get_or_create_ticket(db, bot, db_user.id, db_user.full_name)
         if not ticket:
             logger.error('ai_ticket_client.ticket_init_returned_none', user_id=db_user.id)
             await message.answer(texts.t('TICKET_CREATE_ERROR', '⚠️ Не удалось создать обращение. Пожалуйста, попробуйте позже или используйте другой способ связи.'))
             return
+            
+        if is_new:
+            try:
+                from app.services.admin_notification_service import AdminNotificationService
+                from app.utils.timezone import format_local_datetime
+                
+                title = (user_text[:50] + '...') if user_text else 'Без заголовка'
+                telegram_id_display = (db_user.telegram_id or db_user.email or f'#{db_user.id}')
+                username_display = (db_user.username or 'отсутствует')
+                
+                notification_text = (
+                    f'🎫 <b>НОВЫЙ ТИКЕТ (AI)</b>\n\n'
+                    f'🆔 <b>ID:</b> <code>{ticket.id}</code>\n'
+                    f'👤 <b>Пользователь:</b> {db_user.full_name}\n'
+                    f'🆔 <b>ID:</b> <code>{telegram_id_display}</code>\n'
+                    f'📱 <b>Username:</b> @{username_display}\n'
+                    f'📝 <b>Сообщение:</b>\n{title}\n\n'
+                    f'📅 <b>Создан:</b> {format_local_datetime(ticket.created_at, "%d.%m.%Y %H:%M")}\n'
+                )
+                
+                admin_notifier = AdminNotificationService(bot)
+                await admin_notifier.send_ticket_event_notification(
+                    notification_text, None, media_file_id=media_file_id, media_type=media_type
+                )
+            except Exception as e:
+                logger.error('ai_ticket_client.notify_admin_failed', error=str(e))
+                
     except Exception as e:
         logger.error('ai_ticket_client.ticket_init_failed', error=str(e), user_id=db_user.id)
         await message.answer(texts.t('TICKET_CREATE_ERROR', '⚠️ Ошибка инициализации тикета. Мы скоро свяжемся с вами.'))

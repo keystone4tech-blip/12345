@@ -36,7 +36,7 @@ class ForumService:
         bot: Bot,
         user_id: int,
         user_display_name: str,
-    ) -> ForumTicket:
+    ) -> tuple[ForumTicket | None, bool]:
         """
         Get an existing open ticket for the user, or create a new one
         (including a Telegram Forum topic in the manager group).
@@ -49,7 +49,7 @@ class ForumService:
         result = await db.execute(stmt)
         ticket = result.scalars().first()
         if ticket:
-            return ticket
+            return ticket, False
 
         # Create a new Forum topic in the manager group
         from app.services.system_settings_service import BotConfigurationService
@@ -57,7 +57,7 @@ class ForumService:
         
         if not forum_group_id:
             logger.error('forum_service.no_forum_id', user_id=user_id)
-            return None
+            return None, False
 
         topic_name = f'🎫 {user_display_name} (ID: {user_id})'
         logger.info('forum_service.creating_topic', chat_id=forum_group_id, topic_name=topic_name, user_id=user_id)
@@ -69,7 +69,7 @@ class ForumService:
             topic_id = topic.message_thread_id
         except Exception as e:
             logger.error('forum_service.create_topic_failed', error=str(e), user_id=user_id, forum_id=forum_group_id)
-            return None
+            return None, False
 
         # Persist the ticket
         ai_enabled_global = BotConfigurationService.get_current_value('SUPPORT_AI_ENABLED')
@@ -89,7 +89,7 @@ class ForumService:
                     topic_id=topic_id, 
                     user_id=user_id, 
                     ai_enabled=ticket.ai_enabled)
-        return ticket
+        return ticket, True
 
     @staticmethod
     async def save_message(

@@ -1065,12 +1065,12 @@ async def notify_user_about_ticket_reply(bot: Bot, ticket: Ticket, reply_text: s
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('VIEW_TICKET', '👁️ Посмотреть тикет'), callback_data=f'view_ticket_{ticket.id}'
+                        text=texts.t_raw('VIEW_TICKET', '👁️ Посмотреть тикет'), callback_data=f'view_ticket_{ticket.id}'
                     )
                 ],
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('CLOSE_NOTIFICATION', '❌ Закрыть уведомление'),
+                        text=texts.t_raw('CLOSE_NOTIFICATION', '❌ Закрыть уведомление'),
                         callback_data=f'close_ticket_notification_{ticket.id}',
                     )
                 ],
