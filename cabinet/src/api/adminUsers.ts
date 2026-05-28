@@ -41,6 +41,7 @@ export interface UserListItem {
   last_name: string | null;
   full_name: string;
   status: string;
+  email: string | null;
   balance_kopeks: number;
   balance_rubles: number;
   created_at: string;

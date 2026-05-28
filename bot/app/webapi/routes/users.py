@@ -92,6 +92,7 @@ def _serialize_user(user: User) -> UserResponse:
         language=user.language,
         balance_kopeks=user.balance_kopeks,
         balance_rubles=round(user.balance_kopeks / 100, 2),
+        email=getattr(user, 'email', None),
         referral_code=user.referral_code,
         referred_by_id=user.referred_by_id,
         has_had_paid_subscription=user.has_had_paid_subscription,
@@ -111,6 +112,7 @@ def _apply_search_filter(query, search: str):
         func.lower(User.first_name).like(search_lower),
         func.lower(User.last_name).like(search_lower),
         func.lower(User.referral_code).like(search_lower),
+        func.lower(User.email).like(search_lower),
     ]
 
     if search.isdigit():
@@ -129,6 +131,7 @@ async def list_users(
     status_filter: UserStatus | None = Query(default=None, alias='status'),
     promo_group_id: int | None = Query(default=None),
     search: str | None = Query(default=None),
+    email: str | None = Query(default=None),
 ) -> UserListResponse:
     base_query = select(User).options(
         selectinload(User.subscription),
@@ -140,6 +143,10 @@ async def list_users(
 
     if promo_group_id:
         base_query = base_query.where(User.promo_group_id == promo_group_id)
+
+    if email:
+        email_lower = f'%{email.lower()}%'
+        base_query = base_query.where(func.lower(User.email).like(email_lower))
 
     if search:
         base_query = _apply_search_filter(base_query, search)

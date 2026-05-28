@@ -130,6 +130,14 @@ async def process_referral_registration(db: AsyncSession, new_user_id: int, refe
         except Exception as exc:
             logger.debug('Не удалось записать конкурсную регистрацию', exc=exc)
 
+        if not bot:
+            try:
+                from aiogram import Bot
+                from aiogram.client.default import DefaultBotProperties
+                bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
+            except Exception as e:
+                logger.error('Не удалось инициализировать бота для отправки реферальных уведомлений', error=e)
+
         if bot:
             commission_percent = get_effective_referral_commission_percent(referrer)
             

@@ -41,6 +41,7 @@ class UserResponse(BaseModel):
     language: str
     balance_kopeks: int
     balance_rubles: float
+    email: str | None = None
     referral_code: str | None = None
     referred_by_id: int | None = None
     has_had_paid_subscription: bool
