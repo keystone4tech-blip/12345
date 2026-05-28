@@ -60,8 +60,7 @@ async def handle_review_rating(
     # Создаем новый или обновляем существующий отзыв пользователя
     review = await reviews_service.create_or_update_review(db, db_user.id, rating)
 
-    # Сохраняем review_id в состоянии FSM
-    await state.set_state(ReviewStates.waiting_for_content)
+    # Сохраняем review_id в FSM (без установки состояния ожидания)
     await state.update_data(review_id=review.id)
 
     # Формируем звёзды для отображения
@@ -125,8 +124,9 @@ async def handle_add_content(
 ):
     """
     Пользователь нажал 'Добавить комментарий'.
-    Бот уже в состоянии waiting_for_content, просто выводим подсказку.
+    Устанавливаем состояние ожидания контента и выводим подсказку.
     """
+    await state.set_state(ReviewStates.waiting_for_content)
     try:
         await callback.message.edit_reply_markup(reply_markup=None)
     except Exception:
@@ -227,7 +227,7 @@ async def handle_dismiss(
 
 # ──────────────────────────── Обработчики контента ────────────────────────────
 
-@router.message(ReviewStates.waiting_for_content, F.text)
+@router.message(ReviewStates.waiting_for_content, F.text & ~F.text.startswith('/'))
 async def handle_text_review(
     message: types.Message,
     db_user: User,
@@ -294,7 +294,7 @@ async def handle_video_note_review(
     )
 
 
-@router.message(ReviewStates.waiting_for_content)
+@router.message(ReviewStates.waiting_for_content, ~F.text.startswith('/'))
 async def handle_unsupported_content(
     message: types.Message,
 ):
