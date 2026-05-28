@@ -641,6 +641,7 @@ def get_main_menu_keyboard(
     keyboard: list[list[InlineKeyboardButton]] = []
     paired_buttons: list[InlineKeyboardButton] = []
     active_sub_btn: InlineKeyboardButton | None = None
+    show_traffic_topup = False
 
     if has_active_subscription and subscription_is_active:
         subscription_link = get_display_subscription_link(subscription)
@@ -693,7 +694,6 @@ def get_main_menu_keyboard(
         # Добавляем кнопку докупки трафика для лимитированных подписок
         # В режиме тарифов проверяем tariff_id (детальная проверка в хендлере)
         # В классическом режиме проверяем глобальные настройки
-        show_traffic_topup = False
         if subscription and not subscription.is_trial and (subscription.traffic_limit_gb or 0) > 0:
             if settings.is_tariffs_mode() and getattr(subscription, 'tariff_id', None):
                 # Режим тарифов - показываем кнопку, проверка настроек тарифа в хендлере
@@ -753,8 +753,7 @@ def get_main_menu_keyboard(
                 
         subscription_buttons.append(InlineKeyboardButton(**btn_kwargs))
 
-    if subscription_buttons:
-        paired_buttons.extend(subscription_buttons)
+    # subscription_buttons добавляются в paired_buttons ниже, после выделения основной кнопки
     if simple_purchase_button:
         paired_buttons.append(simple_purchase_button)
 
@@ -787,6 +786,10 @@ def get_main_menu_keyboard(
         main_btn = subscription_buttons[0]
         # Если мы взяли кнопку отсюда, удаляем её из списка "остатков"
         subscription_buttons.pop(0)
+        
+    # Добавляем оставшиеся кнопки подписок в начало paired_buttons
+    if subscription_buttons:
+        paired_buttons = subscription_buttons + paired_buttons
         
     if main_btn:
         # Основная кнопка подписки/триала отдельным рядом (на всю ширину)
