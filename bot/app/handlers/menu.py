@@ -1359,6 +1359,16 @@ async def get_main_menu_text(user, texts, db: AsyncSession):
 
     info_sections: list[str] = []
 
+    # Подсказка для новых пользователей (можно получить триал)
+    has_active_sub = bool(subscription and subscription.is_active)
+    has_had_paid = getattr(user, 'has_had_paid_subscription', False)
+    if not has_had_paid and not has_active_sub:
+        instruction = texts.t(
+            'ONBOARDING_TRIAL_HINT',
+            '💡 <b>Для активации бесплатного периода нажмите на кнопку «🎁 Тестовая подписка» ниже 👇</b>'
+        )
+        info_sections.append(instruction)
+
     try:
         promo_hint = await build_promo_offer_hint(db, user, texts)
         if promo_hint:

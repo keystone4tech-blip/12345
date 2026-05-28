@@ -702,14 +702,12 @@ def get_main_menu_keyboard(
                 # Классический режим - проверяем глобальные настройки
                 show_traffic_topup = settings.BUY_TRAFFIC_BUTTON_VISIBLE
 
-        if show_traffic_topup:
-            paired_buttons.append(
-                InlineKeyboardButton(
-                    text=texts.t('BUY_TRAFFIC_BUTTON', '📈 Докупить трафик'), callback_data='buy_traffic'
-                )
+    if show_traffic_topup:
+        paired_buttons.append(
+            InlineKeyboardButton(
+                text=texts.t('BUY_TRAFFIC_BUTTON', '📈 Докупить трафик'), callback_data='buy_traffic'
             )
-
-    keyboard.append([InlineKeyboardButton(text=balance_button_text, callback_data='menu_balance')])
+        )
 
     show_trial = not has_had_paid_subscription and not has_active_subscription
 
@@ -783,9 +781,6 @@ def get_main_menu_keyboard(
 
     # -- Сборка клавиатуры по запросу пользователя --
     
-    # 1. Ряд: Подписка и Промокод
-    sub_promo_row = []
-    
     # Определяем основную кнопку подписки (Управление активной или Купить/Триальная)
     main_btn = active_sub_btn
     if not main_btn and subscription_buttons:
@@ -794,11 +789,14 @@ def get_main_menu_keyboard(
         subscription_buttons.pop(0)
         
     if main_btn:
-        sub_promo_row.append(main_btn)
+        # Основная кнопка подписки/триала отдельным рядом (на всю ширину)
+        keyboard.append([main_btn])
     
-    # Кнопка Промокод всегда рядом в первом ряду
-    sub_promo_row.append(InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode'))
-    keyboard.append(sub_promo_row)
+    # 1. Ряд: Баланс и Промокод
+    bal_promo_row = []
+    bal_promo_row.append(InlineKeyboardButton(text=balance_button_text, callback_data='menu_balance'))
+    bal_promo_row.append(InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode'))
+    keyboard.append(bal_promo_row)
 
     # 2. Ряд: Поделиться с другом (Рефералы)
     if settings.is_referral_program_enabled():
