@@ -312,10 +312,11 @@ class NotificationDeliveryService:
                 push_sent_count += 1
                 logger.info("Web Push успешно доставлен на устройство пользователя", user_id=user.id, subscription_id=sub.id)
             except WebPushException as e:
-                # Если пуш-служба вернула ошибку 410 (Gone) — это значит, что подписка устарела или удалена на устройстве.
+                # Если пуш-служба вернула ошибку 410 (Gone) или 403 (Forbidden) — это значит, что подписка устарела,
+                # удалена на устройстве или изменились ключи VAPID сервера.
                 # Мы должны незамедлительно очистить ее из базы данных, чтобы не слать лишние запросы.
                 logger.warning("Ошибка отправки Web Push (подписка недействительна)", error=str(e), subscription_id=sub.id)
-                if getattr(e, 'response', None) is not None and e.response.status_code == 410:
+                if getattr(e, 'response', None) is not None and e.response.status_code in (410, 403):
                     try:
                         async with db_manager.session() as db_write:
                             # Находим и удаляем подписку по первичному ключу в отдельной транзакции записи

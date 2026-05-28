@@ -188,11 +188,11 @@ async def send_test_notification(
             push_sent = True
             logger.info("Тестовый пуш успешно отправлен в push-сервис", user_id=user.id, subscription_id=sub.id)
         except WebPushException as e:
-            # Если подписка устарела или удалена на стороне браузера (410 Gone) — удаляем её из базы данных
+            # Если подписка устарела, удалена на стороне браузера (410 Gone) или ключи VAPID изменились (403 Forbidden) — удаляем её из базы данных
             logger.warning("Ошибка отправки web push", error=str(e), subscription_id=sub.id)
             push_errors.append(str(e))
-            if getattr(e, 'response', None) is not None and e.response.status_code == 410:
-                logger.info("Удаление устаревшей подписки на пуши из БД", subscription_id=sub.id)
+            if getattr(e, 'response', None) is not None and e.response.status_code in (410, 403):
+                logger.info("Удаление недействительной подписки на пуши из БД", subscription_id=sub.id)
                 await db.delete(sub)
                 await db.commit()
         except Exception as e:
