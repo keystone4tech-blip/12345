@@ -470,7 +470,7 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                 notify_error=notify_error,
             )
 
-    if user and user.status != UserStatus.DELETED.value:
+    if user and user.status == UserStatus.ACTIVE.value:
         logger.info('✅ Активный пользователь найден', telegram_id=user.telegram_id)
 
         profile_updated = False
@@ -691,7 +691,23 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
             logger.error('❌ Ошибка подготовки к восстановлению', error=e)
             await db.rollback()
     else:
-        logger.info('🆕 Новый пользователь, начинаем регистрацию')
+        logger.info('🆕 Новый пользователь, начинаем регистрацию (добавляем со статусом PENDING)')
+        
+        db_user = await get_user_by_telegram_id(db, message.from_user.id)
+        if not db_user:
+            try:
+                from app.database.crud.user import create_user
+                db_user = await create_user(
+                    db=db,
+                    telegram_id=message.from_user.id,
+                    username=message.from_user.username,
+                    first_name=message.from_user.first_name,
+                    last_name=message.from_user.last_name,
+                    status=UserStatus.PENDING.value
+                )
+                logger.info('👤 Пользователь создан со статусом PENDING', user_id=db_user.id)
+            except Exception as e:
+                logger.error('Ошибка создания пользователя при старте', error=e)
 
     data = await state.get_data() or {}
     if not data.get('language'):
@@ -1263,7 +1279,7 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
 
     campaign_id = data.get('campaign_id')
     is_new_user_registration = existing_user is None or (
-        existing_user and existing_user.status == UserStatus.DELETED.value
+        existing_user and existing_user.status in [UserStatus.DELETED.value, UserStatus.PENDING.value]
     )
 
     referrer_id = data.get('referrer_id')
@@ -1352,6 +1368,7 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
         await db.refresh(user, ['subscription'])
     else:
         logger.info('🔄 Обновляем существующего пользователя', from_user_id=callback.from_user.id)
+        was_pending = existing_user.status == UserStatus.PENDING.value
         existing_user.status = UserStatus.ACTIVE.value
         existing_user.language = language
         if referrer_id and referrer_id != existing_user.id and not existing_user.referred_by_id:
@@ -1363,6 +1380,25 @@ async def complete_registration_from_callback(callback: types.CallbackQuery, sta
         await db.commit()
         await db.refresh(existing_user, ['subscription'])
         user = existing_user
+
+        if was_pending:
+            try:
+                from app.services.event_emitter import event_emitter
+                await event_emitter.emit(
+                    'user.created',
+                    {
+                        'user_id': user.id,
+                        'telegram_id': user.telegram_id,
+                        'username': user.username,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'referral_code': user.referral_code,
+                        'referred_by_id': user.referred_by_id,
+                    },
+                    db=db,
+                )
+            except Exception as error:
+                logger.warning('Failed to emit user.created event in handle_rules_accept', error=error)
 
     if referrer_id and referrer_id != user.id:
         try:
@@ -1669,7 +1705,7 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
 
     campaign_id = data.get('campaign_id')
     is_new_user_registration = existing_user is None or (
-        existing_user and existing_user.status == UserStatus.DELETED.value
+        existing_user and existing_user.status in [UserStatus.DELETED.value, UserStatus.PENDING.value]
     )
 
     referrer_id = data.get('referrer_id')
@@ -1758,6 +1794,7 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
         await db.refresh(user, ['subscription'])
     else:
         logger.info('🔄 Обновляем существующего пользователя', from_user_id=message.from_user.id)
+        was_pending = existing_user.status == UserStatus.PENDING.value
         existing_user.status = UserStatus.ACTIVE.value
         existing_user.language = language
         if referrer_id and referrer_id != existing_user.id and not existing_user.referred_by_id:
@@ -1769,6 +1806,25 @@ async def complete_registration(message: types.Message, state: FSMContext, db: A
         await db.commit()
         await db.refresh(existing_user, ['subscription'])
         user = existing_user
+
+        if was_pending:
+            try:
+                from app.services.event_emitter import event_emitter
+                await event_emitter.emit(
+                    'user.created',
+                    {
+                        'user_id': user.id,
+                        'telegram_id': user.telegram_id,
+                        'username': user.username,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'referral_code': user.referral_code,
+                        'referred_by_id': user.referred_by_id,
+                    },
+                    db=db,
+                )
+            except Exception as error:
+                logger.warning('Failed to emit user.created event in complete_registration', error=error)
 
     if referrer_id and referrer_id != user.id:
         try:
@@ -2300,7 +2356,7 @@ async def required_sub_channel_check(
             await delete_pending_payload_from_redis(query.from_user.id)
             logger.info('🗑️ CHANNEL CHECK: Redis payload удален после успешной проверки подписки')
 
-        if user and user.status != UserStatus.DELETED.value:
+        if user and user.status == UserStatus.ACTIVE.value:
             has_active_subscription, subscription_is_active = _calculate_subscription_flags(user.subscription)
 
             menu_text = await get_main_menu_text(user, texts, db)

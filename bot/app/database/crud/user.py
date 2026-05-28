@@ -232,6 +232,7 @@ async def create_user_no_commit(
     language: str = 'ru',
     referred_by_id: int = None,
     referral_code: str = None,
+    status: str = 'active',
 ) -> User:
     """
     Создает пользователя без немедленного коммита для пакетной обработки
@@ -258,6 +259,7 @@ async def create_user_no_commit(
         has_had_paid_subscription=False,
         has_made_first_topup=False,
         promo_group_id=promo_group_id,
+        status=status,
     )
 
     db.add(user)
@@ -286,6 +288,7 @@ async def create_user(
     language: str = 'ru',
     referred_by_id: int = None,
     referral_code: str = None,
+    status: str = 'active',
 ) -> User:
     if not referral_code:
         referral_code = await create_unique_referral_code(db)
@@ -311,6 +314,7 @@ async def create_user(
             has_had_paid_subscription=False,
             has_made_first_topup=False,
             promo_group_id=promo_group_id,
+            status=status,
         )
 
         db.add(user)
@@ -324,25 +328,26 @@ async def create_user(
                 '✅ Создан пользователь с реферальным кодом', telegram_id=telegram_id, referral_code=referral_code
             )
 
-            # Отправляем событие о создании пользователя
-            try:
-                from app.services.event_emitter import event_emitter
+            if status == UserStatus.ACTIVE.value:
+                # Отправляем событие о создании пользователя
+                try:
+                    from app.services.event_emitter import event_emitter
 
-                await event_emitter.emit(
-                    'user.created',
-                    {
-                        'user_id': user.id,
-                        'telegram_id': user.telegram_id,
-                        'username': user.username,
-                        'first_name': user.first_name,
-                        'last_name': user.last_name,
-                        'referral_code': user.referral_code,
-                        'referred_by_id': user.referred_by_id,
-                    },
-                    db=db,
-                )
-            except Exception as error:
-                logger.warning('Failed to emit user.created event', error=error)
+                    await event_emitter.emit(
+                        'user.created',
+                        {
+                            'user_id': user.id,
+                            'telegram_id': user.telegram_id,
+                            'username': user.username,
+                            'first_name': user.first_name,
+                            'last_name': user.last_name,
+                            'referral_code': user.referral_code,
+                            'referred_by_id': user.referred_by_id,
+                        },
+                        db=db,
+                    )
+                except Exception as error:
+                    logger.warning('Failed to emit user.created event', error=error)
 
             return user
 

@@ -115,6 +115,7 @@ class UserStatus(Enum):
     ACTIVE = 'active'
     BLOCKED = 'blocked'
     DELETED = 'deleted'
+    PENDING = 'pending'
 
 
 class SubscriptionStatus(Enum):

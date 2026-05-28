@@ -104,7 +104,7 @@ class AuthMiddleware(BaseMiddleware):
                     logger.info('🚫 Заблокированный пользователь попытался использовать бота', user_id=user.id)
                     return None
 
-                if db_user.status == UserStatus.DELETED.value:
+                if db_user.status in [UserStatus.DELETED.value, UserStatus.PENDING.value]:
                     state: FSMContext = data.get('state')
                     current_state = None
 
@@ -139,22 +139,28 @@ class AuthMiddleware(BaseMiddleware):
                     )
 
                     if is_start_or_registration:
-                        logger.info('🔄 Удаленный пользователь начинает повторную регистрацию', user_id=user.id)
+                        logger.info('🔄 Пользователь (DELETED/PENDING) начинает/продолжает регистрацию', user_id=user.id)
                         data['db'] = db
-                        data['db_user'] = None
+                        # Если пользователь PENDING, передаем его в обработчики, иначе None (для DELETED)
+                        data['db_user'] = db_user if db_user.status == UserStatus.PENDING.value else None
                         data['is_admin'] = False
                         result = await handler(event, data)
                         await db.commit()
                         return result
+                    
+                    # Блокируем доступ к остальным функциям
                     if isinstance(event, Message):
-                        await event.answer(
-                            '❌ Ваш аккаунт был удален.\n🔄 Для повторной регистрации выполните команду /start'
-                        )
+                        if db_user.status == UserStatus.DELETED.value:
+                            await event.answer('❌ Ваш аккаунт был удален.\n🔄 Для повторной регистрации выполните команду /start')
+                        else:
+                            await event.answer('▶️ Для начала работы необходимо завершить регистрацию с помощью команды /start')
                     elif isinstance(event, CallbackQuery):
-                        await event.answer(
-                            '❌ Ваш аккаунт был удален. Для повторной регистрации выполните /start', show_alert=True
-                        )
-                    logger.info('❌ Удаленный пользователь попытался использовать бота без /start', user_id=user.id)
+                        if db_user.status == UserStatus.DELETED.value:
+                            await event.answer('❌ Ваш аккаунт был удален. Для повторной регистрации выполните /start', show_alert=True)
+                        else:
+                            await event.answer('▶️ Необходимо завершить регистрацию с помощью команды /start', show_alert=True)
+                    
+                    logger.info('❌ Пользователь (DELETED/PENDING) попытался использовать бота без /start', user_id=user.id)
                     return None
 
                 profile_updated = False
