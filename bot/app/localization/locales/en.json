@@ -816,7 +816,7 @@
   "ADMIN_USER_BLOCK": "🚫 Block",
   "ADMIN_USER_DELETE": "🗑️ Delete",
   "ADMIN_USER_LAST_ACTIVITY_UNKNOWN": "Unknown",
-  "ADMIN_USER_MANAGEMENT_PROFILE": "👤 <b>User management</b>\n\n<b>Main information:</b>\n• Name: {name}\n• ID: <code>{telegram_id}</code>\n• Username: {username}\n• Status: {status}\n• Language: {language}\n\n<b>Finances:</b>\n• Balance: {balance}\n• Transactions: {transactions}\n\n<b>Activity:</b>\n• Registration: {registration}\n• Last activity: {last_activity}\n• Days since registration: {registration_days}",
+  "ADMIN_USER_MANAGEMENT_PROFILE": "👤 <b>User management</b>\n\n<b>Main information:</b>\n• Name: {name}\n• ID: <code>{telegram_id}</code>\n• Username: {username}\n• Email: {email}\n• Email: {email}\n• Status: {status}\n• Language: {language}\n\n<b>Finances:</b>\n• Balance: {balance}\n• Transactions: {transactions}\n\n<b>Activity:</b>\n• Registration: {registration}\n• Last activity: {last_activity}\n• Days since registration: {registration_days}",
   "ADMIN_USER_MANAGEMENT_PROMO_GROUP": "<b>Promo group:</b>\n• Name: {name}\n• Server discount: {server_discount}%\n• Traffic discount: {traffic_discount}%\n• Device discount: {device_discount}%",
   "ADMIN_USER_MANAGEMENT_PROMO_GROUP_NONE": "<b>Promo group:</b> Not assigned",
   "ADMIN_USER_MANAGEMENT_SUBSCRIPTION": "<b>Subscription:</b>\n• Type: {type}\n• Status: {status}\n• Until: {end_date}\n• Traffic: {traffic}\n• Devices: {devices}\n• Countries: {countries}",

@@ -1232,6 +1232,7 @@ async def show_user_management(callback: types.CallbackQuery, db_user: User, db:
             name=user.full_name,
             telegram_id=user.telegram_id,
             username=username_display,
+            email=getattr(user, 'email', None) or 'не указан',
             status=status_text,
             language=user.language,
             balance=settings.format_price(user.balance_kopeks),
