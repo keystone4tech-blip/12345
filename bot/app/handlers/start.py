@@ -2144,6 +2144,16 @@ async def get_main_menu_text(user, texts, db: AsyncSession):
 
     info_sections: list[str] = []
 
+    # Подсказка для новых пользователей (можно получить триал)
+    has_active_sub = bool(user.subscription and user.subscription.is_active)
+    has_had_paid = getattr(user, 'has_had_paid_subscription', False)
+    if not has_had_paid and not has_active_sub:
+        instruction = texts.t(
+            'ONBOARDING_TRIAL_HINT',
+            '💡 <b>Для активации бесплатного периода нажмите на кнопку «🎁 Тестовая подписка» ниже 👇</b>'
+        )
+        info_sections.append(instruction)
+
     try:
         if settings.REVIEWS_ENABLED or getattr(settings, 'REVIEWS_BUTTON_ENABLED', False):
             from app.services.reviews_service import reviews_service
@@ -2182,7 +2192,10 @@ async def get_main_menu_text(user, texts, db: AsyncSession):
     if info_sections:
         extra_block = '\n\n'.join(section for section in info_sections if section)
         if extra_block:
-            base_text = _insert_random_message(base_text, extra_block, action_prompt)
+            if action_prompt and action_prompt in base_text:
+                base_text = base_text.replace(action_prompt, f'{extra_block}\n\n{action_prompt}', 1)
+            else:
+                base_text = f'{base_text}\n\n{extra_block}'
 
     try:
         random_message = await get_random_active_message(db)
