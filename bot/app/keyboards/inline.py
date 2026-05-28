@@ -709,7 +709,8 @@ def get_main_menu_keyboard(
             )
         )
 
-    show_trial = not has_had_paid_subscription and not has_active_subscription
+    has_used_trial_or_sub = bool(subscription and not (getattr(subscription, 'is_trial', False) and getattr(subscription, 'status', None) == 'pending'))
+    show_trial = not has_had_paid_subscription and not has_used_trial_or_sub
 
     show_buy = not has_active_subscription or not subscription_is_active
     current_subscription = subscription
