@@ -791,15 +791,18 @@ def get_main_menu_keyboard(
     if subscription_buttons:
         paired_buttons = subscription_buttons + paired_buttons
         
-    if main_btn:
-        # Основная кнопка подписки/триала отдельным рядом (на всю ширину)
-        keyboard.append([main_btn])
-    
-    # 1. Ряд: Баланс и Промокод
-    bal_promo_row = []
-    bal_promo_row.append(InlineKeyboardButton(text=balance_button_text, callback_data='menu_balance'))
-    bal_promo_row.append(InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode'))
-    keyboard.append(bal_promo_row)
+    balance_btn = InlineKeyboardButton(text=balance_button_text, callback_data='menu_balance')
+    promo_btn = InlineKeyboardButton(text=texts.MENU_PROMOCODE, callback_data='menu_promocode')
+
+    if has_active_subscription and subscription_is_active and main_btn:
+        # Пользователь с подпиской: Баланс на всю ширину, Подписка и Промокод в один ряд
+        keyboard.append([balance_btn])
+        keyboard.append([main_btn, promo_btn])
+    else:
+        # Новый пользователь (без подписки): Подписка на всю ширину, Баланс и Промокод в один ряд
+        if main_btn:
+            keyboard.append([main_btn])
+        keyboard.append([balance_btn, promo_btn])
 
     # 2. Ряд: Поделиться с другом (Рефералы)
     if settings.is_referral_program_enabled():

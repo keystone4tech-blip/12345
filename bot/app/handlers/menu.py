@@ -1394,7 +1394,10 @@ async def get_main_menu_text(user, texts, db: AsyncSession):
     if info_sections:
         extra_block = '\n\n'.join(section for section in info_sections if section)
         if extra_block:
-            base_text = _insert_random_message(base_text, extra_block, action_prompt)
+            if action_prompt and action_prompt in base_text:
+                base_text = base_text.replace(action_prompt, f'{extra_block}\n\n{action_prompt}', 1)
+            else:
+                base_text = f'{base_text}\n\n{extra_block}'
 
     try:
         random_message = await get_random_active_message(db)
