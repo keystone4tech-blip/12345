@@ -154,12 +154,20 @@ class TrialAutomationService:
         ])
         
         try:
-            await self.bot.send_message(
+            sent_msg = await self.bot.send_message(
                 chat_id=user.telegram_id,
                 text=message_text,
                 reply_markup=keyboard,
                 parse_mode="HTML"
             )
+            
+            import contextlib
+            with contextlib.suppress(Exception):
+                await self.bot.pin_chat_message(
+                    chat_id=user.telegram_id,
+                    message_id=sent_msg.message_id,
+                    disable_notification=True
+                )
             
             ns = user.notification_settings or {}
             ns['trial_reminder_sent'] = True

@@ -703,6 +703,10 @@ def _get_trial_payment_keyboard(language: str, can_pay_from_balance: bool = Fals
 
 
 async def activate_trial(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
+    import contextlib
+    with contextlib.suppress(Exception):
+        await callback.message.unpin()
+
     from app.services.trial_activation_service import get_trial_activation_charge_amount
 
     texts = get_texts(db_user.language)
