@@ -104,6 +104,10 @@ class ThrottlingMiddleware(BaseMiddleware):
         if getattr(event, 'media_group_id', None):
             self.user_buckets[user_id] = now
             return await handler(event, data)
+            
+        # Игнорируем сервисные сообщения (например, о закреплении)
+        if isinstance(event, Message) and event.content_type in ('pinned_message', 'new_chat_members', 'left_chat_member'):
+            return await handler(event, data)
 
         # --- Общий троттлинг (0.5 сек) ---
         last_call = self.user_buckets.get(user_id, 0)

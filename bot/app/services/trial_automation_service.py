@@ -176,13 +176,16 @@ class TrialAutomationService:
     async def _send_reminder(self, db: AsyncSession, user: User) -> bool:
         texts = get_texts(user.language)
         
+        from app.utils.pricing_utils import _pluralize_days_ru
         duration = settings.TRIAL_DURATION_DAYS
+        days_str = f"{duration} {_pluralize_days_ru(duration)}"
+        
         message_text = texts.t(
             'TRIAL_REMINDER_MESSAGE',
             f'🎁 <b>Вы еще не попробовали наш VPN!</b>\n\n'
-            f'Активируйте тестовый период на {duration} дней абсолютно бесплатно '
+            f'Активируйте тестовый период на {days_str} абсолютно бесплатно '
             f'и оцените высокую скорость без ограничений.\n\n'
-            f'Нажмите на кнопку ниже, чтобы активировать его.'
+            f'Нажмите на кнопку ниже, чтобы перейти в меню.'
         )
         
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
