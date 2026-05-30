@@ -135,6 +135,22 @@ class TrialAutomationService:
         # Оставляем только тех, кому доступен триал
         return [u for u in users if is_trial_available_for_user(u)]
 
+    async def force_send_reminders(self) -> int:
+        """Принудительная отправка напоминаний всем пользователям, не активировавшим триал."""
+        if not self.bot:
+            logger.error("Bot instance не установлен в TrialAutomationService")
+            return 0
+            
+        async with AsyncSessionLocal() as db:
+            users = await self._get_eligible_users(db)
+            sent_count = 0
+            for user in users:
+                success = await self._send_reminder(db, user)
+                if success:
+                    sent_count += 1
+                await asyncio.sleep(0.05)
+            return sent_count
+
     async def _send_reminder(self, db: AsyncSession, user: User) -> bool:
         texts = get_texts(user.language)
         

@@ -10,7 +10,8 @@ from app.database.models import User
 from app.keyboards.admin import get_admin_trials_keyboard
 from app.localization.texts import get_texts
 from app.utils.decorators import admin_required, error_handler
-
+from app.services.trial_automation_service import trial_automation_service
+import asyncio
 
 logger = structlog.get_logger(__name__)
 
@@ -77,6 +78,24 @@ async def reset_trials(
     await callback.answer(texts.t('ADMIN_TRIALS_RESET_TOAST', '✅ Сброс завершен'))
 
 
+@admin_required
+@error_handler
+async def send_trial_reminders(
+    callback: types.CallbackQuery,
+    db_user: User,
+    db: AsyncSession,
+):
+    texts = get_texts(db_user.language)
+    
+    # Запускаем в фоне, чтобы не блокировать бота
+    asyncio.create_task(trial_automation_service.force_send_reminders())
+    
+    await callback.answer(
+        texts.t('ADMIN_TRIALS_SEND_REMINDERS_STARTED', '📨 Рассылка напоминаний запущена. Это может занять некоторое время.'),
+        show_alert=True
+    )
+
+
 def register_handlers(dp: Dispatcher) -> None:
     dp.callback_query.register(
         show_trials_panel,
@@ -85,4 +104,8 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.callback_query.register(
         reset_trials,
         F.data == 'admin_trials_reset',
+    )
+    dp.callback_query.register(
+        send_trial_reminders,
+        F.data == 'admin_trials_send_reminders',
     )

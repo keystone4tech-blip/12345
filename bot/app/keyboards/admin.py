@@ -295,6 +295,12 @@ def get_admin_trials_keyboard(language: str = 'ru') -> InlineKeyboardMarkup:
                     callback_data='admin_trials_reset',
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text=_t(texts, 'ADMIN_TRIALS_SEND_REMINDERS_BUTTON', '📨 Отправить оповещения'),
+                    callback_data='admin_trials_send_reminders',
+                )
+            ],
             [InlineKeyboardButton(text=texts.BACK, callback_data='admin_panel')],
         ]
     )
