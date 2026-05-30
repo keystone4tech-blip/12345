@@ -144,7 +144,7 @@ class TrialAutomationService:
             f'🎁 <b>Вы еще не попробовали наш VPN!</b>\n\n'
             f'Активируйте тестовый период на {duration} дней абсолютно бесплатно '
             f'и оцените высокую скорость без ограничений.\n\n'
-            f'Нажмите на кнопку ниже, чтобы перейти в меню.'
+            f'Нажмите на кнопку ниже, чтобы активировать его.'
         )
         
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
