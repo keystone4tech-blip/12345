@@ -257,6 +257,10 @@ class BotConfigurationService:
         'TRIAL_ADD_REMAINING_DAYS_TO_PAID': '📅 Перенос дней триала при покупке',
         'TRIAL_DISABLED_FOR': '🚫 Триал отключен для...',
         'TRIAL_WARNING_HOURS': '🔔 Предупреждение об окончании (ч)',
+        'TRIAL_AUTO_ACTIVATE_ENABLED': '🤖 Авто-активация триала',
+        'TRIAL_AUTO_ACTIVATE_DELAY_HOURS': '⏳ Задержка авто-активации (ч)',
+        'TRIAL_REMINDER_ENABLED': '🔔 Напоминание о триале',
+        'TRIAL_REMINDER_DELAY_HOURS': '⏳ Задержка напоминания (ч)',
         'TRIAL_USER_TAG': '🏷️ Тег триал-пользователя (RemnaWave)',
 
         # SUBSCRIPTIONS
@@ -703,6 +707,10 @@ class BotConfigurationService:
         'DEFAULT_AUTOPAY_DAYS_BEFORE': 'AUTOPAY',
         'MIN_BALANCE_FOR_AUTOPAY_KOPEKS': 'AUTOPAY',
         'TRIAL_WARNING_HOURS': 'TRIAL',
+        'TRIAL_AUTO_ACTIVATE_ENABLED': 'TRIAL',
+        'TRIAL_AUTO_ACTIVATE_DELAY_HOURS': 'TRIAL',
+        'TRIAL_REMINDER_ENABLED': 'TRIAL',
+        'TRIAL_REMINDER_DELAY_HOURS': 'TRIAL',
         'TRIAL_USER_TAG': 'TRIAL',
         'SUPPORT_USERNAME': 'SUPPORT',
         'SUPPORT_MENU_ENABLED': 'SUPPORT',

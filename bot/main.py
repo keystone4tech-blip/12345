@@ -82,6 +82,7 @@ from app.services.reviews_service import reviews_service
 from app.services.system_settings_service import bot_configuration_service
 from app.services.traffic_monitoring_service import traffic_monitoring_scheduler
 from app.services.traffic_help_service import traffic_help_service
+from app.services.trial_automation_service import trial_automation_service
 from app.services.version_service import version_service
 from app.services.web_api_token_service import ensure_default_web_api_token
 from app.utils.log_handlers import ExcludePaymentFilter, LevelFilterHandler
@@ -361,6 +362,7 @@ async def main():
         ban_notification_service.set_bot(bot)
         traffic_monitoring_scheduler.set_bot(bot)
         traffic_help_service.set_bot(bot)
+        trial_automation_service.set_bot(bot)
         daily_subscription_service.set_bot(bot)
         reviews_service.set_bot(bot)
         telegram_notifier.set_bot(bot)
@@ -746,6 +748,20 @@ async def main():
                 stage.log(f'Задержка дней: {settings.TRAFFIC_HELP_DAYS_AFTER}')
             else:
                 stage.skip('Помощь по трафику отключена настройками')
+
+        async with timeline.stage(
+            'Автоматизация Триала',
+            '🎁',
+            success_message='Сервис автоматизации триала запущен',
+        ) as stage:
+            if trial_automation_service.is_enabled():
+                await trial_automation_service.start()
+                if settings.TRIAL_REMINDER_ENABLED:
+                    stage.log(f'Напоминание через: {settings.TRIAL_REMINDER_DELAY_HOURS} ч')
+                if settings.TRIAL_AUTO_ACTIVATE_ENABLED:
+                    stage.log(f'Авто-активация через: {settings.TRIAL_AUTO_ACTIVATE_DELAY_HOURS} ч')
+            else:
+                stage.skip('Автоматизация триала отключена настройками')
 
         async with timeline.stage(
             'Сервис проверки версий',

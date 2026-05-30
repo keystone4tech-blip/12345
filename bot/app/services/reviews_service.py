@@ -485,7 +485,10 @@ class ReviewsService:
                             
                             # 4. Уведомляем пользователя (тихо)
                             if self.bot and 'user' in locals() and user and user.telegram_id:
-                                msg_text = f"Ваша оценка {stars} успешно учтена! В качестве благодарности вам начислено <b>+{total_days} дн.</b> 🎁"
+                                if total_days > 0:
+                                    msg_text = f"Ваша оценка {stars} успешно учтена! В качестве благодарности вам начислено <b>+{total_days} дн.</b> 🎁"
+                                else:
+                                    msg_text = f"Ваша оценка {stars} успешно учтена! Благодарим за ваше мнение 💙"
                                 await self.bot.send_message(chat_id=user.telegram_id, text=msg_text, parse_mode='HTML', disable_notification=True)
                                 
                             logger.info('⭐ Отзыв автозавершён по таймауту', review_id=review.id, user_id=review.user_id)
@@ -529,13 +532,40 @@ class ReviewsService:
                         if not user.telegram_id:
                             continue
 
-                        # Проверяем, не оставлял ли уже отзыв
-                        if await self.has_recent_review(db, user.id, days=7):
-                            continue
-
-                        # Отправляем запрос на отзыв
-                        await self._send_single_request(user, db)
-                        sent_count += 1
+                        # Проверяем историю отзывов
+                        latest_review = await self.get_latest_review(db, user.id)
+                        
+                        if latest_review:
+                            if latest_review.status == 'REQUESTED':
+                                # Пользователь нажал "Не сейчас" или проигнорировал. Проверяем, прошло ли 7 дней
+                                if latest_review.updated_at and latest_review.updated_at >= datetime.now(UTC) - timedelta(days=7):
+                                    continue
+                                # Иначе шлем заново запрос оценки
+                                await self._send_single_request(user, db)
+                                sent_count += 1
+                                
+                            elif latest_review.status == 'WAITING_FOR_CONTENT':
+                                # Недавно поставил звезды, еще не оставил контент - не трогаем (завершится сам)
+                                continue
+                                
+                            elif latest_review.status == 'COMPLETED':
+                                # Пользователь уже оставил отзыв (оценку).
+                                # Проверяем, оставлял ли он контент
+                                if latest_review.content_reward_days > 0 or latest_review.review_type in ('text', 'voice', 'video_note'):
+                                    # Уже получил все награды - больше ничего не шлем
+                                    continue
+                                
+                                # Оставил только оценку. Проверяем, прошло ли 7 дней с момента последнего обновления
+                                if latest_review.updated_at and latest_review.updated_at >= datetime.now(UTC) - timedelta(days=7):
+                                    continue
+                                
+                                # Если прошло 7 дней, шлем предложение добавить контент
+                                await self._send_content_request(user, db, latest_review)
+                                sent_count += 1
+                        else:
+                            # Отзывов вообще не было - отправляем запрос на оценку
+                            await self._send_single_request(user, db)
+                            sent_count += 1
 
                         # Задержка между отправками (антифлуд)
                         await asyncio.sleep(0.5)
@@ -665,6 +695,58 @@ class ReviewsService:
                 error=e,
             )
 
+    async def _send_content_request(self, user: User, db: AsyncSession, latest_review: UserReview) -> None:
+        """Отправляет пользователю предложение оставить развернутый медиа-отзыв, если он ранее ставил только оценку."""
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text='📝 Оставить отзыв', callback_data='review_add_content')],
+                [InlineKeyboardButton(text='❌ Не сейчас', callback_data='review_dismiss')],
+            ]
+        )
+
+        name = user.first_name or user.full_name or "пользователь"
+        text_lines = [
+            f'👋 <b>Здравствуйте, {name}!</b>\n',
+            'Вы уже достаточно давно пользуетесь нашим сервисом и ранее оставили нам свою оценку. Мы постоянно работаем над тем, чтобы делать VPN еще лучше для наших пользователей.\n',
+            'Будем очень признательны, если вы поделитесь своим мнением о качестве работы более развернуто (голосовым сообщением или видео-кружком)!',
+            'В качестве благодарности мы начислим вам <b>дополнительные бесплатные дни подписки</b> 🎁'
+        ]
+        text = '\n'.join(text_lines)
+
+        try:
+            # 1. Удаляем старое сообщение, если оно есть
+            if latest_review.request_message_id:
+                try:
+                    await self.bot.delete_message(chat_id=user.telegram_id, message_id=latest_review.request_message_id)
+                except Exception as e:
+                    logger.debug('Не удалось удалить старое сообщение с запросом контента', error=str(e))
+
+            # 2. Отправляем новый запрос
+            sent_msg = await self.bot.send_message(
+                chat_id=user.telegram_id,
+                text=text,
+                reply_markup=keyboard,
+                parse_mode='HTML',
+            )
+            logger.debug('⭐ Запрос на контент отправлен', user_id=user.id)
+            
+            # 3. Закрепляем новое сообщение
+            try:
+                await self.bot.pin_chat_message(chat_id=user.telegram_id, message_id=sent_msg.message_id)
+            except Exception as e:
+                logger.debug('Не удалось закрепить сообщение с запросом контента', error=str(e))
+            
+            # 4. Обновляем request_message_id и updated_at, чтобы не спамить
+            latest_review.updated_at = datetime.now(UTC)
+            latest_review.request_message_id = sent_msg.message_id
+            await db.commit()
+            
+        except Exception as e:
+            logger.warning(
+                '⚠️ Не удалось отправить запрос на контент',
+                user_id=user.id,
+                error=e,
+            )
 
 # Глобальный экземпляр сервиса (синглтон)
 reviews_service = ReviewsService()
