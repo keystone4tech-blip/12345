@@ -88,7 +88,7 @@ async def send_trial_reminders(
     texts = get_texts(db_user.language)
     
     # Запускаем в фоне, чтобы не блокировать бота
-    asyncio.create_task(trial_automation_service.force_send_reminders())
+    asyncio.create_task(trial_automation_service.force_send_reminders(db_user.telegram_id))
     
     await callback.answer(
         texts.t('ADMIN_TRIALS_SEND_REMINDERS_STARTED', '📨 Рассылка напоминаний запущена. Это может занять некоторое время.'),

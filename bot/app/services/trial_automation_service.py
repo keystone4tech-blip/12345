@@ -118,9 +118,11 @@ class TrialAutomationService:
                 logger.exception(f"Ошибка при обработке Trial Automation: {e}")
 
     async def _get_eligible_users(self, db: AsyncSession) -> list[User]:
+        from sqlalchemy.orm import selectinload
         # Выбираем пользователей без подписки и без оплаты
         query = (
             select(User)
+            .options(selectinload(User.subscription))
             .outerjoin(Subscription, User.id == Subscription.user_id)
             .where(
                 Subscription.id.is_(None),
@@ -135,7 +137,7 @@ class TrialAutomationService:
         # Оставляем только тех, кому доступен триал
         return [u for u in users if is_trial_available_for_user(u)]
 
-    async def force_send_reminders(self) -> int:
+    async def force_send_reminders(self, admin_id: int) -> int:
         """Принудительная отправка напоминаний всем пользователям, не активировавшим триал."""
         if not self.bot:
             logger.error("Bot instance не установлен в TrialAutomationService")
@@ -144,11 +146,31 @@ class TrialAutomationService:
         async with AsyncSessionLocal() as db:
             users = await self._get_eligible_users(db)
             sent_count = 0
+            blocked_count = 0
             for user in users:
                 success = await self._send_reminder(db, user)
                 if success:
                     sent_count += 1
+                else:
+                    blocked_count += 1
                 await asyncio.sleep(0.05)
+                
+            # Отправка отчета админу
+            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+            report = (
+                f"📊 <b>Аналитика рассылки триалов:</b>\n\n"
+                f"Найдено пользователей без триалов: {len(users)}\n"
+                f"Успешно доставлено: {sent_count}\n"
+                f"Заблокировали бота: {blocked_count}"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Выход на главное меню", callback_data="admin_panel")]
+            ])
+            try:
+                await self.bot.send_message(chat_id=admin_id, text=report, reply_markup=keyboard, parse_mode="HTML")
+            except Exception as e:
+                logger.error(f"Ошибка при отправке отчета админу {admin_id}: {e}")
+                
             return sent_count
 
     async def _send_reminder(self, db: AsyncSession, user: User) -> bool:
