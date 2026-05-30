@@ -147,7 +147,11 @@ class TrialAutomationService:
             f'Нажмите на кнопку ниже, чтобы перейти в меню.'
         )
         
-        keyboard = get_main_menu_keyboard(user.language)
+        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+        
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=texts.t('MENU_TRIAL', '🎁 Активировать триал'), callback_data='trial_activate')]
+        ])
         
         try:
             await self.bot.send_message(
